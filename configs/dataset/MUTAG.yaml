@@ -17,9 +17,9 @@ parameters:
   loss_type: cross_entropy
   monitor_metric: accuracy
   task_level: graph
-  data_seed: 0
-  split_type: 'k-fold' # either k-fold or test
-  k: 10 # for k-Fold Cross-Validation
+  split_type: k-fold 
+  k: 10 # Number of folds
+  data_seed: 0 # Fold number
 
   # Lifting parameters
   max_dim_if_lifted: 2

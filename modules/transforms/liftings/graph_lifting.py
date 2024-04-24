@@ -5,16 +5,12 @@ import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
 from modules.transforms.feature_liftings.feature_liftings import (
-    ConcatentionLifting,
-    ProjectionLifting,
-    SetLifting,
+    SumLifting,
 )
 
 # Implemented Feature Liftings
 FEATURE_LIFTINGS = {
-    "projection": ProjectionLifting,
-    "concatenation": ConcatentionLifting,
-    "set": SetLifting,
+    "SumLifting": SumLifting,
 }
 
 

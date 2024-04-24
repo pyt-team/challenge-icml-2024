@@ -15,10 +15,9 @@ parameters:
   loss_type: cross_entropy
   monitor_metric: accuracy
   task_level: graph
-  data_seed: 0
-  split_type: random #'k-fold' # either "k-fold" or "random" strategies
-  k: 10 # for "k-fold" Cross-Validation
-  train_prop: 0.5 # for "random" strategy splitting
+  split_type: k-fold 
+  k: 10 # Number of folds
+  data_seed: 0 # Fold number
 
 
 

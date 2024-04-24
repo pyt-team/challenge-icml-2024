@@ -15,4 +15,6 @@ parameters:
   loss_type: cross_entropy
   monitor_metric: accuracy
   task_level: node
-  data_seed: 0
+  split_type: k-fold 
+  k: 10 # Number of folds
+  data_seed: 0 # Fold number

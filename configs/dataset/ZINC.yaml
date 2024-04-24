@@ -15,7 +15,7 @@ parameters:
   loss_type: mse
   monitor_metric: mae
   task_level: graph
-  data_seed: 0
-  split_type: 'fixed' # either k-fold or test
-  #k: 10 # for k-Fold Cross-Validation
+  split_type: k-fold 
+  k: 10 # Number of folds
+  data_seed: 0 # Fold number
 

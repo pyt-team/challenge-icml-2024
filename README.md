@@ -2,8 +2,8 @@
 Official repository for the ICML 2024 Topological Deep Learning Challenge, hosted by the Geometry-grounded Representation Learning and Generative Modeling (GRaM) Workshop.
 
 
-## 🦾 Contributing to TMX
-To develop tmx on your machine, here are some tips.
+## 🦾 Contributing to challenge-icml-2024
+To develop on your machine, here are some tips.
 
 First, we recommend using Python 3.11.3, which is the python version used to run the unit-tests.
 
@@ -18,8 +18,8 @@ Then:
 1. Clone a copy of tmx from source:
 
    ```bash
-   git clone git@github.com:pyt-team/TopoModelX.git
-   cd TopoModelX
+   git clone git@github.com:pyt-team/challenge-icml-2024.git
+   cd challenge-icml-2024
    ```
 
 2. Install tmx in editable mode:

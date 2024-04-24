@@ -14,9 +14,7 @@ from modules.transforms.data_manipulations.manipulations import (
     OneHotDegreeFeatures,
 )
 from modules.transforms.feature_liftings.feature_liftings import (
-    ConcatentionLifting,
-    ProjectionLifting,
-    SetLifting,
+    SumLifting,
 )
 from modules.transforms.liftings.graph2cell import CellCyclesLifting
 from modules.transforms.liftings.graph2hypergraph import (
@@ -29,19 +27,20 @@ from modules.transforms.liftings.graph2simplicial import (
 )
 
 TRANSFORMS = {
-    ###
     # Graph -> Hypergraph
     "HypergraphKHopLifting": HypergraphKHopLifting,
     "HypergraphKNearestNeighborsLifting": HypergraphKNearestNeighborsLifting,
+    
     # Graph -> Simplicial Complex
     "SimplicialNeighborhoodLifting": SimplicialNeighborhoodLifting,
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
+    
     # Graph -> Cell Complex
     "CellCyclesLifting": CellCyclesLifting,
+    
     # Feature Liftings
-    "ProjectionLifting": ProjectionLifting,
-    "ConcatentionLifting": ConcatentionLifting,
-    "SetLifting": SetLifting,
+    "SumLifting": SumLifting,
+    
     # Data Manipulations
     "Identity": IdentityTransform,
     "InfereKNNConnectivity": InfereKNNConnectivity,
