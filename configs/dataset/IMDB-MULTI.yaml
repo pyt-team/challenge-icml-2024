@@ -1,0 +1,22 @@
+_target_: modules.io.load.loaders.GraphLoader
+
+# Data definition
+parameters:
+  data_domain: graph
+  data_type: TUDataset
+  data_name: IMDB-MULTI
+  data_dir: ${oc.env:PROJECT_ROOT}/datasets/${parameters.data_domain}/${parameters.data_type}
+  data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${parameters.data_name}
+
+  # Dataset parameters
+  num_features: 89 # In IMDB-MULTI dataset, num_features is equal to maximum node degree among all graphs +1
+  max_node_degree: 88
+  max_x_1_degree: 88
+  num_classes: 3
+  task: classification
+  loss_type: cross_entropy
+  monitor_metric: accuracy
+  task_level: graph
+  data_seed: 0
+  split_type: 'k-fold' # either k-fold or test
+  k: 10 # for k-Fold Cross-Validation

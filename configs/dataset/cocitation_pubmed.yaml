@@ -1,0 +1,20 @@
+_target_: modules.io.load.loaders.GraphLoader
+
+# Data definition
+parameters:
+  data_domain: graph
+  data_type: cocitation
+  data_name: PubMed
+  data_dir: ${oc.env:PROJECT_ROOT}/datasets/${parameters.data_domain}/${parameters.data_type}/${parameters.data_name}
+  data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${parameters.data_name}
+
+  # Dataset parameters
+  num_features: 500
+  num_classes: 3
+  task: classification
+  loss_type: cross_entropy
+  monitor_metric: accuracy
+  task_level: node
+  data_seed: 0
+  split_type: k-fold #'k-fold' # either k-fold or test
+  k: 10 # for k-Fold Cross-Validation

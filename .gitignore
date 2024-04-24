@@ -1,7 +1,12 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files / DS_Store
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+*/.DS_Store
+
+# dataset folders
+datasets/*
 
 # C extensions
 *.so

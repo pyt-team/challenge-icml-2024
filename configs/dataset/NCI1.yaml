@@ -1,0 +1,24 @@
+_target_: modules.io.load.loaders.GraphLoader
+
+# Data definition
+parameters:
+  data_domain: graph
+  data_type: TUDataset
+  data_name: NCI1
+  data_dir: ${oc.env:PROJECT_ROOT}/datasets/${parameters.data_domain}/${parameters.data_type}
+  data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${parameters.data_name}
+
+  # Dataset parameters
+  num_features: 37
+  num_classes: 2
+  task: classification
+  loss_type: cross_entropy
+  monitor_metric: accuracy
+  task_level: graph
+  data_seed: 0
+  split_type: random #'k-fold' # either "k-fold" or "random" strategies
+  k: 10 # for "k-fold" Cross-Validation
+  train_prop: 0.5 # for "random" strategy splitting
+
+
+
