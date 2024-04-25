@@ -4,9 +4,7 @@ import networkx as nx
 import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
-from modules.transforms.feature_liftings.feature_liftings import (
-    SumLifting,
-)
+from modules.transforms.feature_liftings.feature_liftings import SumLifting
 
 # Implemented Feature Liftings
 FEATURE_LIFTINGS = {
@@ -28,7 +26,7 @@ class GraphLifting(torch_geometric.transforms.BaseTransform):
     """
 
     def __init__(
-        self, feature_lifting="projection", preserve_edge_attr=False, **kwargs
+        self, feature_lifting="SumLifting", preserve_edge_attr=False, **kwargs
     ):
         super().__init__()
         self.feature_lifting = FEATURE_LIFTINGS[feature_lifting]()

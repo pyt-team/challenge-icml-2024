@@ -17,7 +17,7 @@ from modules.transforms.feature_liftings.feature_liftings import SumLifting
 from modules.transforms.liftings.graph2cell import CellCycleLifting
 from modules.transforms.liftings.graph2hypergraph import (
     HypergraphKHopLifting,
-    HypergraphKNearestNeighborsLifting,
+    HypergraphKNNLifting,
 )
 from modules.transforms.liftings.graph2simplicial import (
     SimplicialCliqueLifting,
@@ -27,7 +27,7 @@ from modules.transforms.liftings.graph2simplicial import (
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKHopLifting": HypergraphKHopLifting,
-    "HypergraphKNearestNeighborsLifting": HypergraphKNearestNeighborsLifting,
+    "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialNeighborhoodLifting": SimplicialNeighborhoodLifting,
     "SimplicialCliqueLifting": SimplicialCliqueLifting,

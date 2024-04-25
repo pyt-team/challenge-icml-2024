@@ -7,7 +7,7 @@ from modules.transforms.liftings.graph_lifting import GraphLifting
 
 __all__ = [
     "HypergraphKHopLifting",
-    "HypergraphKNearestNeighborsLifting",
+    "HypergraphKNNLifting",
 ]
 
 
@@ -105,7 +105,7 @@ class HypergraphKHopLifting(Graph2HypergraphLifting):
         }
 
 
-class HypergraphKNearestNeighborsLifting(Graph2HypergraphLifting):
+class HypergraphKNNLifting(Graph2HypergraphLifting):
     r"""Lifts graphs to hypergraph domain by considering k-nearest neighbors.
 
     Parameters
@@ -119,7 +119,7 @@ class HypergraphKNearestNeighborsLifting(Graph2HypergraphLifting):
     """
 
     def __init__(self, k_value=1, loop=True, **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         self.k = k_value
         self.loop = loop
         self.transform = torch_geometric.transforms.KNNGraph(self.k, self.loop)
