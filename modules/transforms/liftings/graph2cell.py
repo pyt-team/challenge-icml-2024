@@ -75,7 +75,7 @@ class Graph2CellLifting(GraphLifting):
         return lifted_topology
 
 
-class CellCyclesLifting(Graph2CellLifting):
+class CellCycleLifting(Graph2CellLifting):
     r"""Lifts graphs to cell complexes by identifying the cycles as 2-cells.
 
     Parameters

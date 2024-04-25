@@ -252,16 +252,19 @@ class GraphLoader(AbstractLoader):
 
             # Split back the into train/val/test datasets
             dataset = assing_train_val_test_mask_to_graphs(joined_dataset, split_idx)
-        
+
         elif self.parameters.data_name in ["manual"]:
-            dataset = ManualGraphLoader(self.parameters, self.transforms_config).load()
-         
+            dataset = (
+                ManualGraphLoader(self.parameters, self.transforms_config).load().data
+            )
+
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
             )
 
         return dataset
+
 
 class ManualGraphLoader(AbstractLoader):
     r"""Loader for manual graph datasets.
@@ -341,6 +344,7 @@ class ManualGraphLoader(AbstractLoader):
                 y=torch.tensor(y),
             )
             return data
+
         data = manual_simple_graph()
 
         if self.transforms_config is not None:
@@ -349,5 +353,3 @@ class ManualGraphLoader(AbstractLoader):
             )
             processor_dataset = Preprocessor(data_dir, data, self.transforms_config)
         return processor_dataset
-
-

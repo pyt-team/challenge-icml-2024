@@ -13,10 +13,8 @@ from modules.transforms.data_manipulations.manipulations import (
     NodeFeaturesToFloat,
     OneHotDegreeFeatures,
 )
-from modules.transforms.feature_liftings.feature_liftings import (
-    SumLifting,
-)
-from modules.transforms.liftings.graph2cell import CellCyclesLifting
+from modules.transforms.feature_liftings.feature_liftings import SumLifting
+from modules.transforms.liftings.graph2cell import CellCycleLifting
 from modules.transforms.liftings.graph2hypergraph import (
     HypergraphKHopLifting,
     HypergraphKNearestNeighborsLifting,
@@ -30,17 +28,13 @@ TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKHopLifting": HypergraphKHopLifting,
     "HypergraphKNearestNeighborsLifting": HypergraphKNearestNeighborsLifting,
-    
     # Graph -> Simplicial Complex
     "SimplicialNeighborhoodLifting": SimplicialNeighborhoodLifting,
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
-    
     # Graph -> Cell Complex
-    "CellCyclesLifting": CellCyclesLifting,
-    
+    "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
     "SumLifting": SumLifting,
-    
     # Data Manipulations
     "Identity": IdentityTransform,
     "InfereKNNConnectivity": InfereKNNConnectivity,
