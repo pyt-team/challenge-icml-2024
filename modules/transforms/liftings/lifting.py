@@ -66,7 +66,7 @@ class AbstractLifting(torch_geometric.transforms.BaseTransform):
 
 
 class GraphLifting(AbstractLifting):
-    r"""Abstract class for lifting graph topologies to higher-order topological domains.
+    r"""Abstract class for lifting graph topologies to other (topological) domains.
 
     Parameters
     ----------
@@ -83,22 +83,6 @@ class GraphLifting(AbstractLifting):
     ):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
         self.preserve_edge_attr = preserve_edge_attr
-
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to higher-order topological domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
 
     def _data_has_edge_attr(self, data: torch_geometric.data.Data) -> bool:
         r"""Checks if the input data object has edge attributes.
@@ -168,22 +152,6 @@ class PointCloudLifting(AbstractLifting):
     def __init__(self, feature_lifting="SumLifting", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a point cloud to other domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
-
 
 class CellComplexLifting(AbstractLifting):
     r"""Abstract class for lifting cell complexes to other (topological) domains.
@@ -198,22 +166,6 @@ class CellComplexLifting(AbstractLifting):
 
     def __init__(self, feature_lifting="SumLifting", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
-
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a cell complex to other domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
 
 
 class SimplicialLifting(AbstractLifting):
@@ -230,22 +182,6 @@ class SimplicialLifting(AbstractLifting):
     def __init__(self, feature_lifting="SumLifting", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a simplicial complex to other domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
-
 
 class HypergraphLifting(AbstractLifting):
     r"""Abstract class for lifting hypergraphs to other (topological) domains.
@@ -261,22 +197,6 @@ class HypergraphLifting(AbstractLifting):
     def __init__(self, feature_lifting="SumLifting", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a simplicial complex to higher-order topological domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
-
 
 class CombinatorialLifting(AbstractLifting):
     r"""Abstract class for lifting combinatorial structures to other (topological) domains.
@@ -291,19 +211,3 @@ class CombinatorialLifting(AbstractLifting):
 
     def __init__(self, feature_lifting="SumLifting", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
-
-    @abstractmethod
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a combinatorial structure to other domains.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data
-            The input data to be lifted.
-
-        Returns
-        -------
-        dict
-            The lifted topology.
-        """
-        raise NotImplementedError
