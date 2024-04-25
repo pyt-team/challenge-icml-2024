@@ -6,8 +6,7 @@ import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
-from modules.io.load.utils import get_complex_connectivity
-from modules.transforms.liftings.lifting import GraphLifting
+from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
 
 class SimplicialCliqueLifting(Graph2SimplicialLifting):

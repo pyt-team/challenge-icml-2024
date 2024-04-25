@@ -1,5 +1,7 @@
+import networkx as nx
 import torch
 import torch_geometric
+from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.lifting import GraphLifting
 

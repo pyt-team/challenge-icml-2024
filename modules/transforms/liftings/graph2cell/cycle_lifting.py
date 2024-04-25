@@ -4,7 +4,7 @@ import torch_geometric
 from toponetx.classes import CellComplex
 
 from modules.io.load.utils import get_complex_connectivity
-from modules.transforms.liftings.lifting import GraphLifting
+from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
 
 
 class CellCycleLifting(Graph2CellLifting):

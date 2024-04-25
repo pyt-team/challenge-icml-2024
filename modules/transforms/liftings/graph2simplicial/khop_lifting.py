@@ -7,10 +7,10 @@ import torch_geometric
 from toponetx.classes import SimplicialComplex
 
 from modules.io.load.utils import get_complex_connectivity
-from modules.transforms.liftings.lifting import GraphLifting
+from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
 
-class SimplicialNeighborhoodLifting(Graph2SimplicialLifting):
+class SimplicialKHopLifting(Graph2SimplicialLifting):
     r"""Lifts graphs to simplicial complex domain by considering k-hop neighborhoods.
 
     Parameters

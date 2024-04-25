@@ -26,7 +26,7 @@ class AbstractLifting(torch_geometric.transforms.BaseTransform):
     """
 
     def __init__(self, feature_lifting=None, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
         self.feature_lifting = FEATURE_LIFTINGS[feature_lifting]()
 
     @abstractmethod
