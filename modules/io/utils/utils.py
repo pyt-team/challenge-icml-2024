@@ -2,6 +2,7 @@ import hashlib
 import os
 import os.path as osp
 import pickle
+import random
 
 import numpy as np
 import omegaconf
@@ -383,59 +384,86 @@ def plot_manual_graph(data):
     import numpy as np
     import torch
     from matplotlib.patches import Polygon
+    
+    def sort_vertices_ccw(vertices):
+        # Function to sort the vertices of a polygon to fill it correctly
+        centroid = [sum(v[0] for v in vertices) / len(vertices),
+                    sum(v[1] for v in vertices) / len(vertices)]
+        return sorted(vertices, key=lambda v: (np.arctan2(v[1] - centroid[1], v[0] - centroid[0])))
 
+    max_order = 1
+    if hasattr(data, 'incidence_3'):
+        max_order = 3
+    elif hasattr(data, 'incidence_2'):
+        max_order = 2
+    elif hasattr(data, 'incidence_hyperedges'):
+        max_order = 0
+        incidence = data.incidence_hyperedges.coalesce()
+        
     # Collect vertices
     vertices = [i for i in range(data.x.shape[0])]
 
+    # Hyperedges
+    if max_order == 0:
+        n_vertices = len(vertices)
+        n_hyperedges = incidence.shape[1]
+        vertices += [i+n_vertices for i in range(n_hyperedges)]
+        indices = incidence.indices()
+        edges = np.array([indices[0].numpy(), indices[1].numpy()+n_vertices]).T
+        pos_n = [[i, 0] for i in range(n_vertices)]
+        pos_he = [[i, 1] for i in range(n_hyperedges)]
+        pos = pos_n + pos_he
+        
     # Collect edges
-    edges = []
-    edge_mapper = {}
-    for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
-        node_idxs = torch.where(edge != 0)[0].numpy()
+    if max_order > 0:
+        edges = []
+        edge_mapper = {}
+        for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
+            node_idxs = torch.where(edge != 0)[0].numpy()
 
-        edges.append(torch.where(edge != 0)[0].numpy())
-        edge_mapper[edge_idx] = sorted(node_idxs)
+            edges.append(torch.where(edge != 0)[0].numpy())
+            edge_mapper[edge_idx] = sorted(node_idxs)
+        edges = np.array(edges)
 
-    # Collect triangles
-    triangles = []
-    triangle_mapper = {}
-    for triangle_idx, triangle in enumerate(abs(data.incidence_2.to_dense().T)):
-        edge_idxs = torch.where(triangle != 0)[0].numpy()
+    # Collect 2dn order polygons
+    if max_order > 1:
+        faces = []
+        faces_mapper = {}
+        for faces_idx, face in enumerate(abs(data.incidence_2.to_dense().T)):
+            edge_idxs = torch.where(face != 0)[0].numpy()
 
-        nodes = []
-        for edge_idx in edge_idxs:
-            nodes += edge_mapper[edge_idx]
+            nodes = []
+            for edge_idx in edge_idxs:
+                nodes += edge_mapper[edge_idx]
 
-        triangle_mapper[triangle_idx] = {
-            "edge_idxs": sorted(edge_idxs),
-            "node_idxs": sorted(list(set(nodes))),
-        }
+            faces_mapper[faces_idx] = {
+                "edge_idxs": sorted(edge_idxs),
+                "node_idxs": sorted(list(set(nodes))),
+            }
 
-        triangles.append(sorted(list(set(nodes))))
+            faces.append(sorted(list(set(nodes))))
 
-    # Collect tetraherdons
-    tetrahedrons = []
-    tetrahedron_mapper = {}
-    for tetrahedron_idx, tetrahedron in enumerate(abs(data.incidence_3.to_dense().T)):
-        triangle_idxs = torch.where(tetrahedron != 0)[0].numpy()
+    # Collect volumes
+    if max_order == 3:
+        volumes = []
+        volume_mapper = {}
+        for volume_idx, volume in enumerate(abs(data.incidence_3.to_dense().T)):
+            face_idxs = torch.where(volume != 0)[0].numpy()
 
-        nodes = []
-        edges_in_tetrahedrons = []
-        for triangle_idx in triangle_idxs:
-            nodes += triangle_mapper[triangle_idx]["node_idxs"]
-            edges_in_tetrahedrons += triangle_mapper[triangle_idx]["edge_idxs"]
+            nodes = []
+            edges_in_volumes = []
+            for face_idx in face_idxs:
+                nodes += faces_mapper[face_idx]["node_idxs"]
+                edges_in_volumes += faces_mapper[face_idx]["edge_idxs"]
 
-        tetrahedron_mapper[tetrahedron_idx] = {
-            "triangle_idxs": sorted(triangle_idxs),
-            "edge_idxs": sorted(list(set(edges_in_tetrahedrons))),
-            "node_idxs": sorted(list(set(nodes))),
-        }
+            volume_mapper[volume_idx] = {
+                "face_idxs": sorted(face_idxs),
+                "edge_idxs": sorted(list(set(edges_in_volumes))),
+                "node_idxs": sorted(list(set(nodes))),
+            }
 
-        tetrahedrons.append(sorted(list(set(nodes))))
-
-    edges = np.array(edges)
-    triangles = np.array(triangles)
-    tetrahedrons = np.array(tetrahedrons)
+            volumes.append(sorted(list(set(nodes))))
+        volumes = np.array(volumes)
 
     # Create a graph
     G = nx.Graph()
@@ -447,15 +475,23 @@ def plot_manual_graph(data):
     G.add_edges_from(edges)
 
     # Plot the graph with edge indices using other layout
-    pos = nx.spring_layout(G, seed=42)
+    if max_order != 0:
+        pos = nx.spring_layout(G, seed=42)
     # pos[3] = np.array([0.15539556, 0.25])
 
     plt.figure(figsize=(5, 5))
     # Draw the graph with labels
+    if max_order == 0:
+        labels = {i: f"v_{i}" for i in range(n_vertices)}
+        for e in range(n_hyperedges):
+            labels[e+n_vertices] = f"he_{e}"
+    else:
+        labels = {i: f"v_{i}" for i in G.nodes()}
+        
     nx.draw(
         G,
         pos,
-        labels={i: f"v_{i}" for i in G.nodes()},
+        labels=labels,
         node_size=500,
         node_color="skyblue",
         font_size=12,
@@ -465,7 +501,7 @@ def plot_manual_graph(data):
         alpha=0.9,
     )
 
-    # Color the faces (triangles) of the graph
+    # Color the faces of the graph
     face_color_map = {
         0: "pink",
         1: "gray",
@@ -479,44 +515,54 @@ def plot_manual_graph(data):
         9: "gray",
     }
 
-    for i, clique in enumerate(triangles):
-        # Get the face color:
-        # Calculate to how many tetrahedrons cique belongs
-        # Then assign the color to the face
-        counter = 0
-        for tetrahedron in tetrahedrons:
-            from itertools import combinations
+    if max_order > 1:
+        for i, clique in enumerate(faces):
+            # Get the face color:
+            # Calculate to how many volumes cique belongs
+            # Then assign the color to the face
+            counter = 0
+            if max_order == 3:
+                for volume in volumes:
+                    from itertools import combinations
 
-            for comb in combinations(tetrahedron, 3):
-                if set(clique) == set(comb):
-                    counter += 1
+                    for comb in combinations(volume, 3):
+                        if set(clique) == set(comb):
+                            counter += 1
+            else:
+                counter = random.randint(0,9)
 
-        polygon = [pos[v] for v in clique]
-        poly = Polygon(
-            polygon,
-            closed=True,
-            facecolor=face_color_map[counter],
-            # edgecolor="pink",
-            alpha=0.3,
-        )
-        plt.gca().add_patch(poly)
+            polygon = [pos[v] for v in clique]
+            sorted_polygon = sort_vertices_ccw(polygon)
+            poly = Polygon(
+                sorted_polygon,
+                closed=True,
+                fill=True,
+                facecolor=face_color_map[counter],
+                # edgecolor="pink",
+                alpha=0.3,
+            )
+            plt.gca().add_patch(poly)
 
     # Draw edges with different color and thickness
-    nx.draw_networkx_edge_labels(
-        G,
-        pos,
-        edge_labels={
-            tuple(corr_nodes): f"e_{edge_idx}"
-            for edge_idx, corr_nodes in edge_mapper.items()
-        },
-        font_color="red",
-        alpha=0.9,
-        font_size=8,
-        rotate=False,
-        horizontalalignment="center",
-        verticalalignment="center",
-    )
+    if max_order > 0:
+        nx.draw_networkx_edge_labels(
+            G,
+            pos,
+            edge_labels={
+                tuple(corr_nodes): f"e_{edge_idx}"
+                for edge_idx, corr_nodes in edge_mapper.items()
+            },
+            font_color="red",
+            alpha=0.9,
+            font_size=8,
+            rotate=False,
+            horizontalalignment="center",
+            verticalalignment="center",
+        )
 
-    plt.title("Graph with cliques colored (8 vertices)")
+    if max_order == 0:
+        plt.title("Bipartite graph. Top nodes represent the hyperedges.")
+    else:
+        plt.title("Graph with faces colored")
     plt.axis("off")
     plt.show()
