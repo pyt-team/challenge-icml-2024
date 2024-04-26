@@ -7,15 +7,15 @@ import torch
 import torch_geometric
 from omegaconf import DictConfig
 
-from modules.io.load.loader import AbstractLoader
-from modules.io.load.preprocessor import Preprocessor
-from modules.io.load.split_utils import (
+from modules.io.load.base import AbstractLoader
+from modules.io.preprocessor.preprocessor import Preprocessor
+from modules.io.utils.split_utils import (
     assing_train_val_test_mask_to_graphs,
     load_graph_cocitation_split,
     load_graph_tudataset_split,
     load_split,
 )
-from modules.io.load.utils import (
+from modules.io.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_simplicial_dataset,

@@ -379,14 +379,14 @@ def make_hash(o):
     seed = int(hash_as_hex, 16) % 4294967295
     return seed
 
+
 def plot_manual_graph(data):
+    import matplotlib.pyplot as plt
+    import networkx as nx
     import numpy as np
     import torch
-    import networkx as nx
-    import matplotlib.pyplot as plt
     from matplotlib.patches import Polygon
 
-    
     # Collect vertices
     vertices = [i for i in range(data.x.shape[0])]
 
@@ -395,27 +395,25 @@ def plot_manual_graph(data):
     edge_mapper = {}
     for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
         node_idxs = torch.where(edge != 0)[0].numpy()
-        
+
         edges.append(torch.where(edge != 0)[0].numpy())
         edge_mapper[edge_idx] = sorted(node_idxs)
-
 
     # Collect triangles
     triangles = []
     triangle_mapper = {}
     for triangle_idx, triangle in enumerate(abs(data.incidence_2.to_dense().T)):
         edge_idxs = torch.where(triangle != 0)[0].numpy()
-        
+
         nodes = []
         for edge_idx in edge_idxs:
-            nodes += (edge_mapper[edge_idx])
-        
+            nodes += edge_mapper[edge_idx]
+
         triangle_mapper[triangle_idx] = {
-            'edge_idxs': sorted(edge_idxs),
-            'node_idxs': sorted(list(set(nodes)))
-                                        
+            "edge_idxs": sorted(edge_idxs),
+            "node_idxs": sorted(list(set(nodes))),
         }
-        
+
         triangles.append(sorted(list(set(nodes))))
 
     # Collect tetraherdons
@@ -423,20 +421,19 @@ def plot_manual_graph(data):
     tetrahedron_mapper = {}
     for tetrahedron_idx, tetrahedron in enumerate(abs(data.incidence_3.to_dense().T)):
         triangle_idxs = torch.where(tetrahedron != 0)[0].numpy()
-        
+
         nodes = []
         edges_in_tetrahedrons = []
         for triangle_idx in triangle_idxs:
-            nodes += (triangle_mapper[triangle_idx]['node_idxs'])
-            edges_in_tetrahedrons += (triangle_mapper[triangle_idx]['edge_idxs'])
-        
+            nodes += triangle_mapper[triangle_idx]["node_idxs"]
+            edges_in_tetrahedrons += triangle_mapper[triangle_idx]["edge_idxs"]
+
         tetrahedron_mapper[tetrahedron_idx] = {
-            'triangle_idxs': sorted(triangle_idxs),
-            'edge_idxs': sorted(list(set(edges_in_tetrahedrons))),
-            'node_idxs': sorted(list(set(nodes)))
-                                        
-        }   
-        
+            "triangle_idxs": sorted(triangle_idxs),
+            "edge_idxs": sorted(list(set(edges_in_tetrahedrons))),
+            "node_idxs": sorted(list(set(nodes))),
+        }
+
         tetrahedrons.append(sorted(list(set(nodes))))
 
     edges = np.array(edges)
@@ -454,7 +451,7 @@ def plot_manual_graph(data):
 
     # Plot the graph with edge indices using other layout
     pos = nx.spring_layout(G, seed=42)
-    #pos[3] = np.array([0.15539556, 0.25])
+    # pos[3] = np.array([0.15539556, 0.25])
 
     plt.figure(figsize=(5, 5))
     # Draw the graph with labels
@@ -465,11 +462,10 @@ def plot_manual_graph(data):
         node_size=500,
         node_color="skyblue",
         font_size=12,
-        edge_color='black', 
-        width=1, 
+        edge_color="black",
+        width=1,
         linewidths=1,
         alpha=0.9,
-        
     )
 
     # Color the faces (triangles) of the graph
@@ -503,26 +499,27 @@ def plot_manual_graph(data):
             polygon,
             closed=True,
             facecolor=face_color_map[counter],
-            #edgecolor="pink",
+            # edgecolor="pink",
             alpha=0.3,
         )
         plt.gca().add_patch(poly)
 
-
-
     # Draw edges with different color and thickness
     nx.draw_networkx_edge_labels(
-        G, pos,
-        edge_labels={tuple(corr_nodes): f'e_{edge_idx}' for edge_idx, corr_nodes in edge_mapper.items()},
-        font_color='red',
+        G,
+        pos,
+        edge_labels={
+            tuple(corr_nodes): f"e_{edge_idx}"
+            for edge_idx, corr_nodes in edge_mapper.items()
+        },
+        font_color="red",
         alpha=0.9,
         font_size=8,
         rotate=False,
-        horizontalalignment='center',
-        verticalalignment='center'
+        horizontalalignment="center",
+        verticalalignment="center",
     )
 
-
     plt.title("Graph with cliques colored (8 vertices)")
-    plt.axis('off')
+    plt.axis("off")
     plt.show()

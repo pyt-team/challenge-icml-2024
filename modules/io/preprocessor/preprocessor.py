@@ -4,7 +4,7 @@ import os
 import hydra
 import torch_geometric
 
-from modules.io.load.utils import ensure_serializable, make_hash
+from modules.io.utils.utils import ensure_serializable, make_hash
 
 
 class Preprocessor(torch_geometric.data.InMemoryDataset):

@@ -1,5 +1,3 @@
-# from abc import ABC, abstractmethod
-
 import torch_geometric
 
 from modules.transforms.data_manipulations.manipulations import (
