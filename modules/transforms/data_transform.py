@@ -13,25 +13,17 @@ from modules.transforms.data_manipulations.manipulations import (
 )
 from modules.transforms.feature_liftings.feature_liftings import SumLifting
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
-from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
-    HypergraphKHopLifting,
-)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-from modules.transforms.liftings.graph2simplicial.khop_lifting import (
-    SimplicialKHopLifting,
-)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
-    "HypergraphKHopLifting": HypergraphKHopLifting,
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
-    "SimplicialKHopLifting": SimplicialKHopLifting,
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,

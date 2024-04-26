@@ -8,7 +8,7 @@ import torch_geometric
 from omegaconf import DictConfig
 
 from modules.io.load.base import AbstractLoader
-from modules.io.preprocessor.preprocessor import Preprocessor
+from modules.io.preprocess.preprocessor import Preprocessor
 from modules.io.utils.split_utils import (
     assing_train_val_test_mask_to_graphs,
     load_graph_cocitation_split,

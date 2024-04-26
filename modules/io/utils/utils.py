@@ -12,9 +12,6 @@ from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
 
-# from sklearn.model_selection import StratifiedKFold
-# from modules.data.datasets import CustomDataset
-
 
 def get_complex_connectivity(complex, max_rank, signed=False):
     r"""Gets the connectivity matrices for the complex.
