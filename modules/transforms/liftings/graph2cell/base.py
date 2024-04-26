@@ -1,9 +1,9 @@
-import networkx as nx
 import torch
-import torch_geometric
+import networkx as nx
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.lifting import GraphLifting
+from modules.io.utils.utils import get_complex_connectivity
 
 
 class Graph2CellLifting(GraphLifting):

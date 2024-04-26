@@ -1,16 +1,15 @@
 """Test the message passing module."""
 import pytest
-import rootutils
+
 import torch
-from topobenchmarkx.io.load.loaders import manual_simple_graph
-from topobenchmarkx.transforms.feature_liftings.feature_liftings import (
-    ProjectionLifting,
+from modules.io.load.loaders import manual_simple_graph
+from modules.transforms.feature_liftings.feature_liftings import (
+    SumLifting,
 )
-from topobenchmarkx.transforms.liftings.graph2simplicial import SimplicialCliqueLifting
+from modules.transforms.liftings.graph2simplicial import SimplicialCliqueLifting
 
-
-class TestProjectionLifting:
-    """Test the ProjectionLifting class."""
+class TestSumLifting:
+    """Test the SumLifting class."""
 
     def setup_method(self):
         # Load the graph
@@ -19,7 +18,7 @@ class TestProjectionLifting:
         # Initialize a lifting class
         self.lifting = SimplicialCliqueLifting(complex_dim=3)
         # Initialize the ProjectionLifting class
-        self.feature_lifting = ProjectionLifting()
+        self.feature_lifting = SumLifting()
 
     def test_lift_features(self):
         # Test the lift_features method
