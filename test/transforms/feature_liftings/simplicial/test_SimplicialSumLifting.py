@@ -6,7 +6,7 @@ from modules.io.load.loaders import manual_simple_graph
 from modules.transforms.feature_liftings.feature_liftings import (
     SumLifting,
 )
-from modules.transforms.liftings.graph2cell import CellCycleLifting
+from modules.transforms.liftings.graph2simplicial.clique_lifting import SimplicialCliqueLifting
 
 class TestSumLifting:
     """Test the SumLifting class."""
@@ -16,7 +16,7 @@ class TestSumLifting:
         self.data = manual_simple_graph()
 
         # Initialize a lifting class
-        self.lifting = CellCycleLifting()
+        self.lifting = SimplicialCliqueLifting(complex_dim=3)
         # Initialize the ProjectionLifting class
         self.feature_lifting = SumLifting()
 
@@ -47,16 +47,10 @@ class TestSumLifting:
         )
 
         expected_x2 = torch.tensor(
-            [
-                [10022.],
-                [11020.],
-                [ 3120.],
-                [  212.],
-                [  222.],
-                [   32.]
-            ]
+            [[32.0], [212.0], [222.0], [10022.0], [230.0], [11020.0]]
         )
 
+        expected_x3 = torch.tensor([[696.0]])
 
         assert (
             expected_x1 == lifted_data.x_1
@@ -64,4 +58,6 @@ class TestSumLifting:
         assert (
             expected_x2 == lifted_data.x_2
         ).all(), "Something is wrong with the lifted features x_2."
-        
+        assert (
+            expected_x3 == lifted_data.x_3
+        ).all(), "Something is wrong with the lifted features x_3."

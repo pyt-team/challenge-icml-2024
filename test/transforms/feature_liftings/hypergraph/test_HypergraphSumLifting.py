@@ -6,7 +6,7 @@ from modules.io.load.loaders import manual_simple_graph
 from modules.transforms.feature_liftings.feature_liftings import (
     SumLifting,
 )
-from modules.transforms.liftings.graph2hypergraph import HypergraphKHopLifting
+from modules.transforms.liftings.graph2hypergraph.khop_lifting import HypergraphKHopLifting
 
 class TestSumLifting:
     """Test the SumLifting class."""

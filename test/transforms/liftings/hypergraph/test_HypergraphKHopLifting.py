@@ -2,8 +2,8 @@
 import pytest
 import rootutils
 import torch
-from topobenchmarkx.io.load.loaders import manual_graph
-from topobenchmarkx.transforms.liftings.graph2hypergraph import HypergraphKHopLifting
+from modules.io.load.loaders import manual_simple_graph
+from modules.transforms.liftings.graph2hypergraph.khop_lifting import HypergraphKHopLifting
 
 
 class TestHypergraphKHopLifting:
@@ -11,7 +11,7 @@ class TestHypergraphKHopLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = manual_graph()
+        self.data = manual_simple_graph()
 
         # Initialise the HypergraphKHopLifting class
         self.lifting_k1 = HypergraphKHopLifting(k_value=1)
@@ -21,19 +21,18 @@ class TestHypergraphKHopLifting:
         # Test the lift_topology method
         lifted_data_k1 = self.lifting_k1.forward(self.data.clone())
 
-        expected_n_hyperedges = 9
+        expected_n_hyperedges = 8
 
         expected_incidence_1 = torch.tensor(
             [
-                [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                [1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-                [1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                [1., 1., 1., 0., 1., 0., 0., 1.],
+                [1., 1., 1., 0., 1., 0., 0., 0.],
+                [1., 1., 1., 1., 1., 1., 0., 1.],
+                [0., 0., 1., 1., 0., 0., 1., 0.],
+                [1., 1., 1., 0., 1., 0., 0., 0.],
+                [0., 0., 1., 0., 0., 1., 1., 1.],
+                [0., 0., 0., 1., 0., 1., 1., 0.],
+                [1., 0., 1., 0., 0., 1., 0., 1.]
             ]
         )
 
@@ -46,19 +45,18 @@ class TestHypergraphKHopLifting:
 
         lifted_data_k2 = self.lifting_k2.forward(self.data.clone())
 
-        expected_n_hyperedges = 9
+        expected_n_hyperedges = 8
 
         expected_incidence_1 = torch.tensor(
             [
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0],
-                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+                [1., 1., 1., 1., 1., 1., 0., 1.],
+                [1., 1., 1., 1., 1., 1., 0., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 0., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1.],
+                [0., 0., 1., 1., 0., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1., 1., 1.]
             ]
         )
 

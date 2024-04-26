@@ -6,7 +6,7 @@ from modules.io.load.loaders import manual_simple_graph
 from modules.transforms.feature_liftings.feature_liftings import (
     SumLifting,
 )
-from modules.transforms.liftings.graph2simplicial import SimplicialCliqueLifting
+from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 
 class TestSumLifting:
     """Test the SumLifting class."""
@@ -16,7 +16,7 @@ class TestSumLifting:
         self.data = manual_simple_graph()
 
         # Initialize a lifting class
-        self.lifting = SimplicialCliqueLifting(complex_dim=3)
+        self.lifting = CellCycleLifting()
         # Initialize the ProjectionLifting class
         self.feature_lifting = SumLifting()
 
@@ -30,27 +30,33 @@ class TestSumLifting:
 
         expected_x1 = torch.tensor(
             [
-                [6.0],
-                [11.0],
-                [101.0],
-                [5001.0],
-                [15.0],
-                [105.0],
-                [60.0],
-                [110.0],
-                [510.0],
-                [5010.0],
-                [1050.0],
-                [1500.0],
-                [5500.0],
+                [   6.],
+                [  11.],
+                [ 101.],
+                [5001.],
+                [  15.],
+                [ 105.],
+                [  60.],
+                [ 110.],
+                [ 510.],
+                [5010.],
+                [1050.],
+                [1500.],
+                [5500.]
             ]
         )
 
         expected_x2 = torch.tensor(
-            [[32.0], [212.0], [222.0], [10022.0], [230.0], [11020.0]]
+            [
+                [10022.],
+                [11020.],
+                [ 3120.],
+                [  212.],
+                [  222.],
+                [   32.]
+            ]
         )
 
-        expected_x3 = torch.tensor([[696.0]])
 
         assert (
             expected_x1 == lifted_data.x_1
@@ -58,6 +64,4 @@ class TestSumLifting:
         assert (
             expected_x2 == lifted_data.x_2
         ).all(), "Something is wrong with the lifted features x_2."
-        assert (
-            expected_x3 == lifted_data.x_3
-        ).all(), "Something is wrong with the lifted features x_3."
+        

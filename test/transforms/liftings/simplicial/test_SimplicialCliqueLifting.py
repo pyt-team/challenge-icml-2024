@@ -2,8 +2,8 @@
 import pytest
 import rootutils
 import torch
-from topobenchmarkx.io.load.loaders import manual_simple_graph
-from topobenchmarkx.transforms.liftings.graph2simplicial import SimplicialCliqueLifting
+from modules.io.load.loaders import manual_simple_graph
+from modules.transforms.liftings.graph2simplicial.clique_lifting import SimplicialCliqueLifting
 
 
 class TestSimplicialCliqueLifting:
@@ -83,85 +83,3 @@ class TestSimplicialCliqueLifting:
         ).all(), (
             "Something is wrong with signed incidence_3 (triangles to tetrahedrons)."
         )
-
-    def test_lifted_features_signed(self):
-        """Test the lift_features method in signed incidence cases."""
-
-        # Test the lift_features method for signed case
-        lifted_data = self.lifting_signed.forward(self.data)
-
-        expected_features_1 = torch.tensor(
-            [
-                [4],
-                [9],
-                [99],
-                [4999],
-                [5],
-                [95],
-                [40],
-                [90],
-                [490],
-                [4990],
-                [950],
-                [500],
-                [4500],
-            ]
-        )
-
-        assert (
-            expected_features_1 == lifted_data.x_1
-        ).all(), "Something is wrong with x_1 features."
-
-        expected_features_2 = torch.tensor([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
-
-        assert (
-            expected_features_2 == lifted_data.x_2
-        ).all(), "Something is wrong with x_2 features."
-
-        excepted_features_3 = torch.tensor([[0.0]])
-
-        assert (
-            excepted_features_3 == lifted_data.x_3
-        ).all(), "Something is wrong with x_3 features."
-
-    def test_lifted_features_unsigned(self):
-        """Test the lift_features method in unsigned incidence cases."""
-
-        # Test the lift_features method for unsigned case
-        lifted_data = self.lifting_unsigned.forward(self.data)
-
-        expected_features_1 = torch.tensor(
-            [
-                [6.0],
-                [11.0],
-                [101.0],
-                [5001.0],
-                [15.0],
-                [105.0],
-                [60.0],
-                [110.0],
-                [510.0],
-                [5010.0],
-                [1050.0],
-                [1500.0],
-                [5500.0],
-            ]
-        )
-
-        assert (
-            expected_features_1 == lifted_data.x_1
-        ).all(), "Something is wrong with x_1 features."
-
-        expected_features_2 = torch.tensor(
-            [[32.0], [212.0], [222.0], [10022.0], [230.0], [11020.0]]
-        )
-
-        assert (
-            expected_features_2 == lifted_data.x_2
-        ).all(), "Something is wrong with x_2 features."
-
-        excepted_features_3 = torch.tensor([[696.0]])
-
-        assert (
-            excepted_features_3 == lifted_data.x_3
-        ).all(), "Something is wrong with x_3 features."
