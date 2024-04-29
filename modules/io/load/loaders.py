@@ -5,7 +5,6 @@ import torch_geometric
 from omegaconf import DictConfig
 
 from modules.io.load.base import AbstractLoader
-from modules.io.preprocess.preprocessor import Preprocessor
 from modules.io.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
@@ -39,7 +38,7 @@ class GraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        data_dir = os.path.join(
+        self.data_dir = os.path.join(
             self.parameters["data_dir"], self.parameters["data_name"]
         )
         if (

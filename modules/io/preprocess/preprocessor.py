@@ -7,7 +7,7 @@ from modules.io.utils.utils import ensure_serializable, make_hash
 from modules.transforms.data_transform import DataTransform
 
 
-class Preprocessor(torch_geometric.data.InMemoryDataset):
+class PreProcessor(torch_geometric.data.InMemoryDataset):
     r"""Preprocessor for datasets.
 
     Parameters
