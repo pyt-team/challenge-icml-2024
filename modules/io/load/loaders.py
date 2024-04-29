@@ -12,6 +12,7 @@ from modules.io.preprocess.preprocessor import Preprocessor
 from modules.io.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
+    load_manual_graph,
     load_simplicial_dataset,
 )
 
@@ -245,9 +246,10 @@ class GraphLoader(AbstractLoader):
             # dataset = assing_train_val_test_mask_to_graphs(joined_dataset, split_idx)
 
         elif self.parameters.data_name in ["manual"]:
-            dataset = (
-                ManualGraphLoader(self.parameters, self.transforms_config).load().data
-            )
+            dataset = load_manual_graph()
+
+            if self.transforms_config is not None:
+                dataset = Preprocessor(data_dir, dataset, self.transforms_config)
 
         else:
             raise NotImplementedError(
@@ -284,7 +286,7 @@ class ManualGraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        data = manual_simple_graph()
+        data = load_manual_graph()
 
         if self.transforms_config is not None:
             data_dir = os.path.join(
@@ -292,55 +294,3 @@ class ManualGraphLoader(AbstractLoader):
             )
             processor_dataset = Preprocessor(data_dir, data, self.transforms_config)
         return processor_dataset
-
-
-def manual_simple_graph():
-    """Create a manual graph for testing purposes."""
-    # Define the vertices (just 8 vertices)
-    vertices = [i for i in range(8)]
-    y = [0, 1, 1, 1, 0, 0, 0, 0]
-    # Define the edges
-    edges = [
-        [0, 1],
-        [0, 2],
-        [0, 4],
-        [1, 2],
-        [2, 3],
-        [5, 2],
-        [5, 6],
-        [6, 3],
-        [5, 7],
-        [2, 7],
-        [0, 7],
-    ]
-
-    # Define the tetrahedrons
-    tetrahedrons = [[0, 1, 2, 4]]
-
-    # Add tetrahedrons
-    for tetrahedron in tetrahedrons:
-        for i in range(len(tetrahedron)):
-            for j in range(i + 1, len(tetrahedron)):
-                edges.append([tetrahedron[i], tetrahedron[j]])
-
-    # Create a graph
-    G = nx.Graph()
-
-    # Add vertices
-    G.add_nodes_from(vertices)
-
-    # Add edges
-    G.add_edges_from(edges)
-    G.to_undirected()
-    edge_list = torch.Tensor(list(G.edges())).T.long()
-
-    # Generate feature from 0 to 9
-    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
-
-    data = torch_geometric.data.Data(
-        x=x,
-        edge_index=edge_list,
-        num_nodes=len(vertices),
-        y=torch.tensor(y),
-    )
-    return data

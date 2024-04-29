@@ -1,4 +1,3 @@
-_target_: modules.transforms.data_transform.DataTransform
 transform_name: "KeepSelectedFields"
 transform_type: "data manipulation"
 

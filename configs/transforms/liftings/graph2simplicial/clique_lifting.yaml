@@ -1,7 +1,6 @@
-_target_: modules.transforms.data_transform.DataTransform
 transform_type: 'lifting'
 transform_name: "SimplicialCliqueLifting"
-complex_dim: ${oc.select:parameters.max_dim_if_lifted,3}
-preserve_edge_attr: ${oc.select:parameters.preserve_edge_attr_if_lifted,False}
+complex_dim: 3
+preserve_edge_attr: False
 signed: True
 feature_lifting: ProjectionSum

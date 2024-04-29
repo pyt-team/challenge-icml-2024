@@ -1,23 +1,16 @@
-_target_: modules.io.load.loaders.GraphLoader
+data_domain: graph
+data_type: TUDataset
+data_name: NCI1
+data_dir: ${oc.env:PROJECT_ROOT}/datasets/${data_domain}/${data_type}
+data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
 
-# Data definition
-parameters:
-  data_domain: graph
-  data_type: TUDataset
-  data_name: NCI1
-  data_dir: ${oc.env:PROJECT_ROOT}/datasets/${parameters.data_domain}/${parameters.data_type}
-  data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${parameters.data_name}
-
-  # Dataset parameters
-  num_features: 37
-  num_classes: 2
-  task: classification
-  loss_type: cross_entropy
-  monitor_metric: accuracy
-  task_level: graph
-  split_type: k-fold 
-  k: 10 # Number of folds
-  data_seed: 0 # Fold number
+# Dataset parameters
+num_features: 37
+num_classes: 2
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: graph
 
 
 

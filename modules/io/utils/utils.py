@@ -4,6 +4,7 @@ import os.path as osp
 import pickle
 import random
 
+import networkx as nx
 import numpy as np
 import omegaconf
 import toponetx.datasets.graph as graph
@@ -287,6 +288,58 @@ def load_hypergraph_pickle_dataset(cfg):
     return data
 
 
+def load_manual_graph():
+    """Create a manual graph for testing purposes."""
+    # Define the vertices (just 8 vertices)
+    vertices = [i for i in range(8)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0]
+    # Define the edges
+    edges = [
+        [0, 1],
+        [0, 2],
+        [0, 4],
+        [1, 2],
+        [2, 3],
+        [5, 2],
+        [5, 6],
+        [6, 3],
+        [5, 7],
+        [2, 7],
+        [0, 7],
+    ]
+
+    # Define the tetrahedrons
+    tetrahedrons = [[0, 1, 2, 4]]
+
+    # Add tetrahedrons
+    for tetrahedron in tetrahedrons:
+        for i in range(len(tetrahedron)):
+            for j in range(i + 1, len(tetrahedron)):
+                edges.append([tetrahedron[i], tetrahedron[j]])
+
+    # Create a graph
+    G = nx.Graph()
+
+    # Add vertices
+    G.add_nodes_from(vertices)
+
+    # Add edges
+    G.add_edges_from(edges)
+    G.to_undirected()
+    edge_list = torch.Tensor(list(G.edges())).T.long()
+
+    # Generate feature from 0 to 9
+    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+
+    data = torch_geometric.data.Data(
+        x=x,
+        edge_index=edge_list,
+        num_nodes=len(vertices),
+        y=torch.tensor(y),
+    )
+    return data
+
+
 def get_Planetoid_pyg(cfg):
     r"""Loads Planetoid graph datasets from torch_geometric.
 
@@ -384,22 +437,26 @@ def plot_manual_graph(data):
     import numpy as np
     import torch
     from matplotlib.patches import Polygon
-    
+
     def sort_vertices_ccw(vertices):
         # Function to sort the vertices of a polygon to fill it correctly
-        centroid = [sum(v[0] for v in vertices) / len(vertices),
-                    sum(v[1] for v in vertices) / len(vertices)]
-        return sorted(vertices, key=lambda v: (np.arctan2(v[1] - centroid[1], v[0] - centroid[0])))
+        centroid = [
+            sum(v[0] for v in vertices) / len(vertices),
+            sum(v[1] for v in vertices) / len(vertices),
+        ]
+        return sorted(
+            vertices, key=lambda v: (np.arctan2(v[1] - centroid[1], v[0] - centroid[0]))
+        )
 
     max_order = 1
-    if hasattr(data, 'incidence_3'):
+    if hasattr(data, "incidence_3"):
         max_order = 3
-    elif hasattr(data, 'incidence_2'):
+    elif hasattr(data, "incidence_2"):
         max_order = 2
-    elif hasattr(data, 'incidence_hyperedges'):
+    elif hasattr(data, "incidence_hyperedges"):
         max_order = 0
         incidence = data.incidence_hyperedges.coalesce()
-        
+
     # Collect vertices
     vertices = [i for i in range(data.x.shape[0])]
 
@@ -407,13 +464,13 @@ def plot_manual_graph(data):
     if max_order == 0:
         n_vertices = len(vertices)
         n_hyperedges = incidence.shape[1]
-        vertices += [i+n_vertices for i in range(n_hyperedges)]
+        vertices += [i + n_vertices for i in range(n_hyperedges)]
         indices = incidence.indices()
-        edges = np.array([indices[0].numpy(), indices[1].numpy()+n_vertices]).T
+        edges = np.array([indices[0].numpy(), indices[1].numpy() + n_vertices]).T
         pos_n = [[i, 0] for i in range(n_vertices)]
         pos_he = [[i, 1] for i in range(n_hyperedges)]
         pos = pos_n + pos_he
-        
+
     # Collect edges
     if max_order > 0:
         edges = []
@@ -484,10 +541,10 @@ def plot_manual_graph(data):
     if max_order == 0:
         labels = {i: f"v_{i}" for i in range(n_vertices)}
         for e in range(n_hyperedges):
-            labels[e+n_vertices] = f"he_{e}"
+            labels[e + n_vertices] = f"he_{e}"
     else:
         labels = {i: f"v_{i}" for i in G.nodes()}
-        
+
     nx.draw(
         G,
         pos,
@@ -529,7 +586,7 @@ def plot_manual_graph(data):
                         if set(clique) == set(comb):
                             counter += 1
             else:
-                counter = random.randint(0,9)
+                counter = random.randint(0, 9)
 
             polygon = [pos[v] for v in clique]
             sorted_polygon = sort_vertices_ccw(polygon)

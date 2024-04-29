@@ -1,20 +1,12 @@
-_target_: modules.io.load.loaders.ManualGraphLoader
+data_domain: graph
+data_type: toy_dataset
+data_name: manual
+data_dir: ${oc.env:PROJECT_ROOT}/datasets/${data_domain}/${data_type}
 
-# Data definition
-parameters:
-  data_domain: graph
-  data_type: manual_dataset
-  data_name: manual
-  data_dir: ${oc.env:PROJECT_ROOT}/datasets/${parameters.data_domain}/${parameters.data_type}
-  
-
-  # Dataset parameters
-  num_features: 1
-  num_classes: 2
-  task: classification
-  loss_type: cross_entropy
-  monitor_metric: accuracy
-  task_level: node
-  split_type: k-fold 
-  k: 10 # Number of folds
-  data_seed: 0 # Fold number
+# Dataset parameters
+num_features: 1
+num_classes: 2
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: node

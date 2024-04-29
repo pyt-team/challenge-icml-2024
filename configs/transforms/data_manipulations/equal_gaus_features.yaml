@@ -1,8 +1,5 @@
-_target_: modules.transforms.data_transform.DataTransform
 transform_name: "EqualGausFeatures"
 transform_type: "data manipulation"
-
 mean: 0
 std: 0.1
-num_features: ${parameters.num_features}
 

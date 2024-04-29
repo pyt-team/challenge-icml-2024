@@ -1,10 +1,10 @@
 import json
 import os
 
-import hydra
 import torch_geometric
 
 from modules.io.utils.utils import ensure_serializable, make_hash
+from modules.transforms.data_transform import DataTransform
 
 
 class Preprocessor(torch_geometric.data.InMemoryDataset):
@@ -72,7 +72,9 @@ class Preprocessor(torch_geometric.data.InMemoryDataset):
         torch_geometric.transforms.Compose
             Pre-transform object.
         """
-        pre_transforms_dict = hydra.utils.instantiate(transforms_config)
+        pre_transforms_dict = {
+            key: DataTransform(**value) for key, value in transforms_config.items()
+        }
         pre_transforms = torch_geometric.transforms.Compose(
             list(pre_transforms_dict.values())
         )
@@ -128,7 +130,7 @@ class Preprocessor(torch_geometric.data.InMemoryDataset):
         r"""Process the data."""
         self.data_list = [self.pre_transform(d) for d in self.data_list]
 
-        self.data, self.slices = self.collate(self.data_list)
+        self._data, self.slices = self.collate(self.data_list)
         self._data_list = None  # Reset cache.
 
         assert isinstance(self._data, torch_geometric.data.Data)
