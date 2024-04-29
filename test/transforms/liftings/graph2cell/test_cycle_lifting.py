@@ -3,7 +3,7 @@ import pytest
 import rootutils
 import torch
 
-from modules.io.load.loaders import manual_simple_graph
+from modules.io.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 
 
@@ -12,7 +12,7 @@ class TestCellCyclesLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = manual_simple_graph()
+        self.data = load_manual_graph()
 
         # Initialise the CellCyclesLifting class
         self.lifting = CellCycleLifting()

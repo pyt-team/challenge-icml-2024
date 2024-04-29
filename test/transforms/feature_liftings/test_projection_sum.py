@@ -2,7 +2,7 @@
 
 import torch
 
-from modules.io.load.loaders import manual_simple_graph
+from modules.io.utils.utils import load_manual_graph
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
     HypergraphKHopLifting,
@@ -17,7 +17,7 @@ class TestProjectionSum:
 
     def setup_method(self):
         # Load the graph
-        self.data = manual_simple_graph()
+        self.data = load_manual_graph()
         # Initialize the ProjectionLifting class
         self.feature_lifting = ProjectionSum()
 

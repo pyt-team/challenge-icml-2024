@@ -3,7 +3,7 @@ import pytest
 import rootutils
 import torch
 
-from modules.io.load.loaders import manual_simple_graph
+from modules.io.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
@@ -14,7 +14,7 @@ class TestSimplicialCliqueLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = manual_simple_graph()
+        self.data = load_manual_graph()
 
         # Initialise the SimplicialCliqueLifting class
         self.lifting_signed = SimplicialCliqueLifting(complex_dim=3, signed=True)

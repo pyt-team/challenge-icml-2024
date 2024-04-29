@@ -3,7 +3,7 @@ import pytest
 import rootutils
 import torch
 
-from modules.io.load.loaders import manual_simple_graph
+from modules.io.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
     HypergraphKHopLifting,
 )
@@ -14,7 +14,7 @@ class TestHypergraphKHopLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = manual_simple_graph()
+        self.data = load_manual_graph()
 
         # Initialise the HypergraphKHopLifting class
         self.lifting_k1 = HypergraphKHopLifting(k_value=1)
