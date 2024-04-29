@@ -38,8 +38,6 @@ dependencies=[
     "hypernetx < 2.0.0",
     "trimesh",
     "spharapy",
-    "hydra-core==1.3.2",
-    "hydra-colorlog==1.2.0",
     "rich",
     "rootutils",
     "pytest",

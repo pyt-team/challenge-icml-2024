@@ -5,7 +5,7 @@ data_dir: ${oc.env:PROJECT_ROOT}/datasets/${data_domain}/${data_type}
 data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
 
 # Dataset parameters
-num_features: 1 # here basically I specify the initial num features in mutang at x aka x_0
+num_features: 1
 num_classes: 1
 task: classification
 loss_type: cross_entropy
