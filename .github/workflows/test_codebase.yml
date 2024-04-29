@@ -52,9 +52,6 @@ jobs:
       - name: Install main package
         run: |
           pip install -e .[all]
-      - name: Typecheck [mypy]
-        run: |
-          mypy -p topomodelx
       - name: Run tests for codebase [pytest]
         run: |
           pytest -n 2 --cov --cov-report=xml:coverage.xml test/transforms/feature_liftings test/transforms/liftings 

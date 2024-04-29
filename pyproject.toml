@@ -66,11 +66,19 @@ test = [
     "pytest-cov",
     "coverage",
     "jupyter",
-    "mypy"
+    "mypy",
+    "pytest-xdist",
+    "pytest-split"
 ]
 
+dev = ["challenge-icml-2024[test, lint]"]
+all = ["challenge-icml-2024[dev, doc]"]
+
+[project.urls]
+homepage="https://github.com/pyt-team/challenge-icml-2024.git"
+repository="https://github.com/pyt-team/challenge-icml-2024.git"
+
 [tool.ruff]
-select = "challenge-icml-2024"
 target-version = "py310"
 extend-include = ["*.ipynb"]
 
@@ -100,12 +108,6 @@ convention = "numpy"
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F403"]
-dev = ["challenge-icml-2024[test, lint]"]
-all = ["challenge-icml-2024[dev, doc]"]
-
-[project.urls]
-homepage="https://github.com/pyt-team/challenge-icml-2024"
-repository="https://github.com/pyt-team/challenge-icml-2024"
 
 [tool.setuptools.dynamic]
 version = {attr = "challenge-icml-2024.__version__"}
@@ -120,37 +122,21 @@ include = [
 warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
+disable_error_code = ["import-untyped"]
 plugins = "numpy.typing.mypy_plugin"
-
-[[tool.mypy.overrides]]
-module = [
-    "torch_cluster.*","networkx.*","scipy.spatial","scipy.sparse","toponetx.classes.simplicial_complex"
-]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "--capture=no"
 
-[tool.black]
-line-length = 88
-
-[tool.isort]
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-skip = [".gitignore", "__init__.py"]
-
-[tool.flake8]
-max-line-length = 88
-application_import_names = "modules"
-docstring-convention = "numpy"
-exclude = [
-    "modules/__init__.py",
-    "docs/conf.py"
+[tool.numpydoc_validation]
+checks = [
+    "all",
+    "GL01",
+    "ES01",
+    "EX01",
+    "SA01"
 ]
-
-import_order_style = "smarkets"
-extend-ignore = ["E501", "E203"]
-per-file-ignores = [
-    "*/__init__.py: D104, F401",
+exclude = [
+    '\.undocumented_method$',
+    '\.__init__$',
 ]
