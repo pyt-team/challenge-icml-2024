@@ -83,13 +83,15 @@ def load_model_config(model_type: str, model_name: str) -> omegaconf.DictConfig:
     return model_config
 
 
-def plot_manual_graph(data):
+def plot_manual_graph(data, title=None):
     r"""Plot a manual graph.
 
     Parameters
     ----------
     data : torch_geometric.data.Data
         Data object containing the graph.
+    title: str
+        Title for the plot.
     """
 
     def sort_vertices_ccw(vertices):
@@ -140,13 +142,18 @@ def plot_manual_graph(data):
     if max_order > 0:
         edges = []
         edge_mapper = {}
-        for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
-            node_idxs = torch.where(edge != 0)[0].numpy()
+        if hasattr(data, 'incidence_1'):
+            for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
+                node_idxs = torch.where(edge != 0)[0].numpy()
 
-            edges.append(torch.where(edge != 0)[0].numpy())
-            edge_mapper[edge_idx] = sorted(node_idxs)
-        edges = np.array(edges)
-
+                edges.append(torch.where(edge != 0)[0].numpy())
+                edge_mapper[edge_idx] = sorted(node_idxs)
+            edges = np.array(edges)
+        elif hasattr(data, 'edge_index'):
+            edges = data.edge_index.T.tolist()
+            edge_mapper = {}
+            for e, edge in enumerate(edges):
+                edge_mapper[e] = [node for node in edge]
     # Collect 2dn order polygons
     if max_order > 1:
         faces = []
@@ -192,7 +199,6 @@ def plot_manual_graph(data):
 
     # Add vertices
     G.add_nodes_from(vertices)
-
     # Add edges
     G.add_edges_from(edges)
 
@@ -281,10 +287,13 @@ def plot_manual_graph(data):
             horizontalalignment="center",
             verticalalignment="center",
         )
-
+    if title is not None:
+        plt.title(title)
     if max_order == 0:
         plt.title("Bipartite graph. Top nodes represent the hyperedges.")
+    elif max_order == 1:
+        plt.title("The original graph.")
     else:
-        plt.title("Graph with faces colored")
+        plt.title("Graph with colored faces.")
     plt.axis("off")
     plt.show()
