@@ -4,7 +4,7 @@ import torch
 import torch_geometric
 
 
-class SumLifting(torch_geometric.transforms.BaseTransform):
+class ProjectionSum(torch_geometric.transforms.BaseTransform):
     r"""Lifts r-cell features to r+1-cells by projection.
 
     Parameters
@@ -57,4 +57,3 @@ class SumLifting(torch_geometric.transforms.BaseTransform):
         """
         data = self.lift_features(data)
         return data
-

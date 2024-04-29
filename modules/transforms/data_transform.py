@@ -11,10 +11,14 @@ from modules.transforms.data_manipulations.manipulations import (
     NodeFeaturesToFloat,
     OneHotDegreeFeatures,
 )
-from modules.transforms.feature_liftings.feature_liftings import SumLifting
+from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
-from modules.transforms.liftings.graph2hypergraph.knn_lifting import HypergraphKNNLifting
-from modules.transforms.liftings.graph2hypergraph.khop_lifting import HypergraphKHopLifting
+from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
+    HypergraphKHopLifting,
+)
+from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
+    HypergraphKNNLifting,
+)
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
@@ -28,7 +32,7 @@ TRANSFORMS = {
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
-    "SumLifting": SumLifting,
+    "ProjectionSum": ProjectionSum,
     # Data Manipulations
     "Identity": IdentityTransform,
     "InfereKNNConnectivity": InfereKNNConnectivity,

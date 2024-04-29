@@ -2,6 +2,7 @@
 import pytest
 import rootutils
 import torch
+
 from modules.io.load.loaders import manual_simple_graph
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 
@@ -17,7 +18,6 @@ class TestCellCyclesLifting:
         self.lifting = CellCycleLifting()
 
     def test_lift_topology(self):
-        
         # Test the lift_topology method
         lifted_data = self.lifting.forward(self.data.clone())
 

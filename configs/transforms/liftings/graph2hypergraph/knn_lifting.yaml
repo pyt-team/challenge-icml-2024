@@ -3,4 +3,4 @@ transform_type: 'lifting'
 transform_name: "HypergraphKNNLifting"
 k_value: 1
 loop: True
-feature_lifting: SumLifting
+feature_lifting: ProjectionSum

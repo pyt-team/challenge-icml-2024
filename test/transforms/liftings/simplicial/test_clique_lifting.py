@@ -2,8 +2,11 @@
 import pytest
 import rootutils
 import torch
+
 from modules.io.load.loaders import manual_simple_graph
-from modules.transforms.liftings.graph2simplicial.clique_lifting import SimplicialCliqueLifting
+from modules.transforms.liftings.graph2simplicial.clique_lifting import (
+    SimplicialCliqueLifting,
+)
 
 
 class TestSimplicialCliqueLifting:

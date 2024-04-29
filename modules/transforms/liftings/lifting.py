@@ -5,11 +5,11 @@ import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
 from modules.transforms.data_manipulations.manipulations import IdentityTransform
-from modules.transforms.feature_liftings.feature_liftings import SumLifting
+from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 
 # Implemented Feature Liftings
 FEATURE_LIFTINGS = {
-    "SumLifting": SumLifting,
+    "ProjectionSum": ProjectionSum,
     None: IdentityTransform,
 }
 
@@ -79,7 +79,7 @@ class GraphLifting(AbstractLifting):
     """
 
     def __init__(
-        self, feature_lifting="SumLifting", preserve_edge_attr=False, **kwargs
+        self, feature_lifting="ProjectionSum", preserve_edge_attr=False, **kwargs
     ):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
         self.preserve_edge_attr = preserve_edge_attr
@@ -144,12 +144,12 @@ class PointCloudLifting(AbstractLifting):
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'SumLifting'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     **kwargs : optional
         Additional arguments for the class.
     """
 
-    def __init__(self, feature_lifting="SumLifting", **kwargs):
+    def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
 
@@ -159,12 +159,12 @@ class CellComplexLifting(AbstractLifting):
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'SumLifting'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     **kwargs : optional
         Additional arguments for the class.
     """
 
-    def __init__(self, feature_lifting="SumLifting", **kwargs):
+    def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
 
@@ -174,12 +174,12 @@ class SimplicialLifting(AbstractLifting):
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'SumLifting'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     **kwargs : optional
         Additional arguments for the class.
     """
 
-    def __init__(self, feature_lifting="SumLifting", **kwargs):
+    def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
 
@@ -194,7 +194,7 @@ class HypergraphLifting(AbstractLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, feature_lifting="SumLifting", **kwargs):
+    def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
 
@@ -204,10 +204,10 @@ class CombinatorialLifting(AbstractLifting):
     Parameters
     ----------
     feature_lifting : str, optional
-        The feature lifting method to be used. Default is 'SumLifting'.
+        The feature lifting method to be used. Default is 'ProjectionSum'.
     **kwargs : optional
         Additional arguments for the class.
     """
 
-    def __init__(self, feature_lifting="SumLifting", **kwargs):
+    def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)

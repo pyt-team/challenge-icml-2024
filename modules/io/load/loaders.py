@@ -9,12 +9,6 @@ from omegaconf import DictConfig
 
 from modules.io.load.base import AbstractLoader
 from modules.io.preprocess.preprocessor import Preprocessor
-#from modules.io.utils.split_utils import (
-    #assing_train_val_test_mask_to_graphs,
-    #load_graph_cocitation_split,
-    #load_graph_tudataset_split,
-    #load_split,
-#)
 from modules.io.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
@@ -113,7 +107,7 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         data = load_hypergraph_pickle_dataset(self.parameters)
-        #dataset = load_split(data, self.parameters)
+        # dataset = load_split(data, self.parameters)
         return dataset
 
 
@@ -158,7 +152,7 @@ class GraphLoader(AbstractLoader):
             if self.transforms_config is not None:
                 dataset = Preprocessor(data_dir, dataset, self.transforms_config)
 
-            #dataset = load_graph_cocitation_split(dataset, self.parameters)
+            # dataset = load_graph_cocitation_split(dataset, self.parameters)
 
         elif self.parameters.data_name in [
             "MUTAG",
@@ -214,9 +208,6 @@ class GraphLoader(AbstractLoader):
                     joined_dataset,
                     self.transforms_config,
                 )
-
-            # Split back the into train/val/test datasets
-            #dataset = assing_train_val_test_mask_to_graphs(joined_dataset, split_idx)
 
         elif self.parameters.data_name in ["AQSOL"]:
             datasets = []
@@ -293,9 +284,6 @@ class ManualGraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-
-        
-
         data = manual_simple_graph()
 
         if self.transforms_config is not None:
@@ -304,6 +292,7 @@ class ManualGraphLoader(AbstractLoader):
             )
             processor_dataset = Preprocessor(data_dir, data, self.transforms_config)
         return processor_dataset
+
 
 def manual_simple_graph():
     """Create a manual graph for testing purposes."""
