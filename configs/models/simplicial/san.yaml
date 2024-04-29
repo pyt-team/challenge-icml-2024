@@ -1,0 +1,7 @@
+n_layers: 2
+in_channels: null # This will be set by the dataset
+hidden_channels: 32
+out_channels: null # This will be set by the dataset
+n_filters: 2
+order_harmonic: 5
+epsilon_harmonic: 0.1

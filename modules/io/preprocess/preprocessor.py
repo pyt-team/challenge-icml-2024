@@ -22,7 +22,7 @@ class PreProcessor(torch_geometric.data.InMemoryDataset):
         Additional arguments.
     """
 
-    def __init__(self, data_dir, data_list, transforms_config, **kwargs):
+    def __init__(self, data_list, transforms_config, data_dir, **kwargs):
         if isinstance(data_list, torch_geometric.data.Dataset):
             data_list = [data_list.get(idx) for idx in range(len(data_list))]
         elif isinstance(data_list, torch_geometric.data.Data):

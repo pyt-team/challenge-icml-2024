@@ -1,11 +1,7 @@
 import torch_geometric
 
 from modules.transforms.data_manipulations.manipulations import (
-    CalculateSimplicialCurvature,
-    EqualGausFeatures,
     IdentityTransform,
-    InfereKNNConnectivity,
-    InfereRadiusConnectivity,
     KeepOnlyConnectedComponent,
     NodeDegrees,
     NodeFeaturesToFloat,
@@ -35,13 +31,9 @@ TRANSFORMS = {
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
     "Identity": IdentityTransform,
-    "InfereKNNConnectivity": InfereKNNConnectivity,
-    "InfereRadiusConnectivity": InfereRadiusConnectivity,
     "NodeDegrees": NodeDegrees,
     "OneHotDegreeFeatures": OneHotDegreeFeatures,
-    "EqualGausFeatures": EqualGausFeatures,
     "NodeFeaturesToFloat": NodeFeaturesToFloat,
-    "CalculateSimplicialCurvature": CalculateSimplicialCurvature,
     "KeepOnlyConnectedComponent": KeepOnlyConnectedComponent,
 }
 

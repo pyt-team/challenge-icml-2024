@@ -63,6 +63,26 @@ def load_transform_config(
     return transform_config
 
 
+def load_model_config(model_type: str, model_name: str) -> omegaconf.DictConfig:
+    r"""Load the model configuration.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of the model.
+
+    Returns
+    -------
+    omegaconf.DictConfig
+        Model configuration.
+    """
+    model_config_path = f"{root_folder}/configs/models/{model_type}/{model_name}.yaml"
+    model_config = omegaconf.OmegaConf.load(model_config_path)
+    # Print configuration
+    pprint.pp(dict(model_config.copy()))
+    return model_config
+
+
 def plot_manual_graph(data):
     r"""Plot a manual graph.
 
