@@ -136,8 +136,7 @@ class CellComplexLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        dataset = load_cell_complex_dataset(self.parameters)
-        return dataset
+        return load_cell_complex_dataset(self.parameters)
 
 
 class SimplicialLoader(AbstractLoader):
@@ -167,8 +166,7 @@ class SimplicialLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        dataset = load_simplicial_dataset(self.parameters)
-        return dataset
+        return load_simplicial_dataset(self.parameters)
 
 
 class HypergraphLoader(AbstractLoader):
@@ -198,6 +196,4 @@ class HypergraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        dataset = load_hypergraph_pickle_dataset(self.parameters)
-        # dataset = load_split(data, self.parameters)
-        return dataset
+        return load_hypergraph_pickle_dataset(self.parameters)

@@ -116,7 +116,7 @@ class PreProcessor(torch_geometric.data.InMemoryDataset):
                 json.dump(self.transforms_parameters, f)
         else:
             # If path_transform_parameters exists, check if the transform_parameters are the same
-            with open(path_transform_parameters, "r") as f:
+            with open(path_transform_parameters) as f:
                 saved_transform_parameters = json.load(f)
 
             if saved_transform_parameters != self.transforms_parameters:

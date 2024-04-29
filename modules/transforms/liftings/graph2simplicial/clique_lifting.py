@@ -1,8 +1,6 @@
-import random
 from itertools import combinations
 
 import networkx as nx
-import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 

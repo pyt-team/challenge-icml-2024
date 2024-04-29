@@ -1,5 +1,3 @@
-import time
-
 import torch
 import torch_geometric
 

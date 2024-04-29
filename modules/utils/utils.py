@@ -1,16 +1,11 @@
 import pprint
-
-import omegaconf
-import rootutils
-
-rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
-root_folder = rootutils.find_root()
-
 import random
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+import omegaconf
+import rootutils
 import torch
 from matplotlib.patches import Polygon
 
@@ -28,6 +23,7 @@ def load_dataset_config(dataset_name: str) -> omegaconf.DictConfig:
     omegaconf.DictConfig
         Dataset configuration.
     """
+    root_folder = rootutils.find_root()
     dataset_config_path = f"{root_folder}/configs/datasets/{dataset_name}.yaml"
     dataset_config = omegaconf.OmegaConf.load(dataset_config_path)
     # Print configuration
@@ -54,6 +50,7 @@ def load_transform_config(
     omegaconf.DictConfig
         Transform configuration.
     """
+    root_folder = rootutils.find_root()
     transform_config_path = (
         f"{root_folder}/configs/transforms/{transform_type}/{transform_id}.yaml"
     )
@@ -76,6 +73,7 @@ def load_model_config(model_type: str, model_name: str) -> omegaconf.DictConfig:
     omegaconf.DictConfig
         Model configuration.
     """
+    root_folder = rootutils.find_root()
     model_config_path = f"{root_folder}/configs/models/{model_type}/{model_name}.yaml"
     model_config = omegaconf.OmegaConf.load(model_config_path)
     # Print configuration
@@ -142,14 +140,14 @@ def plot_manual_graph(data, title=None):
     if max_order > 0:
         edges = []
         edge_mapper = {}
-        if hasattr(data, 'incidence_1'):
+        if hasattr(data, "incidence_1"):
             for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
                 node_idxs = torch.where(edge != 0)[0].numpy()
 
                 edges.append(torch.where(edge != 0)[0].numpy())
                 edge_mapper[edge_idx] = sorted(node_idxs)
             edges = np.array(edges)
-        elif hasattr(data, 'edge_index'):
+        elif hasattr(data, "edge_index"):
             edges = data.edge_index.T.tolist()
             edge_mapper = {}
             for e, edge in enumerate(edges):

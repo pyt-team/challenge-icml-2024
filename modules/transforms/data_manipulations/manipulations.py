@@ -1,6 +1,5 @@
 import torch
 import torch_geometric
-from torch_geometric.nn import knn_graph, radius_graph
 from torch_geometric.utils import one_hot
 
 
@@ -86,7 +85,7 @@ class NodeDegrees(torch_geometric.transforms.BaseTransform):
             The transformed data.
         """
         field_to_process = []
-        for key in data.keys():
+        for key in data:
             for field_substring in self.parameters["selected_fields"]:
                 if field_substring in key and key != "incidence_0":
                     field_to_process.append(key)
@@ -120,7 +119,8 @@ class NodeDegrees(torch_geometric.transforms.BaseTransform):
             ), "Following logic of finding degrees is only implemented for edge_index"
             degrees = (
                 torch_geometric.utils.to_dense_adj(
-                    data[field], max_num_nodes=data["x"].shape[0]  # data["num_nodes"]
+                    data[field],
+                    max_num_nodes=data["x"].shape[0],  # data["num_nodes"]
                 )
                 .squeeze(0)
                 .sum(1)
@@ -171,8 +171,7 @@ class KeepOnlyConnectedComponent(torch_geometric.transforms.BaseTransform):
         lcc = LargestConnectedComponents(
             num_components=num_components, connection="strong"
         )
-        data = lcc(data)
-        return data
+        return lcc(data)
 
 
 class OneHotDegreeFeatures(torch_geometric.transforms.BaseTransform):
@@ -204,10 +203,9 @@ class OneHotDegreeFeatures(torch_geometric.transforms.BaseTransform):
         torch_geometric.data.Data
             The transformed data.
         """
-        data = self.transform.forward(
+        return self.transform.forward(
             data, degrees_field=self.deg_field, features_field=self.features_fields
         )
-        return data
 
 
 class OneHotDegree(torch_geometric.transforms.BaseTransform):

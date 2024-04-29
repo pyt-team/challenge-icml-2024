@@ -1,6 +1,5 @@
 import networkx as nx
 import torch
-import torch_geometric
 from toponetx.classes import SimplicialComplex
 
 from modules.io.utils.utils import get_complex_connectivity

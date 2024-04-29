@@ -1,8 +1,6 @@
 import hashlib
-import os
 import os.path as osp
 import pickle
-import random
 
 import networkx as nx
 import numpy as np
@@ -52,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:
                 if connectivity_info == "incidence":
-                    connectivity[
-                        f"{connectivity_info}_{rank_idx}"
-                    ] = generate_zero_sparse_connectivity(
-                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                        )
                     )
                 else:
-                    connectivity[
-                        f"{connectivity_info}_{rank_idx}"
-                    ] = generate_zero_sparse_connectivity(
-                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                        )
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -87,7 +85,6 @@ def generate_zero_sparse_connectivity(m, n):
 
 def load_cell_complex_dataset(cfg):
     r"""Loads cell complex datasets."""
-    pass
 
 
 def load_simplicial_dataset(cfg):
@@ -116,7 +113,7 @@ def load_simplicial_dataset(cfg):
     }
     for rank_idx in range(max_rank + 1):
         try:
-            features["x_{}".format(rank_idx)] = torch.tensor(
+            features[f"x_{rank_idx}"] = torch.tensor(
                 np.stack(
                     list(
                         data.get_simplex_attributes(
@@ -126,7 +123,7 @@ def load_simplicial_dataset(cfg):
                 )
             )
         except:
-            features["x_{}".format(rank_idx)] = torch.tensor(
+            features[f"x_{rank_idx}"] = torch.tensor(
                 np.zeros((data.shape[rank_idx], 0))
             )
     features["y"] = torch.tensor(
@@ -226,7 +223,7 @@ def load_hypergraph_pickle_dataset(cfg):
     edge_idx = 0  # num_nodes
     node_list = []
     edge_list = []
-    for he in hypergraph.keys():
+    for he in hypergraph:
         cur_he = hypergraph[he]
         cur_size = len(cur_he)
 
@@ -331,13 +328,12 @@ def load_manual_graph():
     # Generate feature from 0 to 9
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
 
-    data = torch_geometric.data.Data(
+    return torch_geometric.data.Data(
         x=x,
         edge_index=edge_list,
         num_nodes=len(vertices),
         y=torch.tensor(y),
     )
-    return data
 
 
 def get_Planetoid_pyg(cfg):

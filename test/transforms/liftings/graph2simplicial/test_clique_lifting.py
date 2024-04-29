@@ -1,6 +1,5 @@
 """Test the message passing module."""
-import pytest
-import rootutils
+
 import torch
 
 from modules.io.utils.utils import load_manual_graph

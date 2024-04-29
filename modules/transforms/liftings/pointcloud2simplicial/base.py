@@ -1,6 +1,3 @@
-import torch
-import torch_geometric
-
 from modules.transforms.liftings.lifting import PointCloudLifting
 
 
