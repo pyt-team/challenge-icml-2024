@@ -1,5 +1,6 @@
 import pprint
 import random
+import shutil
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -9,9 +10,8 @@ import rootutils
 import torch
 import torch_geometric
 from matplotlib.patches import Polygon
-import shutil
 
-plt.rcParams['text.usetex']= True if shutil.which('latex') else False
+plt.rcParams["text.usetex"] = True if shutil.which("latex") else False
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
 

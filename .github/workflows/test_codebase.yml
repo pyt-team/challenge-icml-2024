@@ -1,6 +1,6 @@
 name: "Testing Codebase"
 
-on: 
+on:
   workflow_dispatch:
   push:
     branches: [main,github-actions-test]
@@ -54,7 +54,7 @@ jobs:
           pip install -e .[all]
       - name: Run tests for codebase [pytest]
         run: |
-          pytest -n 2 --cov --cov-report=xml:coverage.xml test/transforms/feature_liftings test/transforms/liftings 
+          pytest -n 2 --cov --cov-report=xml:coverage.xml test/transforms/feature_liftings test/transforms/liftings
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:

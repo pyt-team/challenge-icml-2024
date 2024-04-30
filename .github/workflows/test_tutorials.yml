@@ -1,6 +1,6 @@
 name: "Testing Tutorials"
 
-on: 
+on:
   workflow_dispatch:
   push:
     branches: [main,github-actions-test]
@@ -54,6 +54,6 @@ jobs:
       - name: Install main package
         run: |
           pip install -e .[all]
-      - name: Run tests for tutorials on all domains [pytest] 
+      - name: Run tests for tutorials on all domains [pytest]
         run: |
           pytest test/tutorials/test_tutorials.py
