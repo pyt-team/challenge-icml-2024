@@ -11,6 +11,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
 
+
 class TestProjectionSum:
     """Test the ProjectionSum class."""
 
