@@ -3,7 +3,7 @@ import os
 
 import torch_geometric
 
-from modules.io.utils.utils import ensure_serializable, make_hash
+from modules.data.utils.utils import ensure_serializable, make_hash
 from modules.transforms.data_transform import DataTransform
 
 

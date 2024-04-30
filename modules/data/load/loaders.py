@@ -5,8 +5,9 @@ import rootutils
 import torch_geometric
 from omegaconf import DictConfig
 
-from modules.io.load.base import AbstractLoader
-from modules.io.utils.utils import (
+from modules.data.load.base import AbstractLoader
+from modules.data.utils.custom_dataset import CustomDataset
+from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
@@ -102,7 +103,8 @@ class GraphLoader(AbstractLoader):
             dataset = datasets[0] + datasets[1] + datasets[2]
 
         elif self.parameters.data_name in ["manual"]:
-            dataset = load_manual_graph()
+            data = load_manual_graph()
+            dataset = CustomDataset([data], self.data_dir)
 
         else:
             raise NotImplementedError(

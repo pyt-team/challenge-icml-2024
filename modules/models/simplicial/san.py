@@ -15,7 +15,11 @@ class SANModel(torch.nn.Module):
     """
 
     def __init__(self, model_config, dataset_config):
-        in_channels = dataset_config["num_features"]
+        in_channels = (
+            dataset_config["num_features"]
+            if isinstance(dataset_config["num_features"], int)
+            else dataset_config["num_features"][0]
+        )
         hidden_channels = model_config["hidden_channels"]
         out_channels = dataset_config["num_classes"]
         n_layers = model_config["n_layers"]

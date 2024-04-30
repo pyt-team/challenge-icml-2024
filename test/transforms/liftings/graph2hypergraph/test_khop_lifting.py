@@ -2,7 +2,7 @@
 
 import torch
 
-from modules.io.utils.utils import load_manual_graph
+from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
     HypergraphKHopLifting,
 )

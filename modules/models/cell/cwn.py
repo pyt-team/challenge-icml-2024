@@ -15,9 +15,13 @@ class CWNModel(torch.nn.Module):
     """
 
     def __init__(self, model_config, dataset_config):
-        in_channels_0 = dataset_config["num_features"]
-        in_channels_1 = dataset_config["num_features"]
-        in_channels_2 = dataset_config["num_features"]
+        in_channels_0 = (
+            dataset_config["num_features"]
+            if isinstance(dataset_config["num_features"], int)
+            else dataset_config["num_features"][0]
+        )
+        in_channels_1 = in_channels_0
+        in_channels_2 = in_channels_0
         hidden_channels = model_config["hidden_channels"]
         out_channels = dataset_config["num_classes"]
         n_layers = model_config["n_layers"]
