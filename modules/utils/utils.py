@@ -9,8 +9,9 @@ import rootutils
 import torch
 import torch_geometric
 from matplotlib.patches import Polygon
+import shutil
 
-plt.rcParams["text.usetex"] = True
+plt.rcParams['text.usetex']= True if shutil.which('latex') else False
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
 
@@ -103,9 +104,9 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
     idx_sample : int
         Index of the sample to describe.
     """
-    assert isinstance(
-        dataset, torch_geometric.data.Dataset
-    ), "Data object must be a PyG Dataset object."
+    # assert isinstance(
+    #     dataset, torch_geometric.data.Dataset
+    # ), "Data object must be a PyG Dataset object."
     num_samples = len(dataset)
     if num_samples == 1:
         print(f"\nDataset only contains {num_samples} sample:")
@@ -149,18 +150,12 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         plot_manual_graph(data)
 
     if hyperedges:
-        if len(complex_dim) == 1:
-            print(
-                f" - Hypergraph with {complex_dim[0]} vertices and {hyperedges} hyperedges."
-            )
-            features_dim.append(hyperedges_features_dim)
-            print(f" - Features dimensions: {features_dim}")
-        else:
-            print(
-                f" - {len(complex_dim)}-Complex with dimensions {complex_dim} and {hyperedges} hyperedges."
-            )
-            print(f" - Complex features dimensions: {features_dim}")
-            print(f" - Hyperedges features dimensions: {hyperedges_features_dim}")
+        print(
+            f" - Hypergraph with {complex_dim[0]} vertices and {hyperedges} hyperedges."
+        )
+        features_dim.append(hyperedges_features_dim)
+        print(f" - The nodes have feature dimensions {features_dim[0]}.")
+        print(f" - The hyperedges have feature dimensions {features_dim[1]}.")
     else:
         if len(complex_dim) == 1:
             print(f" - Set with {complex_dim[0]} points.")
@@ -179,8 +174,9 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
                         isolated_nodes.append(i)
                 print(f" - There are {len(isolated_nodes)} isolated nodes.")
         else:
-            print(f" - {len(complex_dim)}-Complex with dimensions {complex_dim}.")
-            print(f" - Complex features dimensions: {features_dim}")
+            for i, c_d in enumerate(complex_dim):
+                print(f" - The complex has {c_d} {i}-cells.")
+                print(f" - The {i}-cells have features dimension {features_dim[i]}")
     print("")
 
 

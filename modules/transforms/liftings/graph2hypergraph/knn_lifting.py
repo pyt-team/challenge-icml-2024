@@ -41,6 +41,16 @@ class HypergraphKNNLifting(Graph2HypergraphLifting):
         num_hyperedges = num_nodes
         incidence_1 = torch.zeros(num_nodes, num_nodes)
         data_lifted = self.transform(data)
+        # check for loops, since KNNGraph is inconsistent with nodes with equal features
+        if self.loop:
+            for i in range(num_nodes):
+                if not torch.any(torch.all(data_lifted.edge_index == torch.tensor([[i,i]]).T, dim=0)):
+                    connected_nodes = data_lifted.edge_index[0, data_lifted.edge_index[1]==i]
+                    dists = torch.sqrt(torch.sum((data.pos[connected_nodes]-data.pos[i].unsqueeze(0)**2),dim=1))
+                    furthest = torch.argmax(dists)
+                    idx = torch.where(torch.all(data_lifted.edge_index==torch.tensor([[connected_nodes[furthest],i]]).T, dim=0))[0]
+                    data_lifted.edge_index[:,idx] = torch.tensor([[i,i]]).T
+                    
         incidence_1[data_lifted.edge_index[1], data_lifted.edge_index[0]] = 1
         incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
         return {
