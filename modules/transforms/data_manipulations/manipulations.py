@@ -299,7 +299,7 @@ class KeepSelectedDataFields(torch_geometric.transforms.BaseTransform):
         if len(self.parameters["keep_fields"]) == 1:
             return data
 
-        for key, _ in data.items():
+        for key, _ in data.items(): # noqa : PERF102
             if key not in self.parameters["keep_fields"]:
                 del data[key]
 
