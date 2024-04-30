@@ -11,7 +11,7 @@ import torch
 import torch_geometric
 from matplotlib.patches import Polygon
 
-plt.rcParams["text.usetex"] = True if shutil.which("latex") else False
+plt.rcParams["text.usetex"] = bool(shutil.which("latex"))
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
 
@@ -171,7 +171,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
                     if i not in connected_nodes:
-                        isolated_nodes.append(i)
+                        isolated_nodes.append(i) # noqa : PERF401
                 print(f" - There are {len(isolated_nodes)} isolated nodes.")
         else:
             for i, c_d in enumerate(complex_dim):
@@ -344,7 +344,7 @@ def plot_manual_graph(data, title=None):
     }
 
     if max_order > 1:
-        for i, clique in enumerate(faces):
+        for _, clique in enumerate(faces):
             # Get the face color:
             # Calculate to how many volumes cique belongs
             # Then assign the color to the face

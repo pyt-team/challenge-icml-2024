@@ -88,7 +88,7 @@ class NodeDegrees(torch_geometric.transforms.BaseTransform):
         for key in data:
             for field_substring in self.parameters["selected_fields"]:
                 if field_substring in key and key != "incidence_0":
-                    field_to_process.append(key)
+                    field_to_process.append(key) # noqa : PERF401
 
         for field in field_to_process:
             data = self.calculate_node_degrees(data, field)
@@ -299,8 +299,8 @@ class KeepSelectedDataFields(torch_geometric.transforms.BaseTransform):
         if len(self.parameters["keep_fields"]) == 1:
             return data
 
-        else:
-            for key, _ in data.items():
-                if key not in self.parameters["keep_fields"]:
-                    del data[key]
+        for key in data:
+            if key not in self.parameters["keep_fields"]:
+                del data[key]
+
         return data

@@ -48,18 +48,18 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                         rank=rank_idx, signed=signed
                     )
                 )
-            except ValueError:
+            except ValueError: # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[
-                        f"{connectivity_info}_{rank_idx}"
-                    ] = generate_zero_sparse_connectivity(
-                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                        )
                     )
                 else:
-                    connectivity[
-                        f"{connectivity_info}_{rank_idx}"
-                    ] = generate_zero_sparse_connectivity(
-                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                        )
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -122,7 +122,7 @@ def load_simplicial_dataset(cfg):
                     )
                 )
             )
-        except:
+        except ValueError: # noqa: PERF203
             features[f"x_{rank_idx}"] = torch.tensor(
                 np.zeros((data.shape[rank_idx], 0))
             )
@@ -172,11 +172,9 @@ def load_simplicial_dataset(cfg):
     # Project node-level features to edge-level (WHY DO WE NEED IT, data already has x_1)
     data.x_1 = data.x_1 + torch.mm(data.incidence_1.to_dense().T, data.x_0)
 
-    # TODO: Fix the splits
-    data = torch_geometric.transforms.random_node_split.RandomNodeSplit(
+    return torch_geometric.transforms.random_node_split.RandomNodeSplit(
         num_val=4, num_test=4
     )(data)
-    return data
 
 
 def load_hypergraph_pickle_dataset(cfg):
@@ -312,7 +310,7 @@ def load_manual_graph():
     for tetrahedron in tetrahedrons:
         for i in range(len(tetrahedron)):
             for j in range(i + 1, len(tetrahedron)):
-                edges.append([tetrahedron[i], tetrahedron[j]])
+                edges.append([tetrahedron[i], tetrahedron[j]]) # noqa: PERF401
 
     # Create a graph
     G = nx.Graph()
@@ -371,8 +369,7 @@ def get_TUDataset_pyg(cfg):
     """
     data_dir, data_name = cfg["data_dir"], cfg["data_name"]
     dataset = torch_geometric.datasets.TUDataset(root=data_dir, name=data_name)
-    data_lst = [data for data in dataset]
-    return data_lst
+    return [data for data in dataset]
 
 
 def ensure_serializable(obj):
@@ -392,11 +389,11 @@ def ensure_serializable(obj):
         for key, value in obj.items():
             obj[key] = ensure_serializable(value)
         return obj
-    elif isinstance(obj, (list, tuple)):
+    elif isinstance(obj, list | tuple): # noqa: RET505
         return [ensure_serializable(item) for item in obj]
     elif isinstance(obj, set):
         return {ensure_serializable(item) for item in obj}
-    elif isinstance(obj, (str, int, float, bool, type(None))):
+    elif isinstance(obj, str | int | float | bool | type(None)):
         return obj
     elif isinstance(obj, omegaconf.dictconfig.DictConfig):
         return dict(obj)
@@ -422,6 +419,5 @@ def make_hash(o):
     sha1 = hashlib.sha1()
     sha1.update(str.encode(str(o)))
     hash_as_hex = sha1.hexdigest()
-    # convert the hex back to int and restrict it to the relevant int range
-    seed = int(hash_as_hex, 16) % 4294967295
-    return seed
+    # Convert the hex back to int and restrict it to the relevant int range
+    return int(hash_as_hex, 16) % 4294967295

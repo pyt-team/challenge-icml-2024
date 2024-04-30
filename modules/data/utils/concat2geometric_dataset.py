@@ -1,4 +1,3 @@
-import torch
 from torch_geometric.data import Data, Dataset
 
 
@@ -25,5 +24,4 @@ class ConcatToGeometricDataset(Dataset):
             y = y.unsqueeze(dim=1)
 
         # Construct PyTorch Geometric Data object
-        data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
-        return data
+        return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, y=y)
