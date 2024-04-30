@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import omegaconf
-import rootutils
+
 import torch
 from matplotlib.patches import Polygon
 
+import rootutils
+rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
 def load_dataset_config(dataset_name: str) -> omegaconf.DictConfig:
     r"""Load the dataset configuration.
@@ -23,9 +25,11 @@ def load_dataset_config(dataset_name: str) -> omegaconf.DictConfig:
     omegaconf.DictConfig
         Dataset configuration.
     """
+
     root_folder = rootutils.find_root()
     dataset_config_path = f"{root_folder}/configs/datasets/{dataset_name}.yaml"
     dataset_config = omegaconf.OmegaConf.load(dataset_config_path)
+    
     # Print configuration
     pprint.pp(dict(dataset_config.copy()))
     return dataset_config

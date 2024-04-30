@@ -8,6 +8,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
 )
 
 
+
 class TestSimplicialCliqueLifting:
     """Test the SimplicialCliqueLifting class."""
 

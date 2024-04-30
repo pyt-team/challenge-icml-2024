@@ -1,7 +1,7 @@
 data_domain: graph
 data_type: toy_dataset
 data_name: manual
-data_dir: ${oc.env:PROJECT_ROOT}/datasets/${data_domain}/${data_type}
+data_dir: datasets/${data_domain}/${data_type}
 
 # Dataset parameters
 num_features: 1

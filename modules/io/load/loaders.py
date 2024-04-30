@@ -1,5 +1,5 @@
 import os
-
+import rootutils
 import numpy as np
 import torch_geometric
 from omegaconf import DictConfig
@@ -38,15 +38,19 @@ class GraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
+        # Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
         self.data_dir = os.path.join(
-            self.parameters["data_dir"], self.parameters["data_name"]
+            root_data_dir, self.parameters["data_name"]
         )
         if (
             self.parameters.data_name.lower() in ["cora", "citeseer", "pubmed"]
             and self.parameters.data_type == "cocitation"
         ):
             dataset = torch_geometric.datasets.Planetoid(
-                root=self.parameters["data_dir"],
+                root=root_data_dir,
                 name=self.parameters["data_name"],
             )
 
@@ -62,7 +66,7 @@ class GraphLoader(AbstractLoader):
             "NCI109",
         ]:
             dataset = torch_geometric.datasets.TUDataset(
-                root=self.parameters["data_dir"],
+                root=root_data_dir,
                 name=self.parameters["data_name"],
                 use_node_attr=False,
             )
@@ -73,7 +77,7 @@ class GraphLoader(AbstractLoader):
                 if self.parameters.data_name == "ZINC":
                     datasets.append(
                         torch_geometric.datasets.ZINC(
-                            root=self.parameters["data_dir"],
+                            root=root_data_dir,
                             subset=True,
                             split=split,
                         )
@@ -81,7 +85,7 @@ class GraphLoader(AbstractLoader):
                 elif self.parameters.data_name == "AQSOL":
                     datasets.append(
                         torch_geometric.datasets.AQSOL(
-                            root=self.parameters["data_dir"],
+                            root=root_data_dir,
                             split=split,
                         )
                     )

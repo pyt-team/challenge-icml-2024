@@ -1,8 +1,8 @@
 data_domain: graph
 data_type: cocitation
 data_name: Cora
-data_dir: ${oc.env:PROJECT_ROOT}/datasets/${data_domain}/${data_type}
-data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
+data_dir: datasets/${data_domain}/${data_type}
+#data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
 
 # Dataset parameters
 num_features: 1433
