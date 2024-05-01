@@ -48,7 +48,7 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                         rank=rank_idx, signed=signed
                     )
                 )
-            except ValueError: # noqa: PERF203
+            except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
                     connectivity[f"{connectivity_info}_{rank_idx}"] = (
                         generate_zero_sparse_connectivity(
@@ -122,7 +122,7 @@ def load_simplicial_dataset(cfg):
                     )
                 )
             )
-        except ValueError: # noqa: PERF203
+        except ValueError:  # noqa: PERF203
             features[f"x_{rank_idx}"] = torch.tensor(
                 np.zeros((data.shape[rank_idx], 0))
             )
@@ -310,7 +310,7 @@ def load_manual_graph():
     for tetrahedron in tetrahedrons:
         for i in range(len(tetrahedron)):
             for j in range(i + 1, len(tetrahedron)):
-                edges.append([tetrahedron[i], tetrahedron[j]]) # noqa: PERF401
+                edges.append([tetrahedron[i], tetrahedron[j]])  # noqa: PERF401
 
     # Create a graph
     G = nx.Graph()
@@ -389,7 +389,7 @@ def ensure_serializable(obj):
         for key, value in obj.items():
             obj[key] = ensure_serializable(value)
         return obj
-    elif isinstance(obj, list | tuple): # noqa: RET505
+    elif isinstance(obj, list | tuple):  # noqa: RET505
         return [ensure_serializable(item) for item in obj]
     elif isinstance(obj, set):
         return {ensure_serializable(item) for item in obj}

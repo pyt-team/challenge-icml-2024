@@ -171,7 +171,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
                     if i not in connected_nodes:
-                        isolated_nodes.append(i) # noqa : PERF401
+                        isolated_nodes.append(i)  # noqa : PERF401
                 print(f" - There are {len(isolated_nodes)} isolated nodes.")
         else:
             for i, c_d in enumerate(complex_dim):

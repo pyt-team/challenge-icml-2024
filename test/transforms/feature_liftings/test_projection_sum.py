@@ -4,8 +4,8 @@ import torch
 
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2hypergraph.khop_lifting import (
-    HypergraphKHopLifting,
+from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
+    HypergraphKNNLifting,
 )
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
@@ -23,8 +23,8 @@ class TestProjectionSum:
 
         # Initialize a simplicial/cell lifting class
         self.lifting = SimplicialCliqueLifting(complex_dim=3)
-        # Initialize a hypergraph lifting class
-        self.lifting_h = HypergraphKHopLifting(k_value=1)
+
+        self.lifting_h = HypergraphKNNLifting(k_value=3)
 
     def test_lift_features(self):
         # Test the lift_features method for simplicial/cell lifting
@@ -78,16 +78,7 @@ class TestProjectionSum:
         )
 
         expected_x_hyperedges = torch.tensor(
-            [
-                [5116.0],
-                [116.0],
-                [5666.0],
-                [1060.0],
-                [116.0],
-                [6510.0],
-                [1550.0],
-                [5511.0],
-            ]
+            [[16.0], [66.0], [166.0], [650.0], [1600.0], [6500.0], [6000.0], [5000.0]]
         )
 
         assert (
