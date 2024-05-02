@@ -2,7 +2,7 @@
 Official repository for the ICML 2024 Topological Deep Learning Challenge, hosted by the [Geometry-grounded Representation Learning and Generative Modeling (GRaM) Workshop](https://gram-workshop.github.io) at ICML.
 
 ## Relevant Information
-- The deadline is July 12th, 2024 (Anywhere on Earth). Participants are welcome to modify their submissions until this time.
+- The deadline is **July 12th, 2024 (Anywhere on Earth)**. Participants are welcome to modify their submissions until this time.
 - Please, check out the [main webpage of the challenge](https://pyt-team.github.io/packs/challenge.html) for the full description of the competition (motivation, submission requirements, evaluation, etc.)
 
 ## Brief Description
@@ -11,9 +11,10 @@ The main purpose of the challenge is to further expand the current scope and imp
 
 ## General Guidelines
 Everyone can participate and participation is free --only principal PyT-Team developers are excluded. It is sufficient to:
-- Send a Pull Request;
+- Send a valid Pull Request (i.e. passing all tests) before the deadline.
 - Respect Submission Requirements (see below).
-Teams are accepted, and there is no restriction on the number of team members and number of submissions. An acceptable Pull Request automatically subscribes a participant/team to the challenge.
+
+Teams are accepted, and there is no restriction on the number of team members. An acceptable Pull Request automatically subscribes a participant/team to the challenge.
 
 We encourage participants to start submitting their Pull Request early on, as this helps addressing potential issues with the code. Moreover, earlier Pull Requests will be given priority consideration in the case of multiple submissions of similar quality implementing the same lifting.
 
@@ -74,4 +75,4 @@ Then:
 
 ## Questions
 
-Feel free to contact us through GitHub issues on this repository, or through the [Geometry and Topology in Machine Learning slack](https://tda-in-ml.slack.com/join/shared_invite/enQtOTIyMTIyNTYxMTM2LTA2YmQyZjVjNjgxZWYzMDUyODY5MjlhMGE3ZTI1MzE4NjI2OTY0MmUyMmQ3NGE0MTNmMzNiMTViMjM2MzE4OTc#/). Alternatively, you can contact us via mail at any of these accounts: guillermo.bernardez@upc.edu, lev.telyatnikov@uniroma1.it, marco.montagna@uniroma1.it.
+Feel free to contact us through GitHub issues on this repository, or through the [Geometry and Topology in Machine Learning slack](https://tda-in-ml.slack.com/join/shared_invite/enQtOTIyMTIyNTYxMTM2LTA2YmQyZjVjNjgxZWYzMDUyODY5MjlhMGE3ZTI1MzE4NjI2OTY0MmUyMmQ3NGE0MTNmMzNiMTViMjM2MzE4OTc#/). Alternatively, you can contact us via mail at any of these accounts: guillermo.bernardez@upc.edu, lev.telyatnikov@uniroma1.it.
