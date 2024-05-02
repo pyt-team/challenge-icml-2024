@@ -1,4 +1,4 @@
-# ICML 2024 Topological Deep Learning Challenge
+# ICML 2024 Topological Deep Learning Challenge: Beyond the Graph Domain
 Official repository for the ICML 2024 Topological Deep Learning Challenge, hosted by the [Geometry-grounded Representation Learning and Generative Modeling (GRaM) Workshop](https://gram-workshop.github.io) at ICML.
 
 ## Relevant Information
