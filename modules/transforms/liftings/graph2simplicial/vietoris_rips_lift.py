@@ -32,7 +32,7 @@ def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: 
 
     return SimplicialComplex.from_gudhi(simplex_tree)
 
-class VietorisRipsLifting(Graph2SimplicialLifting):
+class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
     r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
 
     Parameters
@@ -68,6 +68,8 @@ class VietorisRipsLifting(Graph2SimplicialLifting):
         # Assign feature embeddings to the SimplicialComplex for 0-simplices (nodes)
         # and then for higher order n-simplices by taking the mean of the lower order simplices
 
+        '''
+
         simplex_dict = {i: [] for i in range(self.dim+1)} 
 
         # Add the simplices for each n-dimension
@@ -102,6 +104,7 @@ class VietorisRipsLifting(Graph2SimplicialLifting):
                 simplex_feature_dict[simplex_index] = z[l]
         # Actually assign the embeddings
         simplicial_complex.set_simplex_attributes(simplex_feature_dict, name='feature')
+        '''
 
         # TODO Add edge_attributes 
 

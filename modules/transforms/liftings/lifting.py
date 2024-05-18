@@ -5,11 +5,12 @@ import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
 from modules.transforms.data_manipulations.manipulations import IdentityTransform
-from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
+from modules.transforms.feature_liftings.feature_liftings import ProjectionSum, ProjectionMean
 
 # Implemented Feature Liftings
 FEATURE_LIFTINGS = {
     "ProjectionSum": ProjectionSum,
+    "ProjectionMean": ProjectionMean,
     None: IdentityTransform,
 }
 
