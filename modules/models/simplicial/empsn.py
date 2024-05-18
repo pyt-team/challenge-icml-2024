@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch_geometric.data import Data
 from torch import Tensor
 from torch_geometric.nn import global_add_pool
-from modules.models.simplicial.esmpn_layer import EMPSNLayer
+from modules.models.simplicial.empsn_layer import EMPSNLayer
 from modules.base.econv import EConv
 from typing import Tuple, Dict, List, Literal
 from utils import compute_invariants_3d
@@ -13,7 +13,7 @@ class EMPSN(nn.Module):
     """
     E(n) Equivariant Message Passing Simplicial Networks (EMPSN)
     """
-    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int, num_layers: int, max_com: str, max_dim: int) -> None: 
+    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int, num_layers: int, max_dim: int) -> None: 
         super().__init__()
 
         self.max_dim = max_dim

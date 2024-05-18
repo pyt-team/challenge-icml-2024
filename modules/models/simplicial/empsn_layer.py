@@ -141,21 +141,22 @@ class EMPSNLayer(torch.nn.Module):
             conv_edge_weights = self.convs_low_to_high[f"rank_{rank}"][2]
 
             x = features[rank]
-            x_minus_1 = features[rank-1]
             n_r_cells = x.shape[0]
             adj = adjacencies[rank]
             inv_r = invariances_r_r[rank]
-            inv_r_minus_1 = invariances_r_r_minus_1[rank]
+
 
             # For all r-cells reciving from r-cells
             for recv_idx in range(n_r_cells):
                 # This are all nodes sending to for r-cell with index recv_idx 
+                # TODO no reason to take the transpose
                 send_idx = adj.T[recv_idx] # This is a tensor with a one in the position of a neighboor
-                state_send = x[send_idx]
-                state_recv = x[recv_idx]
-                edge_attr = inv_r.T[recv_idx] # Edge attributes of each receiving 
+                state_send = x[send_idx] # [n_neighbors, channels]
+                state_recv = x[recv_idx] # [1, channels]
+                edge_attr = inv_r.T[recv_idx] # [n_neighbors, n_invariances]
 
                 # TODO is this correct ?
+                # TODO brodcast sate_recv n times 
                 current_state = torch.cat((state_send, state_recv, edge_attr), dim=1)
 
                 message = conv_msg_2(conv_msg_1(current_state))
@@ -164,9 +165,20 @@ class EMPSNLayer(torch.nn.Module):
 
                 weighted_message = message * edge_weights
 
+                # Add the initial features of the node
                 weighted_message_aggr = self.aggregations[f"rank_{rank}"](weighted_message) 
 
                 out_features[rank][recv_idx] = weighted_message_aggr
+
+        for rank in range(1, self.max_rank+1):
+            conv_msg_1 = self.convs_low_to_high[f"rank_{rank}"][0]
+            conv_msg_2 = self.convs_low_to_high[f"rank_{rank}"][1]
+            conv_edge_weights = self.convs_low_to_high[f"rank_{rank}"][2]
+
+            n_r_cells = x.shape[0]
+            x = features[rank]
+            x_minus_1 = features[rank-1]
+            inv_r_minus_1 = invariances_r_r_minus_1[rank]
 
             # For all r-cells receiving from (r-1)-cells
             for recv_idx in range(n_r_cells):
@@ -187,6 +199,7 @@ class EMPSNLayer(torch.nn.Module):
 
                 weighted_message_aggr = self.aggregations[f"rank_{rank}"](weighted_message) 
 
+                # TODO change for aggregation
                 out_features[rank][recv_idx] += weighted_message_aggr
 
         
