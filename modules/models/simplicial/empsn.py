@@ -1,12 +1,9 @@
 import torch
 import torch.nn as nn
-from torch_geometric.data import Data
 from torch import Tensor
 from torch_geometric.nn import global_add_pool
 from modules.models.simplicial.empsn_layer import EMPSNLayer
-from modules.base.econv import EConv
 from typing import Tuple, Dict, List, Literal
-from utils import compute_invariants_3d
 
 
 class EMPSN(nn.Module):
@@ -20,21 +17,32 @@ class EMPSN(nn.Module):
         self.feature_embedding = nn.Linear(in_channels, hidden_channels)
 
         # Create `num_layers` layers with sum aggregation and SiLU update function
+        tmp_dict = {
+            0: {
+                0: 3,
+                1: 3
+            },
+            1: {
+                1: 6,
+                2: 6
+            }
+        }
 
         self.layers = nn.ModuleList(
-            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu", aggr_update_func=None) for _ in range(num_layers)]
+            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu", aggr_update_func=None, n_inv=tmp_dict) for _ in range(num_layers)]
         )
 
         # Pre-pooling operation
-        self.pre_pool = nn.ModuleDict({
+        self.pre_pool = nn.ModuleDict(
+            {
             str(dim): 
                 nn.Sequential(
                     nn.Linear(hidden_channels, hidden_channels),
                     nn.SiLU(),
                     nn.Linear(hidden_channels, hidden_channels)
                 )
+                for dim in range(self.max_dim+1)
             }
-             for dim in range(self.max_dim+1)
         )
 
         # Post-pooling operation over all dimensions

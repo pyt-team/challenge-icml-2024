@@ -46,6 +46,7 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
     def __init__(self, dis: float = 0, **kwargs):
         super().__init__(**kwargs)
         self.dis = dis
+        self.contains_edge_attr = None
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to a simplicial complex by identifying the cliques as k-simplices.
@@ -60,10 +61,18 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
         dict
             The lifted topology.
         """
-        graph = self._generate_graph_from_data(data)
+
 
         # Lift graph to Simplicial Complex
-        simplicial_complex = rips_lift(graph, self.complex_dim, self.dis)
+        simplicial_complex = rips_lift(data, self.complex_dim, self.dis)
+
+        feature_dict = {
+
+        }
+        for i, node in enumerate(data.x):
+            feature_dict[i] = node
+
+        simplicial_complex.set_simplex_attributes(feature_dict, name='features')
 
         # Assign feature embeddings to the SimplicialComplex for 0-simplices (nodes)
         # and then for higher order n-simplices by taking the mean of the lower order simplices
@@ -108,4 +117,22 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
 
         # TODO Add edge_attributes 
 
-        return self._get_lifted_topology(simplicial_complex, graph)
+        return self._get_lifted_topology(simplicial_complex, data)
+
+    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        r"""Applies the full lifting (topology + features) to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The lifted data.
+        """
+        initial_data = data.to_dict()
+        lifted_topology = self.lift_topology(data)
+        lifted_topology = self.feature_lifting(lifted_topology)
+        return torch_geometric.data.Data(**initial_data, **lifted_topology)
