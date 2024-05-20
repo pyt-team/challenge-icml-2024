@@ -20,51 +20,59 @@ class EMPSN(nn.Module):
         self.feature_embedding = nn.Linear(in_channels, hidden_channels)
 
         # Create `num_layers` layers with sum aggregation and SiLU update function
+
         self.layers = nn.ModuleList(
-            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu") for _ in range(num_layers)]
+            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu", aggr_update_func=None) for _ in range(num_layers)]
         )
 
-        self.pre_pool = nn.ModuleList(
-            [
-
-                EConv(
-                    in_channels=hidden_channels,
-                    out_channels=hidden_channels,
-                    update_func="silu"
-                ),
-                EConv(
-                    in_channels=hidden_channels,
-                    out_channels=hidden_channels,
-                    update_func=None
-                ),
-            ]
-            
-            for dim in range(self.max_dim+1)
+        # Pre-pooling operation
+        self.pre_pool = nn.ModuleDict({
+            str(dim): 
+                nn.Sequential(
+                    nn.Linear(hidden_channels, hidden_channels),
+                    nn.SiLU(),
+                    nn.Linear(hidden_channels, hidden_channels)
+                )
+            }
+             for dim in range(self.max_dim+1)
         )
 
-        self.post_pool = nn.ModuleList(
-            [
-
-                EConv(
-                    in_channels=(max_dim+1) * hidden_channels,
-                    out_channels=hidden_channels,
-                    update_func="silu"
-                ),
-                EConv(
-                    in_channels=hidden_channels,
-                    out_channels=out_channels,
-                    update_func=None
-                ),
-            ]
-            
-            for dim in range(self.max_dim+1)
+        # Post-pooling operation over all dimensions
+        # and final classification
+        self.post_pool = nn.Sequential(
+            nn.Linear((max_dim + 1) * hidden_channels, hidden_channels),
+            nn.SiLU(),
+            nn.Linear(hidden_channels, out_channels)
         )
 
-    def forward(self, features, adjacencies, incidence, invariances_r_r, invariances_r_r_minus_1) -> Tensor:
+
+    def forward(self, features: Dict[int, Tensor], edge_index_adjacencies: Dict[int, Tensor],
+                edge_index_incidences: Dict[int, Tensor], invariances_r_r: Dict[int, Tensor],
+                invariances_r_r_minus_1: Dict[int, Tensor]) -> Tensor:
+        r"""Forward pass.
+
+        Parameters
+        ----------
+        features : dict[int, torch.Tensor], length=max_rank+1, shape = (n_rank_r_cells, channels)
+            Input features on the cells of the simplicial complex.
+        edge_index_incidences : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_cells_r_cells)
+            Incidence matrices :math:`B_r` mapping r-cells to (r-1)-cells.
+        edge_index_adjacencies : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_minus_1_cells_r_cells)
+            Adjacency matrices :math:`H_r` mapping cells to cells via lower and upper cells.
+        invariances_r_r : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_cells, n_rank_r_cells)
+            Adjacency matrices :math:`I^0_r` with weights of cells to cells via lower and upper cells.
+        invariances_r_r_minus_1 : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_minus_1_cells, n_rank_r_cells)
+            Adjacency matrices :math:`I^1_r` with weights of map from r-cells to (r-1)-cells
+
+        Returns
+        -------
+        Tensor, shape = (1)
+            Regression value of the pooling of the graph
+        """
 
         x = features 
         for layer in self.layers:
-            x = layer(x, adjacencies, incidence, invariances_r_r, invariances_r_r_minus_1)
+            x = layer(x, edge_index_adjacencies, edge_index_incidences, invariances_r_r, invariances_r_r_minus_1)
 
         # read out
         x = {dim: self.pre_pool[dim](feature) for dim, feature in x.items()}
