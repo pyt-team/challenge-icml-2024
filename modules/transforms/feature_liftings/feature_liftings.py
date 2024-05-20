@@ -83,12 +83,23 @@ class ProjectionMean(torch_geometric.transforms.BaseTransform):
             The lifted data."""
         keys = sorted([key.split("_")[1] for key in data.keys() if "incidence" in key])  # noqa : SIM118
         for elem in keys:
-            if f"x_{elem}" not in data:
-                idx_to_project = 0 if elem == "hyperedges" else int(elem) - 1
-                data["x_" + elem] = torch.matmul(
-                    abs(data["incidence_" + elem].t()),
-                    data[f"x_{idx_to_project}"],
-                ).mean(dim=1) #TODO check if this is correct
+            if f"x_{elem}"  in data:
+                continue
+            idx_to_project = 0 if elem == "hyperedges" else int(elem) - 1
+
+            # r_cell (n_r_cells, channels)
+            # incidence_r_r (n_(r-1)_cells, n_r_cells)
+            # (r-1) cell (n_r-1_cells, channels)
+            last_features = data[f"x_0"]
+
+            for low_ele in range(1, idx_to_project+1):
+                last_features = torch.matmul(
+                    abs(data["incidence_" + low_ele].t()),
+                    last_features,
+                ) 
+
+            # Take the mean
+            last_features = last_features / (idx_to_project+1)
         return data
 
     def forward(
