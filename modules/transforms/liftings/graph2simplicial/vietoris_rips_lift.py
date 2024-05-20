@@ -43,7 +43,7 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, dis: int = 0, **kwargs):
+    def __init__(self, dis: float = 0, **kwargs):
         super().__init__(**kwargs)
         self.dis = dis
 
@@ -63,7 +63,7 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
         graph = self._generate_graph_from_data(data)
 
         # Lift graph to Simplicial Complex
-        simplicial_complex = rips_lift(graph, self.dim, self.dis)
+        simplicial_complex = rips_lift(graph, self.complex_dim, self.dis)
 
         # Assign feature embeddings to the SimplicialComplex for 0-simplices (nodes)
         # and then for higher order n-simplices by taking the mean of the lower order simplices
@@ -109,23 +109,3 @@ class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
         # TODO Add edge_attributes 
 
         return self._get_lifted_topology(simplicial_complex, graph)
-
-
-if __name__ == '__main__':
-    from torch_geometric.datasets import QM9
-
-    dim = 2
-    dis = 3
-
-
-    data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}'
-    dataset = QM9(root=data_root)
-    g = torch_geometric.utils.to_networkx(data, to_undirected=True)
-    nx.draw(g)
-
-    
-    graph = dataset[0]
-    print(graph)
-    #lift = VietorisRipsLifting(complex_dim=2, singed=False, dis=3)
-
-
