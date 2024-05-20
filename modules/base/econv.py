@@ -6,10 +6,10 @@ import torch
 from torch.nn.parameter import Parameter
 from torch_scatter import scatter_add
 
-from topomodelx.base.conv import Conv
+from topomodelx.base.message_passing import MessagePassing
 
 
-class EConv(Conv):
+class EConv(MessagePassing):
     """Message passing: steps 1, 2, and 3.
 
     Builds on the Conv class to implement message passing but 
@@ -117,15 +117,15 @@ class EConv(Conv):
             case "xavier_uniform":
                 if self.weight_1 is not None:
                     torch.nn.init.xavier_uniform_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_1, gain=self.initialization_gain
                     )
                 if self.weight_2 is not None:
                     torch.nn.init.xavier_uniform_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_2, gain=self.initialization_gain
                     )
                 if self.weight_3 is not None:
                     torch.nn.init.xavier_uniform_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_3, gain=self.initialization_gain
                     )
                 if self.att:
                     torch.nn.init.xavier_uniform_(
