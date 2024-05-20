@@ -2,9 +2,7 @@ import torch
 import torch.nn as nn
 from torch_geometric.data import Data
 from torch import Tensor
-from torch_geometric.nn import global_add_pool
 from typing import Tuple, Dict, List, Literal
-from utils import compute_invariants_3d
 from modules.base.ScatterAggregation import ScatterAggregation
 from modules.base.econv import EConv
 
@@ -47,7 +45,7 @@ class EMPSNLayer(torch.nn.Module):
                 f"rank_{rank}": 
                     EConv(
                         in_channels=channels,
-                        weight_channels=n_inv[rank][rank-1], #from r-1-cell to r-cell
+                        weight_channels=n_inv[rank-1][rank], #from r-1-cell to r-cell
                         out_channels=1,
                         with_linear_transform_1=True,
                         with_linear_transform_2=True,
