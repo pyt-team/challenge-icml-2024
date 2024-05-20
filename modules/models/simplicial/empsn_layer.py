@@ -5,9 +5,8 @@ from torch import Tensor
 from torch_geometric.nn import global_add_pool
 from typing import Tuple, Dict, List, Literal
 from utils import compute_invariants_3d
-from topomodelx.base.conv import Conv
+from modules.base.ScatterAggregation import ScatterAggregation
 from modules.base.econv import EConv
-from topomodelx.base.aggregation import Aggregation
 
 class EMPSNLayer(torch.nn.Module):
     def __init__(
@@ -16,7 +15,8 @@ class EMPSNLayer(torch.nn.Module):
         max_rank,
         n_inv: Dict[int, Dict[int, int]], # Number of invariances from r-cell to r-cell
         aggr_func: Literal["mean", "sum"] = "sum",
-        update_func: Literal["relu", "sigmoid", "tanh", "silu"] | None = "sigmoid"
+        update_func: Literal["relu", "sigmoid", "tanh", "silu"] | None = "sigmoid",
+        aggr_update_func: Literal["relu", "sigmoid", "tanh", "silu"] | None = "sigmoid"
     ) -> None:
         super().__init__()
         self.channels = channels
@@ -26,26 +26,17 @@ class EMPSNLayer(torch.nn.Module):
         # convolutions within the same rank
         self.convs_same_rank = torch.nn.ModuleDict(
             {
-                f"rank_{rank}": torch.nn.ModuleList(
-                    [
-                        EConv(
-                        in_channels=2*channels + n_inv[rank][rank], #from r-cell to r-cell
-                        out_channels=channels,
-                        update_func=update_func,
-                        ),
-
-                        EConv(
-                        in_channels=channels, 
-                        out_channels=channels,
-                        update_func=update_func,
-                        ),
-                        EConv(
-                        in_channels=channels, 
+                f"rank_{rank}": 
+                    EConv(
+                        in_channels=channels,
+                        weight_channels=n_inv[rank][rank], #from r-cell to r-cell
                         out_channels=1,
-                        update_func="sigmoid",
-                        )
-                    ]
-                )
+                        with_linear_transform_1=True,
+                        with_linear_transform_2=True,
+                        with_weighted_message=True,
+                        update_func=update_func,
+                    )
+
                 for rank in range(max_rank) # Same rank conv up to r-1
             }
         )
@@ -53,55 +44,42 @@ class EMPSNLayer(torch.nn.Module):
         # convolutions from lower to higher rank
         self.convs_low_to_high = torch.nn.ModuleDict(
             {
-                f"rank_{rank}": torch.nn.ModuleList(
-                    [
-                        EConv(
-                            in_channels=2*channels + n_inv[rank-1][rank], # from r-1-cell to r-cell
-                            out_channels=channels,
-                            update_func=None,
-                        ),
-                        EConv(
-                        in_channels=channels, 
-                        out_channels=channels,
-                        update_func="silu",
-                        ),
-                        EConv(
-                        in_channels=channels, 
+                f"rank_{rank}": 
+                    EConv(
+                        in_channels=channels,
+                        weight_channels=n_inv[rank][rank-1], #from r-1-cell to r-cell
                         out_channels=1,
-                        update_func="sigmoid",
-                        )
-                    ]
-                )
+                        with_linear_transform_1=True,
+                        with_linear_transform_2=True,
+                        with_weighted_message=True,
+                        update_func=update_func,
+                    )
+
                 for rank in range(1, max_rank+1)
             }
         )
 
         # aggregation functions
-        self.aggregations = torch.nn.ModuleDict(
+        self.scatter_aggregations = torch.nn.ModuleDict(
             {
-                f"rank_{rank}": Aggregation(
-                    aggr_func=aggr_func, update_func=update_func
+                f"rank_{rank}": ScatterAggregation(
+                    aggr_func=aggr_func, 
+                    update_func=aggr_update_func
                 )
                 for rank in range(max_rank + 1)
             }
         )
-        self.update = torch.nn.ModuleList(
-            [
-                EConv(
-                    in_channels=channels,
-                    out_channels=channels,
-                    update_func=update_func,
-                ),
-                EConv(
-                    in_channels=channels,
-                    out_channels=channels,
-                    update_func=None
-                ),
-            ]
-            for rank in range(max_rank+1)
+        # Perform an update layer over final embeddings
+        self.update = torch.nn.ModuleDict(
+            {
+                str(rank):  nn.Sequential(
+                    nn.Linear(channels, channels),
+                    nn.SiLU(),
+                    nn.Linear(channels, channels)
+                    )
+                for rank in range(max_rank + 1)
+            }
         )
-
-
     def reset_parameters(self) -> None:
         r"""Reset learnable parameters."""
         for rank in self.convs_same_rank:
@@ -116,9 +94,9 @@ class EMPSNLayer(torch.nn.Module):
         ----------
         features : dict[int, torch.Tensor], length=max_rank+1, shape = (n_rank_r_cells, channels)
             Input features on the cells of the simplicial complex.
-        incidences : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_minus_1_cells, n_rank_r_cells)
+        edge_index_incidences : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_cells_r_cells)
             Incidence matrices :math:`B_r` mapping r-cells to (r-1)-cells.
-        adjacencies : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_cells, n_rank_r_cells)
+        edge_index_adjacencies : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_minus_1_cells_r_cells)
             Adjacency matrices :math:`H_r` mapping cells to cells via lower and upper cells.
         invariances_r_r : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_cells, n_rank_r_cells)
             Adjacency matrices :math:`I^0_r` with weights of cells to cells via lower and upper cells.
@@ -131,82 +109,69 @@ class EMPSNLayer(torch.nn.Module):
             Output features on the cells of the simplicial complex.
         """
 
-        out_features = {}
+        aggregation_dict = {} 
+
+        h = {}
 
         # Same rank convolutions
         for rank in range(self.max_rank):
-            # Get the MLPs
-            conv_msg_1 = self.convs_low_to_high[f"rank_{rank}"][0]
-            conv_msg_2 = self.convs_low_to_high[f"rank_{rank}"][1]
-            conv_edge_weights = self.convs_low_to_high[f"rank_{rank}"][2]
+            # Get the convolution operation for the same rank
+            conv = self.convs_same_rank[f"rank_{rank}"]
 
-            x = features[rank]
-            n_r_cells = x.shape[0]
-            adj = adjacencies[rank]
-            inv_r = invariances_r_r[rank]
+            x_source = features[rank]
+            edge_index = adjacencies[rank]
+            send_idx, recv_idx = edge_index
+            x_target = features[rank]
+            x_weights = invariances_r_r[rank]
 
+            # Run the convolution
+            message = conv(x_source, edge_index, x_weights, x_target)
 
-            # For all r-cells reciving from r-cells
-            for recv_idx in range(n_r_cells):
-                # This are all nodes sending to for r-cell with index recv_idx 
-                # TODO no reason to take the transpose
-                send_idx = adj.T[recv_idx] # This is a tensor with a one in the position of a neighboor
-                state_send = x[send_idx] # [n_neighbors, channels]
-                state_recv = x[recv_idx] # [1, channels]
-                edge_attr = inv_r.T[recv_idx] # [n_neighbors, n_invariances]
+            # Aggregate the message
+            aggregate_message = self.scatter_aggregations[f"rank_{rank}"](message, recv_idx, dim=0, target_dim=x_target.shape[0])
 
-                # TODO is this correct ?
-                # TODO brodcast sate_recv n times 
-                current_state = torch.cat((state_send, state_recv, edge_attr), dim=1)
+            aggregation_dict[rank] = {
+                "message": aggregate_message,
+                "recv_idx": recv_idx,
+            }
 
-                message = conv_msg_2(conv_msg_1(current_state))
-                edge_weights = conv_edge_weights(message)
-
-
-                weighted_message = message * edge_weights
-
-                # Add the initial features of the node
-                weighted_message_aggr = self.aggregations[f"rank_{rank}"](weighted_message) 
-
-                out_features[rank][recv_idx] = weighted_message_aggr
-
+        # Low to high convolutions starting from rank 1 and looking
+        # backward to convolute
         for rank in range(1, self.max_rank+1):
-            conv_msg_1 = self.convs_low_to_high[f"rank_{rank}"][0]
-            conv_msg_2 = self.convs_low_to_high[f"rank_{rank}"][1]
-            conv_edge_weights = self.convs_low_to_high[f"rank_{rank}"][2]
+            conv = self.convs_low_to_high[f"rank_{rank}"]
 
-            n_r_cells = x.shape[0]
-            x = features[rank]
-            x_minus_1 = features[rank-1]
-            inv_r_minus_1 = invariances_r_r_minus_1[rank]
+            x_source = features[rank-1]
+            edge_index = incidences[rank]
+            send_idx, recv_idx = edge_index
+            x_target = features[rank]
+            x_weights = invariances_r_r_minus_1[rank]
 
-            # For all r-cells receiving from (r-1)-cells
-            for recv_idx in range(n_r_cells):
-                # This are all nodes sending to  r-cell with index recv_idx from (r-1)-cells
-                send_idx = incidences.T[recv_idx] # This is a tensor with a one in the position of a neighboor
-                state_send = x_minus_1[send_idx] # Recive the state from the (r-1)-cells
-                state_recv = x[recv_idx] # The state of the r-cell
-                edge_attr = inv_r_minus_1.T[recv_idx] # Edge attributes of each receiving  from (r-1)-cells to r-cells
+            # Run the convolution
+            message = conv(x_source, edge_index, x_weights, x_target)
 
-                # TODO is this correct ?
-                current_state = torch.cat((state_send, state_recv, edge_attr), dim=1)
+            # Aggregate the message
 
-                message = conv_msg_2(conv_msg_1(current_state))
-                edge_weights = conv_edge_weights(message)
+            aggregation_dict[rank] = {
+                "message": torch.cat(aggregation_dict[rank]["message"], aggregate_message),
+                "recv_idx": torch.cat(aggregation_dict["recv_idx"], recv_idx),
+            }
 
+        for rank in range(self.max_rank+1):
+            # Check for ranks not receiving any messages
+            if rank not in aggregation_dict:
+                continue
+            message = aggregation_dict[rank]["message"]
+            recv_idx = aggregation_dict[rank]["recv_idx"]
+            x_target = features[rank]
 
-                weighted_message = message * edge_weights
+            # Aggregate the message
+            h[f"rank_{rank}"] = self.scatter_aggregations[f"rank_{rank}"](message, recv_idx, dim=0, target_dim=x_target.shape[0])
 
-                weighted_message_aggr = self.aggregations[f"rank_{rank}"](weighted_message) 
+        # Update over the final embeddings with another MLP
 
-                # TODO change for aggregation
-                out_features[rank][recv_idx] += weighted_message_aggr
-
-        
-        # MLP over the update
         h = {
-            dim: self.update[dim][1](self.update[dim][0](feature)) # Run the 2 EConvs
-            for dim, feature in out_features.items()
+            dim: self.update[dim](feature)
+            for dim, feature in h.items()
         }
 
         # Residual connection
