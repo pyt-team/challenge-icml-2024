@@ -304,3 +304,77 @@ class KeepSelectedDataFields(torch_geometric.transforms.BaseTransform):
                 del data[key]
 
         return data
+
+def compute_invariants_3d(feat_ind, pos, adj, inv_ind, device):
+    # angles
+    angle = {}
+
+    vecs = pos[feat_ind['1'][:, 0]] - pos[feat_ind['1'][:, 1]]
+    send_vec, rec_vec = vecs[adj['1_1'][0]], vecs[adj['1_1'][1]]
+    send_norm, rec_norm = torch.linalg.norm(send_vec, ord=2, dim=1), torch.linalg.norm(rec_vec, ord=2, dim=1)
+
+    dot = torch.sum(send_vec * rec_vec, dim=1)
+    cos_angle = dot / (send_norm * rec_norm)
+    eps = 1e-6
+    angle['1_1'] = torch.arccos(cos_angle.clamp(-1 + eps, 1 - eps)).unsqueeze(1)
+
+    # p1, p2 and a are the position of the nodes in the three endges composing it
+    p1, p2, a = pos[inv_ind['1_2'][0]], pos[inv_ind['1_2'][1]], pos[inv_ind['1_2'][2]]
+    # Differentece in position of the simplices
+    v1, v2, b = p1 - a, p2 - a, p1 - p2
+
+    # Norms of simplices
+    v1_n, v2_n, b_n = torch.linalg.norm(v1, dim=1), torch.linalg.norm(v2, dim=1), torch.linalg.norm(b, dim=1)
+
+    # Angles between simplices
+    v1_a = torch.arccos((torch.sum(v1 * b, dim=1) / (v1_n * b_n)).clamp(-1 + eps, 1 - eps))
+    v2_a = torch.arccos((torch.sum(v2 * b, dim=1) / (v2_n * b_n)).clamp(-1 + eps, 1 - eps))
+    b_a = torch.arccos((torch.sum(v1 * v2, dim=1) / (v1_n * v2_n)).clamp(-1 + eps, 1 - eps))
+
+    #TODO Figure out what is this angle
+    angle['1_2'] = torch.moveaxis(torch.vstack((v1_a + v2_a, b_a)), 0, 1)
+
+    # areas
+    area = {}
+    # Area of the point is zero
+    area['0'] = torch.zeros(len(feat_ind['0'])).unsqueeze(1)
+    # Area is the norm of the vector from p1 to p0 of the 1-simplex
+    area['1'] = torch.norm(pos[feat_ind['1'][:, 0]] - pos[feat_ind['1'][:, 1]], dim=1).unsqueeze(1)
+
+    # TODO Figure out what this area represnents
+    area['2'] = (torch.norm(torch.cross(pos[feat_ind['2'][:, 0]] - pos[feat_ind['2'][:, 1]],
+                                        pos[feat_ind['2'][:, 0]] - pos[feat_ind['2'][:, 2]], dim=1),
+                            dim=1) / 2).unsqueeze(1)
+
+
+    # Conversion to CUDA/CPU
+    area = {k: v.to(feat_ind['0'].device) for k, v in area.items()}
+
+
+    inv = {
+        # Norm of distance between the two nodes of the 0-simplex
+        '0_0': torch.linalg.norm(pos[adj['0_0'][0]] - pos[adj['0_0'][1]], dim=1).unsqueeze(1),
+
+        '0_1': torch.linalg.norm(pos[inv_ind['0_1'][0]] - pos[inv_ind['0_1'][1]], dim=1).unsqueeze(1),
+        '1_1': torch.stack([
+            torch.linalg.norm(pos[inv_ind['1_1'][0]] - pos[inv_ind['1_1'][1]], dim=1),
+            torch.linalg.norm(pos[inv_ind['1_1'][0]] - pos[inv_ind['1_1'][2]], dim=1),
+            torch.linalg.norm(pos[inv_ind['1_1'][1]] - pos[inv_ind['1_1'][2]], dim=1),
+        ], dim=1),
+        '1_2': torch.stack([
+            torch.linalg.norm(pos[inv_ind['1_2'][0]] - pos[inv_ind['1_2'][2]], dim=1)
+            + torch.linalg.norm(pos[inv_ind['1_2'][1]] - pos[inv_ind['1_2'][2]], dim=1),
+            torch.linalg.norm(pos[inv_ind['1_2'][1]] - pos[inv_ind['1_2'][2]], dim=1)
+        ], dim=1),
+    }
+
+    for k, v in inv.items():
+        area_send, area_rec = area[k[0]], area[k[2]]
+        send, rec = adj[k]
+        area_send, area_rec = area_send[send], area_rec[rec]
+        inv[k] = torch.cat((v, area_send, area_rec), dim=1)
+
+    inv['1_1'] = torch.cat((inv['1_1'], angle['1_1'].to(feat_ind['0'].device)), dim=1)
+    inv['1_2'] = torch.cat((inv['1_2'], angle['1_2'].to(feat_ind['0'].device)), dim=1)
+
+    return inv
