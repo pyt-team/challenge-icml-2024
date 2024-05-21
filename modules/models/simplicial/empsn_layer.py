@@ -27,7 +27,7 @@ class EMPSNLayer(torch.nn.Module):
                 f"rank_{rank}": 
                     EConv(
                         in_channels=channels,
-                        weight_channels=n_inv[rank][rank], #from r-cell to r-cell
+                        weight_channels=n_inv[f"rank_{rank}"][f"rank_{rank}"], #from r-cell to r-cell
                         out_channels=1,
                         with_linear_transform_1=True,
                         with_linear_transform_2=True,
@@ -45,7 +45,7 @@ class EMPSNLayer(torch.nn.Module):
                 f"rank_{rank}": 
                     EConv(
                         in_channels=channels,
-                        weight_channels=n_inv[rank-1][rank], #from r-1-cell to r-cell
+                        weight_channels=n_inv[f"rank_{rank-1}"][f"rank_{rank}"], #from r-1-cell to r-cell
                         out_channels=1,
                         with_linear_transform_1=True,
                         with_linear_transform_2=True,
@@ -70,7 +70,7 @@ class EMPSNLayer(torch.nn.Module):
         # Perform an update layer over final embeddings
         self.update = torch.nn.ModuleDict(
             {
-                str(rank):  nn.Sequential(
+                f"rank_{rank}":  nn.Sequential(
                     nn.Linear(channels, channels),
                     nn.SiLU(),
                     nn.Linear(channels, channels)
@@ -85,17 +85,17 @@ class EMPSNLayer(torch.nn.Module):
         for rank in self.convs_low_to_high:
             self.convs_low_to_high[rank].reset_parameters()
 
-    def forward(self, features, incidences, adjacencies, invariances_r_r, invariances_r_r_minus_1) -> Dict[int, Tensor]:
+    def forward(self, features, adjacencies, incidences, invariances_r_r, invariances_r_r_minus_1) -> Dict[int, Tensor]:
         r"""Forward pass.
 
         Parameters
         ----------
         features : dict[int, torch.Tensor], length=max_rank+1, shape = (n_rank_r_cells, channels)
             Input features on the cells of the simplicial complex.
-        edge_index_incidences : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_cells_r_cells)
-            Incidence matrices :math:`B_r` mapping r-cells to (r-1)-cells.
         edge_index_adjacencies : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_minus_1_cells_r_cells)
             Adjacency matrices :math:`H_r` mapping cells to cells via lower and upper cells.
+        edge_index_incidences : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_cells_r_cells)
+            Incidence matrices :math:`B_r` mapping r-cells to (r-1)-cells.
         invariances_r_r : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_cells, n_rank_r_cells)
             Adjacency matrices :math:`I^0_r` with weights of cells to cells via lower and upper cells.
         invariances_r_r_minus_1 : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_minus_1_cells, n_rank_r_cells)
@@ -107,6 +107,9 @@ class EMPSNLayer(torch.nn.Module):
             Output features on the cells of the simplicial complex.
         """
 
+        for rank, feature in features.items():
+            assert(not torch.isnan(feature).any())
+            assert(not torch.isinf(feature).any())
         aggregation_dict = {} 
 
         h = {}
@@ -116,20 +119,24 @@ class EMPSNLayer(torch.nn.Module):
             # Get the convolution operation for the same rank
             conv = self.convs_same_rank[f"rank_{rank}"]
 
-            x_source = features[rank]
-            edge_index = adjacencies[rank]
+            rank_str = f"rank_{rank}"
+            x_source = features[rank_str]
+            x_target = features[rank_str]
+
+            edge_index = adjacencies[rank_str]
+            x_weights = invariances_r_r[rank_str]
+
             send_idx, recv_idx = edge_index
-            x_target = features[rank]
-            x_weights = invariances_r_r[rank]
 
             # Run the convolution
             message = conv(x_source, edge_index, x_weights, x_target)
 
-            # Aggregate the message
-            aggregate_message = self.scatter_aggregations[f"rank_{rank}"](message, recv_idx, dim=0, target_dim=x_target.shape[0])
+            assert(message.size(0) == recv_idx.size(0))
+            assert(not torch.isnan(message).any())
+            assert(not torch.isinf(message).any())
 
-            aggregation_dict[rank] = {
-                "message": aggregate_message,
+            aggregation_dict[rank_str] = {
+                "message": message,
                 "recv_idx": recv_idx,
             }
 
@@ -138,41 +145,52 @@ class EMPSNLayer(torch.nn.Module):
         for rank in range(1, self.max_rank+1):
             conv = self.convs_low_to_high[f"rank_{rank}"]
 
-            x_source = features[rank-1]
-            edge_index = incidences[rank]
+            rank_str = f"rank_{rank}"
+            rank_minus_1_str = f"rank_{rank-1}"
+
+            x_source = features[rank_minus_1_str]
+            x_target = features[rank_str]
+            x_weights = invariances_r_r_minus_1[rank_str]
+            edge_index = incidences[rank_str]
+
             send_idx, recv_idx = edge_index
-            x_target = features[rank]
-            x_weights = invariances_r_r_minus_1[rank]
 
             # Run the convolution
             message = conv(x_source, edge_index, x_weights, x_target)
 
-            # Aggregate the message
+            assert(message.size(0) == recv_idx.size(0))
 
-            aggregation_dict[rank] = {
-                "message": torch.cat(aggregation_dict[rank]["message"], aggregate_message),
-                "recv_idx": torch.cat(aggregation_dict["recv_idx"], recv_idx),
-            }
+            # Aggregate the message
+            if rank not in aggregation_dict:
+                aggregation_dict[rank_str] = {
+                    "message": message,
+                    "recv_idx": recv_idx,
+                }
+            else:
+                aggregation_dict[rank_str] = {
+                    "message": torch.cat((aggregation_dict[rank]["message"], message)),
+                    "recv_idx": torch.cat((aggregation_dict[rank]["recv_idx"], recv_idx)),
+                }
 
         for rank in range(self.max_rank+1):
             # Check for ranks not receiving any messages
-            if rank not in aggregation_dict:
+            rank_str = f"rank_{rank}"
+            if rank_str not in aggregation_dict:
                 continue
-            message = aggregation_dict[rank]["message"]
-            recv_idx = aggregation_dict[rank]["recv_idx"]
-            x_target = features[rank]
+            message = aggregation_dict[rank_str]["message"]
+            recv_idx = aggregation_dict[rank_str]["recv_idx"]
+            x_target = features[rank_str]
 
             # Aggregate the message
-            h[f"rank_{rank}"] = self.scatter_aggregations[f"rank_{rank}"](message, recv_idx, dim=0, target_dim=x_target.shape[0])
+            h[rank_str] = self.scatter_aggregations[rank_str](message, recv_idx, dim=0, target_dim=x_target.shape[0])
 
         # Update over the final embeddings with another MLP
-
         h = {
-            dim: self.update[dim](feature)
-            for dim, feature in h.items()
+            rank: self.update[rank](feature)
+            for rank, feature in h.items()
         }
 
         # Residual connection
-        x = {dim: feature + h[dim] for dim, feature in x.items()}
+        x = {rank: feature + h[rank] for rank, feature in features.items()}
 
         return x
