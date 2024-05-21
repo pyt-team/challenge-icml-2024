@@ -28,7 +28,7 @@ def main(args):
     print(f'Number of parameters: {num_params}')
 
     # # Get loaders
-    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers)
+    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, debug=True)
 
     mean, mad = calc_mean_mad(train_loader)
     mean, mad = mean.to(args.device), mad.to(args.device)
@@ -47,9 +47,32 @@ def main(args):
         model.train()
         for _, batch in enumerate(train_loader):
             optimizer.zero_grad()
-            batch = batch.to(args.device)
 
-            pred = model(batch)
+
+            features = {
+                f"rank_{i}": batch[f'x_{i}'].to(args.device) for i in range(args.dim + 1)
+            }
+            edge_index_adj = {
+                f"rank_{i}": batch[f'adjacency_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+            }
+
+            edge_index_inc = {
+                f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+            }
+            inv_r_r = {
+                f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+            }
+            inv_r_minus_1_r = {
+                f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+            }
+            x_batch = {
+                f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
+            }
+
+
+            #batch = batch.to(args.device)
+
+            pred = model(features, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r, x_batch)
             loss = criterion(pred, (batch.y - mean) / mad)
             mae = criterion(pred * mad + mean, batch.y)
             loss.backward()
@@ -61,8 +84,27 @@ def main(args):
 
         model.eval()
         for _, batch in enumerate(val_loader):
-            batch = batch.to(args.device)
-            pred = model(batch)
+            features = {
+                f"rank_{i}": batch[f'x_{i}'].to(args.device) for i in range(args.dim + 1)
+            }
+            edge_index_adj = {
+                f"rank_{i}": batch[f'adjacency_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+            }
+
+            edge_index_inc = {
+                f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+            }
+            inv_r_r = {
+                f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+            }
+            inv_r_minus_1_r = {
+                f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+            }
+            x_batch = {
+                f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
+            }
+
+            pred = model(features, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r, x_batch)
             mae = criterion(pred * mad + mean, batch.y)
 
             epoch_mae_val += mae.item()
@@ -72,7 +114,7 @@ def main(args):
 
         if epoch_mae_val < best_val_mae:
             best_val_mae = epoch_mae_val
-            best_model = copy.deepcopy(model)
+            best_model = copy.deepcopy(model.state_dict())
 
         scheduler.step()
 
@@ -82,10 +124,30 @@ def main(args):
         })
 
     test_mae = 0
-    best_model.eval()
+    model.load_state_dict(best_model)
+    model.eval()
     for _, batch in enumerate(test_loader):
-        batch = batch.to(args.device)
-        pred = best_model(batch)
+        features = {
+            f"rank_{i}": batch[f'x_{i}'].to(args.device) for i in range(args.dim + 1)
+        }
+        edge_index_adj = {
+            f"rank_{i}": batch[f'adjacency_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+        }
+
+        edge_index_inc = {
+            f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
+        }
+        inv_r_r = {
+            f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+        }
+        inv_r_minus_1_r = {
+            f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+        }
+        x_batch = {
+            f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
+        }
+
+        pred = model(features, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r, x_batch)
         mae = criterion(pred * mad + mean, batch.y)
         test_mae += mae.item()
 
@@ -101,7 +163,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # General parameters
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=1000,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=96,
                         help='batch size')
@@ -135,7 +197,7 @@ if __name__ == "__main__":
                         help='regression task')
     parser.add_argument('--dim', type=int, default=2,
                         help='ASC dimension')
-    parser.add_argument('--dis', type=float, default=4.0,
+    parser.add_argument('--dis', type=float, default=3.0,
                         help='radius Rips complex')
     parser.add_argument('--seed', type=int, default=42,
                         help='random seed')
