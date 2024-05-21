@@ -103,13 +103,13 @@ class EConv(MessagePassing):
         match self.initialization:
             case "uniform":
                 if self.weight_1 is not None:
-                    stdv = 1.0 / math.sqrt(self.weight.size(1))
+                    stdv = 1.0 / math.sqrt(self.weight_1.size(1))
                     self.weight_1.data.uniform_(-stdv, stdv)
                 if self.weight_2 is not None:
-                    stdv = 1.0 / math.sqrt(self.weight.size(1))
+                    stdv = 1.0 / math.sqrt(self.weight_2.size(1))
                     self.weight_1.data.uniform_(-stdv, stdv)
                 if self.weight_2 is not None:
-                    stdv = 1.0 / math.sqrt(self.weight.size(1))
+                    stdv = 1.0 / math.sqrt(self.weight_3.size(1))
                     self.weight_1.data.uniform_(-stdv, stdv)
                 if self.att:
                     stdv = 1.0 / math.sqrt(self.att_weight.size(1))
@@ -225,8 +225,21 @@ class EConv(MessagePassing):
         '''
         # Construct the edge index tensor of size (2, n_boundaries)
         send_idx, recv_idx = edge_index
+        # print(f"send_idx: {send_idx.size()}")
+        # print(f"recv_idx: {recv_idx.size()}")
 
+        # print(f"x_source: {x_source.size()}")
+        # print(f"x_target: {x_target.size()}")
+
+        # print(f"x_weights: {x_weights.size()}")
+
+        # print(f"x_source[send_idx]: {x_source[send_idx].size()}")
+        # print(f"x_target[recv_idx]: {x_target[recv_idx].size()}")
+
+        # x_weights is indexed with send_idx because there might be more relationships
+        # than r-cells, in that case the weights are not aligned 
         x_message = torch.cat((x_source[send_idx], x_target[recv_idx], x_weights), dim=1) 
+        # print(f'x_message: {x_message.size()}')
 
         if self.weight_1 is not None:
             x_message = torch.mm(x_message, self.weight_1)
@@ -236,7 +249,7 @@ class EConv(MessagePassing):
             x_message = self.update(x_message)
         if self.weight_3 is not None:
             x_message_weights =  torch.mm(x_message, self.weight_3)
-            self.x_message_weights = torch.nn.Sigmoid(x_message_weights)
+            x_message_weights = torch.nn.functional.sigmoid(x_message_weights)
         else:
             x_message_weights = torch.ones_like(x_message)
 
@@ -252,4 +265,4 @@ class EConv(MessagePassing):
             )
         '''
 
-        return scatter_add(x_message, recv_idx, dim=0, dim_size=x_target.size(0))
+        return x_message
