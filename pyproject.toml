@@ -36,7 +36,7 @@ dependencies=[
     "pyg-nightly",
     "decorator",
     "hypernetx < 2.0.0",
-    "hydra-core==1.3.2",
+    "omegaconf",
     "trimesh",
     "spharapy",
     "rich",
@@ -138,9 +138,6 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F403"]
-
-[tool.setuptools.dynamic]
-version = {attr = "challenge-icml-2024.__version__"}
 
 [tool.setuptools.packages.find]
 include = [
