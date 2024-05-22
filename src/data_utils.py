@@ -6,8 +6,14 @@ from tqdm import tqdm
 from torch_geometric.loader import DataLoader
 from torch_geometric.datasets import QM9
 
-from data_transform import SimplicialPreTransfrom, prepare_data, qm9_to_ev
+from data_transform import AlphaPreTransform, VietorisRipsPreTransfrom, prepare_data, qm9_to_ev
 from modules.transforms.liftings.graph2simplicial.vietoris_rips_lift import SimplicialVietorisRipsLifting
+from modules.transforms.liftings.pointcloud2simplicial.alpha_complex_lift import SimplicialAlphaComplexLifting
+
+LIFT_TYPE_DICT = {
+    'rips': VietorisRipsPreTransfrom,
+    'alpha': AlphaPreTransform 
+}
 
 
 def calc_mean_mad(loader: DataLoader) -> Tuple[Tensor, Tensor]:
@@ -18,10 +24,10 @@ def calc_mean_mad(loader: DataLoader) -> Tuple[Tensor, Tensor]:
     return mean, mad
 
 
-def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int, num_workers: int, debug = False) -> Tuple[DataLoader, DataLoader, DataLoader]:
+def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int, num_workers: int, lift_type: str, debug = False) -> Tuple[DataLoader, DataLoader, DataLoader]:
 
     if debug:
-        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_debug'
+        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_{lift_type}_debug'
         dataset = QM9(root=data_root)
         print('About to prepare data')
         dataset = [prepare_data(graph, target_name, qm9_to_ev) for graph in tqdm(dataset, desc='Preparing data')]
@@ -29,8 +35,8 @@ def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int
         transform = SimplicialVietorisRipsLifting(complex_dim=dim, dis=dis)
         dataset = [transform(data) for data in dataset[:7]]
     else:
-        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}'
-        transform = SimplicialPreTransfrom(complex_dim=dim, dis=dis, target_name=target_name)
+        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_{lift_type}'
+        transform = LIFT_TYPE_DICT[lift_type](complex_dim=dim, dis=dis, target_name=target_name)
         dataset = QM9(root=data_root, pre_transform=transform)
         dataset = dataset.shuffle()
 
