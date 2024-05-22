@@ -83,9 +83,7 @@ class Graph2InvariantSimplicialLifting(GraphLifting):
         for r in range(0, simplicial_complex.dim+1):
             if r != simplicial_complex.dim:
                 lifted_topology[f'inv_same_{r}'] = inv_same_dict[r]
-                print(lifted_topology[f'inv_same_{r}'].size(), r)
             if r > 0:
-                print(inv_low_high_dict[r-1].size(), r)
                 lifted_topology[f'inv_low_high_{r}'] = inv_low_high_dict[r-1]
 
         lifted_topology["x_0"] = torch.stack(
