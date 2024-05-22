@@ -23,8 +23,8 @@ class EMPSN(nn.Module):
                 f"rank_1": 3
             },
             "rank_1": {
-                f"rank_1": 3,
-                f"rank_2": 3
+                f"rank_1": 6,
+                f"rank_2": 5
             }
         }
 

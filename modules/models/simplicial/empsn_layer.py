@@ -126,6 +126,8 @@ class EMPSNLayer(torch.nn.Module):
             edge_index = adjacencies[rank_str]
             x_weights = invariances_r_r[rank_str]
 
+            # print(rank, x_source.size(), x_target.size(), x_weights.size(), edge_index.size())
+
             send_idx, recv_idx = edge_index
 
             # Run the convolution
