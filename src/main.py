@@ -32,7 +32,7 @@ def main(args):
 
     # # Get loaders
     start_lift_time = time.process_time()
-    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, args.lift_type, debug=True)
+    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, args.lift_type, debug=False)
     end_lift_time = time.process_time()
     wandb.log({
         'Lift time': end_lift_time - start_lift_time
