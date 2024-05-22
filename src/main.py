@@ -60,10 +60,10 @@ def main(args):
                 f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
             }
             inv_r_r = {
-                f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+                f"rank_{i}": batch[f'inv_same_{i}'].to(args.device) for i in range(0, args.dim)
             }
             inv_r_minus_1_r = {
-                f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+                f"rank_{i}": batch[f'inv_low_high_{i}'].to(args.device) for i in range(1, args.dim+1)
             }
             x_batch = {
                 f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
@@ -95,10 +95,10 @@ def main(args):
                 f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
             }
             inv_r_r = {
-                f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+                f"rank_{i}": batch[f'inv_same_{i}'].to(args.device) for i in range(0, args.dim)
             }
             inv_r_minus_1_r = {
-                f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+                f"rank_{i}": batch[f'inv_low_high_{i}'].to(args.device) for i in range(1, args.dim+1)
             }
             x_batch = {
                 f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
@@ -138,10 +138,10 @@ def main(args):
             f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
         }
         inv_r_r = {
-            f"rank_{i}": torch.ones((edge_index_adj[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(args.dim + 1)
+            f"rank_{i}": batch[f'inv_same_{i}'].to(args.device) for i in range(0, args.dim)
         }
         inv_r_minus_1_r = {
-            f"rank_{i}": torch.ones((edge_index_inc[f'rank_{i}'].size(1), 3)).to(args.device) for i in range(0, args.dim+1)
+            f"rank_{i}": batch[f'inv_low_high_{i}'].to(args.device) for i in range(1, args.dim+1)
         }
         x_batch = {
             f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
