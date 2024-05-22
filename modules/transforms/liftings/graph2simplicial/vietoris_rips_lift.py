@@ -7,7 +7,7 @@ from gudhi import SimplexTree
 from toponetx.classes import SimplicialComplex
 import torch
 
-from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
+from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting, Graph2InvariantSimplicialLifting
 
 
 def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: bool = True) -> SimplicialComplex:
@@ -32,7 +32,7 @@ def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: 
 
     return SimplicialComplex.from_gudhi(simplex_tree)
 
-class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
+class SimplicialVietorisRipsLifting(Graph2InvariantSimplicialLifting):
     r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
 
     Parameters
