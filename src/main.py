@@ -31,7 +31,7 @@ def main(args):
 
     # # Get loaders
     start_lift_time = time.process_time()
-    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, args.lift_type, debug=True)
+    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, args.lift_type, debug=args.debug)
     end_lift_time = time.process_time()
     wandb.log({
         'Lift time': end_lift_time - start_lift_time
@@ -113,6 +113,8 @@ if __name__ == "__main__":
                         help='batch size')
     parser.add_argument('--num_workers', type=int, default=0,
                         help='num workers')
+    parser.add_argument('--debug', action='store_true',
+                        help='debug mode')
 
     # Model parameters
     parser.add_argument('--model_name', type=str, default='empsn',
