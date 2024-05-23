@@ -32,11 +32,11 @@ def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int
         print('About to prepare data')
         dataset = [prepare_data(graph, target_name, qm9_to_ev) for graph in tqdm(dataset, desc='Preparing data')]
         print('Data prepared')
-        transform = SimplicialVietorisRipsLifting(complex_dim=dim, dis=dis)
+        transform = SimplicialVietorisRipsLifting(complex_dim=dim, dis=dis, feature_lifting='ProjectionElementWiseMean')
         dataset = [transform(data) for data in dataset[:7]]
     else:
         data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_{lift_type}'
-        transform = LIFT_TYPE_DICT[lift_type](complex_dim=dim, dis=dis, target_name=target_name)
+        transform = LIFT_TYPE_DICT[lift_type](complex_dim=dim, dis=dis, target_name=target_name, feature_lifting='ProjectionElementWiseMean')
         dataset = QM9(root=data_root, pre_transform=transform)
         dataset = dataset.shuffle()
 
