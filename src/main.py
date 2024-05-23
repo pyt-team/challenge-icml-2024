@@ -11,7 +11,6 @@ import time
 from utils import set_seed, decompose_batch
 
 
-
 def main(args):
     # # Generate model
     num_input = 15
