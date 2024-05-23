@@ -351,12 +351,14 @@ def compute_invariance_r_to_r(simplices: Dict[int, torch.Tensor], pos: torch.Ten
             Adjacency matrices :math:`H_r` mapping cells to cells via lower and upper cells.
 
     """
-    adj_dict={}
 
+    adj_dict={}
     # for 0 dimensional simplices:
     result_matrix_0 = []
     #loop over number of simplexes (we use the iterator as an simplex_id)
     for sending_simplex_id in range(adj[0].shape[0]):
+        if sum(adj[0][sending_simplex_id]) == 0:
+            continue
         row = adj[0][sending_simplex_id]
         #get the indexes all connected simplices in the adjecency matrix.
         connected_simplex_ids = [idx for idx, v in enumerate(row) if idx != sending_simplex_id and v != 0]
@@ -372,6 +374,8 @@ def compute_invariance_r_to_r(simplices: Dict[int, torch.Tensor], pos: torch.Ten
     #for 1 dimensional simplexes
     result_matrix_1 = []
     for sending_simplex_id in range(adj[1].shape[0]):
+        if sum(adj[1][sending_simplex_id]) == 0:
+            continue
         row = adj[1][sending_simplex_id]
         connected_simplex_ids = [idx for idx, v in enumerate(row) if idx != sending_simplex_id and v != 0] 
         # get connected nodes shape:[N,2]
@@ -425,6 +429,8 @@ def compute_invariance_r_minus_1_to_r(simplices: Dict[int, torch.Tensor], pos: t
     result_matrix_0_1 = []
     #loop over num of 0 simplices
     for sending_simplex_id in range(inc[0].shape[0]):
+        if sum(inc[0][sending_simplex_id]) == 0:
+            continue
         row = inc[0][sending_simplex_id]
         #get the indexes all connected simplices in the adjecency matrix.
         connected_simplex_ids = [simplex_id for simplex_id, v in enumerate(row) if v != 0]
@@ -445,6 +451,9 @@ def compute_invariance_r_minus_1_to_r(simplices: Dict[int, torch.Tensor], pos: t
     result_matrix_1_2 = []
     
     for sending_simplex_id in range(inc[1].shape[0]):
+        #if no connections, skip
+        if sum(inc[1][sending_simplex_id]) == 0:
+            continue
         row = inc[1][sending_simplex_id]
         connected_simplex_ids = [idx for idx, v in enumerate(row) if v != 0]
         # get connected nodes shape:[N,2]
@@ -463,16 +472,23 @@ def compute_invariance_r_minus_1_to_r(simplices: Dict[int, torch.Tensor], pos: t
         #check if dimensions of angle are appropriate [n,2]
         angle = torch.moveaxis(torch.vstack((v1_a + v2_a, b_a)), 0, 1)
         #area
-        area_2 = (torch.norm(torch.cross(pos[simplices[2][connected_simplex_ids, 0]] - pos[simplices[2][connected_simplex_ids, 1]],
-                                        pos[simplices[2][connected_simplex_ids, 0]] - pos[simplices[2][connected_simplex_ids, 2]], dim=1),
-                            dim=1) / 2).unsqueeze(1) 
-        
+        area_1 = torch.linalg.norm(b, dim=1).unsqueeze(1)
+        area_2 = (
+            torch.norm(
+                torch.cross(
+                    pos[simplices[2][connected_simplex_ids, 0]] - pos[simplices[2][connected_simplex_ids, 1]],
+                    pos[simplices[2][connected_simplex_ids, 0]] - pos[simplices[2][connected_simplex_ids, 2]], 
+                    dim=1
+                ),
+                dim=1
+            ) / 2
+        ).unsqueeze(1)
+
         distances = torch.stack([
             torch.linalg.norm(p1 - a, dim=1)
             + torch.linalg.norm(p1 - a, dim=1),
             torch.linalg.norm(p2 - a, dim=1)
         ], dim=1)
-        result_matrix_1_2.append(torch.cat((distances,area_2,angle,),dim=1))
+        result_matrix_1_2.append(torch.cat((distances,area_1,area_2,angle),dim=1))
     inc_dict[1] = torch.cat(result_matrix_1_2, dim=0)
     return inc_dict 
-    
