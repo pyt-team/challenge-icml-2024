@@ -50,6 +50,15 @@ class Graph2InvariantSimplicialLifting(GraphLifting):
         adj_dict = {}
         inc_dict = {}
 
+        simplex_dict = {i: [] for i in range(self.complex_dim+1)}
+
+        # Add the simplices for each n-dimension
+        for simplex in simplicial_complex.simplices:
+            dim = len(simplex) - 1
+            simplex_dict[dim].append(torch.tensor(list(simplex)))
+
+        for k, v in simplex_dict.items():
+            lifted_topology[f'x_idx_{k}'] = torch.stack(v)
 
         # Dictionaries for each dimension
         for r in range(0, simplicial_complex.dim+1):

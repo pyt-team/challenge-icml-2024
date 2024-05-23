@@ -115,8 +115,6 @@ class SimplicialVietorisRipsLifting(Graph2InvariantSimplicialLifting):
         simplicial_complex.set_simplex_attributes(simplex_feature_dict, name='feature')
         '''
 
-        # TODO Add edge_attributes 
-
         return self._get_lifted_topology(simplicial_complex, data)
 
     def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
