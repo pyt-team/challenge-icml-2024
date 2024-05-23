@@ -53,7 +53,8 @@ class EConv(MessagePassing):
         initialization_gain: float = 1.414,
         with_linear_transform_1: bool = True,
         with_linear_transform_2: bool = True,
-        with_weighted_message: bool = True
+        with_weighted_message: bool = True,
+        with_biases: bool = True 
     ) -> None:
         super().__init__(
             att=att,
@@ -71,15 +72,30 @@ class EConv(MessagePassing):
             if with_linear_transform_1
             else None
         )
+        self.biases_1 = (
+            Parameter(torch.Tensor(self.in_channels))
+            if with_biases
+            else None
+        )
         self.weight_2 = (
             Parameter(torch.Tensor(self.in_channels, self.in_channels))
             if with_linear_transform_2
+            else None
+        )
+        self.biases_2 = (
+            Parameter(torch.Tensor(self.in_channels))
+            if with_biases
             else None
         )
 
         self.weight_3 = (
             Parameter(torch.Tensor(self.in_channels, self.out_channels))
             if with_weighted_message
+            else None
+        )
+        self.biases_3 = (
+            Parameter(torch.Tensor(self.out_channels))
+            if with_biases
             else None
         )
 
@@ -131,18 +147,25 @@ class EConv(MessagePassing):
                     torch.nn.init.xavier_uniform_(
                         self.att_weight.view(-1, 1), gain=self.initialization_gain
                     )
+                if self.biases_1 is not None:
+                    torch.nn.init.zeros_(self.biases_1)
+                if self.biases_2 is not None:
+                    torch.nn.init.zeros_(self.biases_2)
+                if self.biases_3 is not None:
+                    torch.nn.init.zeros_(self.biases_3)
+
             case "xavier_normal":
                 if self.weight_1 is not None:
                     torch.nn.init.xavier_normal_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_2, gain=self.initialization_gain
                     )
                 if self.weight_2 is not None:
                     torch.nn.init.xavier_normal_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_2, gain=self.initialization_gain
                     )
                 if self.weight_3 is not None:
                     torch.nn.init.xavier_normal_(
-                        self.weight, gain=self.initialization_gain
+                        self.weight_2, gain=self.initialization_gain
                     )
                 if self.att:
                     torch.nn.init.xavier_normal_(
@@ -243,12 +266,18 @@ class EConv(MessagePassing):
 
         if self.weight_1 is not None:
             x_message = torch.mm(x_message, self.weight_1)
+            if self.biases_1 is not None:
+                x_message += self.biases_1
             x_message = self.update(x_message)
         if self.weight_2 is not None:
             x_message = torch.mm(x_message, self.weight_2)
+            if self.biases_2 is not None:
+                x_message += self.biases_2
             x_message = self.update(x_message)
         if self.weight_3 is not None:
-            x_message_weights =  torch.mm(x_message, self.weight_3)
+            x_message_weights = torch.mm(x_message, self.weight_3)
+            if self.biases_3 is not None:
+                x_message_weights += self.biases_3
             x_message_weights = torch.nn.functional.sigmoid(x_message_weights)
         else:
             x_message_weights = torch.ones_like(x_message)
