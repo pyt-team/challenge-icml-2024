@@ -67,17 +67,19 @@ class EMPSNLayer(torch.nn.Module):
                 for rank in range(max_rank + 1)
             }
         )
-        # Perform an update layer over final embeddings
-        self.update = torch.nn.ModuleDict(
-            {
-                f"rank_{rank}":  nn.Sequential(
-                    nn.Linear(channels, channels),
-                    nn.SiLU(),
-                    nn.Linear(channels, channels)
-                    )
-                for rank in range(max_rank + 1)
-            }
-        )
+        # Perform an update over the received
+        # messages by each other layer
+        self.update = torch.nn.ModuleDict()
+        for rank in range(max_rank+1):
+            factor = 1
+            for target_dict in n_inv.values():
+                for target_rank in target_dict.keys():
+                    factor += int(target_rank[-1] == str(rank))
+            self.update[f"rank_{rank}"] = nn.Sequential(
+                nn.Linear(factor*channels, channels),
+                nn.SiLU(),
+                nn.Linear(channels, channels)
+                )
     def reset_parameters(self) -> None:
         r"""Reset learnable parameters."""
         for rank in self.convs_same_rank:
@@ -137,8 +139,10 @@ class EMPSNLayer(torch.nn.Module):
             assert(not torch.isnan(message).any())
             assert(not torch.isinf(message).any())
 
+            message_aggr = self.scatter_aggregations[rank_str](message, recv_idx, dim=0, target_dim=x_target.shape[0])
+
             aggregation_dict[rank_str] = {
-                "message": message,
+                "message": [message_aggr],
                 "recv_idx": recv_idx,
             }
 
@@ -159,20 +163,25 @@ class EMPSNLayer(torch.nn.Module):
 
             # Run the convolution
             message = conv(x_source, edge_index, x_weights, x_target)
+            message_aggr = self.scatter_aggregations[rank_str](message, recv_idx, dim=0, target_dim=x_target.shape[0])
 
             assert(message.size(0) == recv_idx.size(0))
 
             # Aggregate the message
-            if rank not in aggregation_dict:
+            if rank_str not in aggregation_dict:
                 aggregation_dict[rank_str] = {
-                    "message": message,
+                    "message": [message_aggr],
                     "recv_idx": recv_idx,
                 }
             else:
+                aggregation_dict[rank_str]['message'].append(message_aggr) 
+                '''
                 aggregation_dict[rank_str] = {
-                    "message": torch.cat((aggregation_dict[rank]["message"], message)),
-                    "recv_idx": torch.cat((aggregation_dict[rank]["recv_idx"], recv_idx)),
+                    "message": [prev_msg, message],
+                    #"recv_idx": torch.cat((aggregation_dict[rank]["recv_idx"], recv_idx)),
+                    for prev_msg in aggregation_dict[rank_str]["message"]
                 }
+                '''
 
         for rank in range(self.max_rank+1):
             # Check for ranks not receiving any messages
@@ -184,9 +193,19 @@ class EMPSNLayer(torch.nn.Module):
             x_target = features[rank_str]
 
             # Aggregate the message
-            h[rank_str] = self.scatter_aggregations[rank_str](message, recv_idx, dim=0, target_dim=x_target.shape[0])
+            #h[rank_str] = self.scatter_aggregations[rank_str](message, recv_idx, dim=0, target_dim=x_target.shape[0])
 
         # Update over the final embeddings with another MLP
+
+        h = {}
+        for rank, feature in features.items():
+            feat_list = [feature]
+            for rank_str, msg in aggregation_dict.items():
+                if rank_str == rank:
+                    for msg_i in msg["message"]:
+                        feat_list.append(msg_i)
+            h[rank] = torch.cat(feat_list, dim=1)
+
         h = {
             rank: self.update[rank](feature)
             for rank, feature in h.items()
