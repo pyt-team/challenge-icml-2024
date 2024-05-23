@@ -7,9 +7,9 @@ from gudhi import SimplexTree
 from toponetx.classes import SimplicialComplex
 import torch
 
-from modules.transforms.liftings.pointcloud2simplicial.base import PointCloud2SimplicialLifting
+from modules.transforms.liftings.graph2simplicial.base import Graph2InvariantSimplicialLifting
 
-class SimplicialAlphaComplexLifting(PointCloud2SimplicialLifting):
+class SimplicialAlphaComplexLifting(Graph2InvariantSimplicialLifting):
     r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
 
     Parameters
@@ -21,6 +21,7 @@ class SimplicialAlphaComplexLifting(PointCloud2SimplicialLifting):
     """
 
     def __init__(self, **kwargs):
+        self.contains_edge_attr = False
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -45,7 +46,8 @@ class SimplicialAlphaComplexLifting(PointCloud2SimplicialLifting):
 
         # Lift the graph to an AlphaComplex
         alpha_complex = gudhi.AlphaComplex(points=points)
-        simplex_tree: SimplexTree = alpha_complex.create_simplex_tree()
+        simplex_tree: SimplexTree = alpha_complex.create_simplex_tree(default_filtration_value=True)
+        simplex_tree.prune_above_dimension(self.complex_dim)
         simplicial_complex = SimplicialComplex.from_gudhi(simplex_tree)
 
         feature_dict = {
