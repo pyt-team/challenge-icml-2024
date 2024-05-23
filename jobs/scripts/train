@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --job-name=train
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=18
+#SBATCH --time=70:00:00
+#SBATCH --mem=59000M
+#SBATCH --output=jobs/outputs/train%A.out
+#SBATCH --error=jobs/outputs/train%A_error.out
+
+module purge
+module load 2022
+module load Anaconda3/2022.05
+
+export WANDB_API_KEY=d8d926c88fca2a57e368a40b04f294cdc016d52f
+
+conda activate topox
+python -u src/main.py --target_name alpha
