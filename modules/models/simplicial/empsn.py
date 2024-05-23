@@ -33,17 +33,13 @@ class EMPSN(nn.Module):
         )
 
         # Pre-pooling operation
-        self.pre_pool = nn.ModuleDict(
-            {
-                f"rank_{rank}": 
-                nn.Sequential(
-                    nn.Linear(hidden_channels, hidden_channels),
-                    nn.SiLU(),
-                    nn.Linear(hidden_channels, hidden_channels)
-                )
-                for rank in range(self.max_dim+1)
-            }
-        )
+        self.pre_pool = nn.ModuleDict()
+        for rank in range(self.max_dim+1):
+            self.pre_pool[f"rank_{rank}"]= nn.Sequential(
+                nn.Linear(hidden_channels, hidden_channels),
+                nn.SiLU(),
+                nn.Linear(hidden_channels, hidden_channels)
+            )
 
         # Post-pooling operation over all dimensions
         # and final classification
