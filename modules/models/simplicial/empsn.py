@@ -85,7 +85,6 @@ class EMPSN(nn.Module):
 
         # read out
         x = {rank: self.pre_pool[rank](feature) for rank, feature in x.items()}
-        # TODO how to batch
         x = {rank: global_add_pool(x[rank], batch=x_batch[rank]) for rank, feature in x.items()}
         state = torch.cat(tuple([feature for rank, feature in x.items()]), dim=1)
         out = self.post_pool(state) # Classifier across 19 variables 

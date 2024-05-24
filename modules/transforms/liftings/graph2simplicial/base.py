@@ -50,39 +50,34 @@ class Graph2InvariantSimplicialLifting(GraphLifting):
         adj_dict = {}
         inc_dict = {}
 
-        simplex_dict = {i: [] for i in range(self.complex_dim+1)}
-
-        # Add the simplices for each n-dimension
-        for simplex in simplicial_complex.simplices:
-            dim = len(simplex) - 1
-            simplex_dict[dim].append(torch.tensor(list(simplex)))
-
-        for k, v in simplex_dict.items():
-            lifted_topology[f'x_idx_{k}'] = torch.stack(v)
-
-        # Dictionaries for each dimension
+        # Create feature dictionary
         for r in range(0, simplicial_complex.dim+1):
             feat_ind[r] = torch.tensor(list(simplicial_complex.incidence_matrix(r, index=True)[1].keys()), dtype=torch.int)
+            lifted_topology[f'x_idx_{r}'] =feat_ind[r]
             adj_dict[r] = lifted_topology[f'adjacency_{r}']
 
+        '''
+        # For some reason this incidence marix never has problems ?
         # Remove incidence relations where the symmetric difference between (r-1)-cell and r-cell > 1
         for r in range(1, simplicial_complex.dim+1):
             r_inc = lifted_topology[f'incidence_{r}'].to_dense()
             for i in range(0, feat_ind[r-1].size(0)):
                 for j in range(0, feat_ind[r].size(0)):
+                    if r_inc[i][j] == 0:
+                        continue
+
                     set_1 = set(feat_ind[r-1][i].tolist())
                     set_2 = set(feat_ind[r][j].tolist())
 
                     sym_dif = set(set_1).symmetric_difference(set(set_2))
                     if len(sym_dif) > 1:
-                        r_inc[i][j] = 0
+                        r_inc[i][j] = r_inc[i][j] = 0
             lifted_topology[f'incidence_{r}'] = r_inc.to_sparse()
+        '''
 
         # Assign r-cell the incidences of (r+1)-cell so that we can compute invariances
         for r in range(0, simplicial_complex.dim):
             inc_dict[r] = lifted_topology[f'incidence_{r+1}']
-
-            #inc_dict[r] = lifted_topology[f'incidence_{r}'] 
 
         inv_same_dict = compute_invariance_r_to_r(feat_ind, graph.pos, adj_dict)
         inv_low_high_dict = compute_invariance_r_minus_1_to_r(feat_ind, graph.pos, inc_dict)
@@ -95,6 +90,7 @@ class Graph2InvariantSimplicialLifting(GraphLifting):
             if r > 0:
                 lifted_topology[f'inv_low_high_{r}'] = inv_low_high_dict[r-1]
 
+        # Set features of the 0-cell
         lifted_topology["x_0"] = torch.stack(
             list(simplicial_complex.get_simplex_attributes("features", 0).values())
         )
@@ -146,9 +142,19 @@ class Graph2SimplicialLifting(GraphLifting):
         lifted_topology = get_complex_connectivity(
             simplicial_complex, self.complex_dim, signed=self.signed
         )
+
+        feat_ind = {}
+
+        # Create feature dictionary
+        for r in range(0, simplicial_complex.dim+1):
+            feat_ind[r] = torch.tensor(list(simplicial_complex.incidence_matrix(r, index=True)[1].keys()), dtype=torch.int)
+            lifted_topology[f'x_idx_{r}'] = feat_ind[r]
+
+        # Set features of the 0-cell
         lifted_topology["x_0"] = torch.stack(
             list(simplicial_complex.get_simplex_attributes("features", 0).values())
         )
+
         # If new edges have been added during the lifting process, we discard the edge attributes
         if self.contains_edge_attr and simplicial_complex.shape[1] == (
             graph.number_of_edges()

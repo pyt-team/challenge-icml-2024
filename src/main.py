@@ -15,6 +15,7 @@ def main(args):
     # # Generate model
     num_input = 15
     num_out = 1
+
     model = EMPSN(
             in_channels=num_input,
             hidden_channels=args.num_hidden,
@@ -24,14 +25,14 @@ def main(args):
         ).to(args.device)
 
     # Setup wandb
-    wandb.init(project=f"QM9-{args.target_name}")
+    wandb.init(project=f"QM9-{args.target_name}-{'preproc' if args.pre_proc else 'no-preproc'}")
     wandb.config.update(vars(args))
     num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Number of parameters: {num_params}')
 
     # # Get loaders
     start_lift_time = time.process_time()
-    train_loader, val_loader, test_loader = generate_loaders_qm9(args.dis, args.dim, args.target_name, args.batch_size, args.num_workers, args.lift_type, debug=args.debug)
+    train_loader, val_loader, test_loader = generate_loaders_qm9(args)
     end_lift_time = time.process_time()
     wandb.log({
         'Lift time': end_lift_time - start_lift_time
@@ -147,6 +148,9 @@ if __name__ == "__main__":
                         help='radius Rips complex')
     parser.add_argument('--seed', type=int, default=42,
                         help='random seed')
+    parser.add_argument('--pre_proc', action='store_true',
+                        help='preprocessing')
+
 
     parsed_args = parser.parse_args()
     parsed_args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

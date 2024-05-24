@@ -5,14 +5,19 @@ from tqdm import tqdm
 
 from torch_geometric.loader import DataLoader
 from torch_geometric.datasets import QM9
+import torch_geometric.transforms as T
 
-from data_transform import AlphaPreTransform, VietorisRipsPreTransfrom, prepare_data, qm9_to_ev, filter_not_enough_simplices_alpha
-from modules.transforms.liftings.graph2simplicial.vietoris_rips_lift import SimplicialVietorisRipsLifting
+from data_transform import InputPreprocTransform, LabelPreprocTransform, qm9_to_ev, filter_not_enough_simplices_alpha
+from modules.transforms.liftings.graph2simplicial.vietoris_rips_lift import SimplicialVietorisRipsLifting, InvariantSimplicialVietorisRipsLifting
 from modules.transforms.liftings.graph2simplicial.alpha_complex_lift import SimplicialAlphaComplexLifting
 
 LIFT_TYPE_DICT = {
-    'rips': VietorisRipsPreTransfrom,
-    'alpha': AlphaPreTransform 
+    'rips': SimplicialVietorisRipsLifting,
+    'alpha': SimplicialAlphaComplexLifting
+}
+LIFT_INV_TYPE_DICT = {
+    'rips': InvariantSimplicialVietorisRipsLifting,
+    'alpha': SimplicialAlphaComplexLifting 
 }
 
 
@@ -24,29 +29,53 @@ def calc_mean_mad(loader: DataLoader) -> Tuple[Tensor, Tensor]:
     return mean, mad
 
 
-def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int, num_workers: int, lift_type: str, debug = False) -> Tuple[DataLoader, DataLoader, DataLoader]:
+# TODO FIx this crap
+def _load_debug(args):
+    preproc_str = 'preproc' if args.pre_proc else 'normal'
+    data_root = f'./datasets/QM9_delta_{args.dis}_dim_{args.dim}_{args.lift_type}_debug_{preproc_str}'
+    pre_filter = None
+    if args.lift_type == 'alpha':
+        pre_filter = filter_not_enough_simplices_alpha
+    dataset = QM9(root=data_root, pre_filter=pre_filter)
+    print('About to prepare data')
+    TRANSFORM_DICT = LIFT_INV_TYPE_DICT if args.pre_proc else LIFT_TYPE_DICT 
+    transform = T.Compose([
+        InputPreprocTransform(),
+        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, dis=args.dis, feature_lifting='ProjectionElementWiseMean'),
+        ])
+    dataset = [transform(data) for data in dataset[:7]]
+    print('Preparing labels...')
+    label_transform = LabelPreprocTransform(target_name=args.target_name)
+    dataset = [label_transform(data) for data in tqdm(dataset)]
+    print('Data prepared')
 
-    if debug:
-        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_{lift_type}_debug'
-        dataset = QM9(root=data_root, pre_filter=filter_not_enough_simplices_alpha)
-        print('About to prepare data')
-        dataset = [prepare_data(graph, target_name, qm9_to_ev) for graph in tqdm(dataset, desc='Preparing data')]
-        print('Data prepared')
-        transform = SimplicialAlphaComplexLifting(complex_dim=dim, dis=dis, feature_lifting='ProjectionElementWiseMean')
-        dataset = [transform(data) for data in dataset[:7]]
-    else:
-        data_root = f'./datasets/QM9_delta_{dis}_dim_{dim}_{lift_type}'
-        transform = LIFT_TYPE_DICT[lift_type](complex_dim=dim, dis=dis, target_name=target_name, feature_lifting='ProjectionElementWiseMean')
-        pre_filter = filter_not_enough_simplices_alpha if lift_type == 'alpha' else None
-        dataset = QM9(root=data_root, pre_transform=transform, pre_filter=pre_filter)
-        dataset = dataset.shuffle()
+    return dataset
 
-    # filter relevant index and update units to eV
+def _load_normal(args):
+    preproc_str = 'preproc' if args.pre_proc else 'normal'
+    data_root = f'./datasets/QM9_delta_{args.dis}_dim_{args.dim}_{args.lift_type}_{preproc_str}'
+    TRANSFORM_DICT = LIFT_INV_TYPE_DICT if args.pre_proc else LIFT_TYPE_DICT 
+    transform = T.Compose([
+        InputPreprocTransform(),
+        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, dis=args.dis, feature_lifting='ProjectionElementWiseMean'),
+        ])
+    pre_filter = filter_not_enough_simplices_alpha if args.lift_type == 'alpha' else None
+    print('Preparing data...')
+    dataset = QM9(root=data_root, pre_transform=transform, pre_filter=pre_filter)
+    print('Preparing labels...')
+    label_transform = LabelPreprocTransform(target_name=args.target_name)
+    dataset = [label_transform(data) for data in tqdm(dataset)]
+    print('Preparation done!')
+    dataset = dataset.shuffle()
 
-    # train/val/test split
-    if debug:
+    return dataset
+
+def generate_loaders_qm9(args):
+    if args.debug:
+        dataset = _load_debug(args)
         n_train, n_test = 3, 5
     else:
+        dataset = _load_normal(args)
         n_train, n_test = 100000, 110000
 
     train_dataset = dataset[:n_train]
@@ -54,9 +83,9 @@ def generate_loaders_qm9(dis: float, dim: int, target_name: str, batch_size: int
     val_dataset = dataset[n_test:]
 
     # dataloaders
-    follow = [f"x_{i}" for i in range(dim+1)] + ['x']
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True, follow_batch=follow)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False, follow_batch=follow)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False, follow_batch=follow)
+    follow = [f"x_{i}" for i in range(args.dim+1)] + ['x']
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True, follow_batch=follow)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False, follow_batch=follow)
+    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False, follow_batch=follow)
 
     return train_loader, val_loader, test_loader
