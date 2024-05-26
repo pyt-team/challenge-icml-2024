@@ -58,6 +58,7 @@ def main(args):
 
             #batch = batch.to(args.device)
             pred = model(*decompose_batch(args, batch))
+            batch.y = batch.y.to(args.device)
             loss = criterion(pred, (batch.y - mean) / mad)
             mae = criterion(pred * mad + mean, batch.y)
             loss.backward()
