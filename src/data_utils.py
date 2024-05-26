@@ -43,7 +43,7 @@ def _load_debug(args):
         InputPreprocTransform(),
         TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, dis=args.dis, feature_lifting='ProjectionElementWiseMean'),
         ])
-    dataset = [transform(data) for data in dataset[:7]]
+    dataset = [transform(data) for data in dataset[:1200]]
     print('Preparing labels...')
     label_transform = LabelPreprocTransform(target_name=args.target_name)
     dataset = [label_transform(data) for data in tqdm(dataset)]
@@ -73,7 +73,7 @@ def _load_normal(args):
 def generate_loaders_qm9(args):
     if args.debug:
         dataset = _load_debug(args)
-        n_train, n_test = 3, 5
+        n_train, n_test = 1000, 1100
     else:
         dataset = _load_normal(args)
         n_train, n_test = 100000, 110000

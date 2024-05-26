@@ -71,6 +71,7 @@ def main(args):
         model.eval()
         for _, batch in enumerate(val_loader):
             pred = model(*decompose_batch(args, batch))
+            batch.y = batch.y.to(args.device)
             mae = criterion(pred * mad + mean, batch.y)
 
             epoch_mae_val += mae.item()
@@ -94,6 +95,7 @@ def main(args):
     model.eval()
     for _, batch in enumerate(test_loader):
         pred = model(*decompose_batch(args, batch))
+        batch.y = batch.y.to(args.device)
         mae = criterion(pred * mad + mean, batch.y)
         test_mae += mae.item()
 
