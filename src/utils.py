@@ -65,7 +65,7 @@ def decompose_batch(args, batch) -> Tuple[Dict, Dict, Dict, Dict, Dict, Dict]:
         f"rank_{i}": batch[f'incidence_{i}'].to_dense().nonzero().t().contiguous().to(args.device) for i in range(0, args.dim + 1)
     }
     x_batch = {
-        f"rank_{i}": batch[f'x_{i}_batch'] for i in range(args.dim + 1)
+        f"rank_{i}": batch[f'x_{i}_batch'].to(args.device) for i in range(args.dim + 1)
     }
 
     return features, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r, x_batch

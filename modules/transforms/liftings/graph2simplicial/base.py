@@ -52,7 +52,7 @@ class Graph2InvariantSimplicialLifting(GraphLifting):
 
         # Create feature dictionary
         for r in range(0, simplicial_complex.dim+1):
-            feat_ind[r] = torch.tensor(list(simplicial_complex.incidence_matrix(r, index=True)[1].keys()), dtype=torch.int)
+            feat_ind[r] = torch.tensor(simplicial_complex.skeleton(r), dtype=torch.int)
             lifted_topology[f'x_idx_{r}'] =feat_ind[r]
             adj_dict[r] = lifted_topology[f'adjacency_{r}']
 
@@ -147,7 +147,7 @@ class Graph2SimplicialLifting(GraphLifting):
 
         # Create feature dictionary
         for r in range(0, simplicial_complex.dim+1):
-            feat_ind[r] = torch.tensor(list(simplicial_complex.incidence_matrix(r, index=True)[1].keys()), dtype=torch.int)
+            feat_ind[r] = torch.tensor(simplicial_complex.skeleton(r), dtype=torch.int)
             lifted_topology[f'x_idx_{r}'] = feat_ind[r]
 
         # Set features of the 0-cell
