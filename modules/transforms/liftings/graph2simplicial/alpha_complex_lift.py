@@ -7,9 +7,9 @@ from gudhi import SimplexTree
 from toponetx.classes import SimplicialComplex
 import torch
 
-from modules.transforms.liftings.graph2simplicial.base import Graph2InvariantSimplicialLifting
+from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
-class SimplicialAlphaComplexLifting(Graph2InvariantSimplicialLifting):
+class SimplicialAlphaComplexLifting(Graph2SimplicialLifting):
     r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
 
     Parameters
