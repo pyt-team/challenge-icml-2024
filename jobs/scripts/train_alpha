@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=train_alpha
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=8
 #SBATCH --time=70:00:00
 #SBATCH --mem=59000M
 #SBATCH --output=jobs/outputs/train_alpha%A.out
@@ -19,6 +19,6 @@ source /sw/arch/RHEL8/EB_production/2022/software/Anaconda3/2022.05/etc/profile.
 export WANDB_API_KEY=d8d926c88fca2a57e368a40b04f294cdc016d52f
 
 conda activate topox
-python -u src/main.py --lift_type alpha --target_name alpha
+python -u src/main.py --lift_type alpha --target_name alpha --batch_size 96
 
 echo "Finished!"
