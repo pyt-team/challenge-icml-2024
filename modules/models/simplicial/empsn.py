@@ -4,6 +4,7 @@ from torch import Tensor
 from torch_geometric.nn import global_add_pool
 from modules.models.simplicial.empsn_layer import EMPSNLayer
 from typing import Tuple, Dict, List, Literal
+from modules.models.model_utils import decompose_batch
 
 
 class EMPSN(nn.Module):
@@ -50,38 +51,26 @@ class EMPSN(nn.Module):
         )
 
 
-    def forward(self, features: Dict[int, Tensor], edge_index_adjacencies: Dict[int, Tensor],
-                edge_index_incidences: Dict[int, Tensor], invariances_r_r: Dict[int, Tensor],
-                invariances_r_r_minus_1: Dict[int, Tensor], x_batch: Dict[int, Tensor]) -> Tensor:
+    def forward(self, batch)-> Tensor:
         r"""Forward pass.
 
         Parameters
         ----------
-        features : dict[int, torch.Tensor], length=max_rank+1, shape = (n_rank_r_cells, channels)
+        batch : torch_geometric.data.BatchData, length=max_rank+1, shape = (n_rank_r_cells, channels)
             Input features on the cells of the simplicial complex.
-        edge_index_incidences : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_cells_r_cells)
-            Incidence matrices :math:`B_r` mapping r-cells to (r-1)-cells.
-        edge_index_adjacencies : dict[int, torch.sparse], length=max_rank, shape = (2, n_boundries_r_minus_1_cells_r_cells)
-            Adjacency matrices :math:`H_r` mapping cells to cells via lower and upper cells.
-        invariances_r_r : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_cells, n_rank_r_cells)
-            Adjacency matrices :math:`I^0_r` with weights of cells to cells via lower and upper cells.
-        invariances_r_r_minus_1 : dict[int, torch.sparse], length=max_rank, shape = (n_rank_r_minus_1_cells, n_rank_r_cells)
-            Adjacency matrices :math:`I^1_r` with weights of map from r-cells to (r-1)-cells
-        x_batch : dict[int, torch.Tensor], length=max_rank+1, shape = (n_rank_r_cells, channels)
-            Batching information of the features  
-
         Returns
         -------
         Tensor, shape = (1)
             Regression value of the pooling of the graph
         """
+        features, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r, x_batch = decompose_batch(batch, self.max_dim)
 
         x = {
             rank: self.feature_embedding(feature) 
             for rank, feature in features.items()
         }
         for layer in self.layers:
-            x = layer(x, edge_index_adjacencies, edge_index_incidences, invariances_r_r, invariances_r_r_minus_1)
+            x = layer(x, edge_index_adj, edge_index_inc, inv_r_r, inv_r_minus_1_r)
 
         # read out
         x = {rank: self.pre_pool[rank](feature) for rank, feature in x.items()}
