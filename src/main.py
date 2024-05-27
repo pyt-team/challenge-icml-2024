@@ -8,7 +8,7 @@ from modules.models.simplicial.empsn import EMPSN
 
 from data_utils import generate_loaders_qm9, calc_mean_mad
 import time
-from utils import set_seed, decompose_batch
+from utils import set_seed
 
 
 def main(args):
@@ -56,9 +56,8 @@ def main(args):
         for _, batch in enumerate(train_loader):
             optimizer.zero_grad()
 
-            #batch = batch.to(args.device)
-            pred = model(*decompose_batch(args, batch))
-            batch.y = batch.y.to(args.device)
+            batch = batch.to(args.device)
+            pred = model(batch)
             loss = criterion(pred, (batch.y - mean) / mad)
             mae = criterion(pred * mad + mean, batch.y)
             loss.backward()
@@ -70,8 +69,8 @@ def main(args):
 
         model.eval()
         for _, batch in enumerate(val_loader):
-            pred = model(*decompose_batch(args, batch))
-            batch.y = batch.y.to(args.device)
+            batch = batch.to(args.device)
+            pred = model(batch)
             mae = criterion(pred * mad + mean, batch.y)
 
             epoch_mae_val += mae.item()
@@ -94,8 +93,8 @@ def main(args):
     model.load_state_dict(best_model)
     model.eval()
     for _, batch in enumerate(test_loader):
-        pred = model(*decompose_batch(args, batch))
-        batch.y = batch.y.to(args.device)
+        batch = batch.to(args.device)
+        pred = model(batch)
         mae = criterion(pred * mad + mean, batch.y)
         test_mae += mae.item()
 
