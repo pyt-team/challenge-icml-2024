@@ -23,6 +23,9 @@ class SimplicialIndependentSetsLifting(Graph2SimplicialLifting):
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to a simplicial complex by identifying the independent sets as k-simplices
 
+        We use the fact that the independent sets of a graph G are the cliques of its complement graph Gc. The nodes and the edges
+        of the complement graph represent the 0-simplices and 1-simplices respectively.
+
         Parameters
         ----------
         data : torch_geometric.data.Data
