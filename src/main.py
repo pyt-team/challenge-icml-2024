@@ -25,7 +25,7 @@ def main(args):
         ).to(args.device)
 
     # Setup wandb
-    wandb.init(project=f"QM9-{args.target_name}-{'preproc' if args.pre_proc else 'no-preproc'}")
+    wandb.init(project=f"QM9-{args.target_name}-{args.lift_type}-{'preproc' if args.pre_proc else 'no-preproc'}")
     wandb.config.update(vars(args))
     num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Number of parameters: {num_params}')
