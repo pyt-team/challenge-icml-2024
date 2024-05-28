@@ -500,7 +500,9 @@ def compute_invariance_r_to_r(simplices: Dict[int, torch.Tensor], pos: torch.Ten
     sending_nodes = adj[0][0]
     receiving_nodes = adj[0][1]
     distance = torch.linalg.norm(pos[sending_nodes] - pos[receiving_nodes], dim=1)
+    print(distance.device)
     area = torch.zeros(len(distance), 2)
+    print(area.device)
     adj_dict[0] = torch.cat((distance.unsqueeze(1), area),dim=1)
     
     #for 1 dimensional simplexes

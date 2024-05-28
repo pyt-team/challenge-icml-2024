@@ -26,6 +26,8 @@ def get_invariances(batch, max_rank):
             inc_dict[r] = batch[f'incidence_{r+1}']
             print(inc_dict[r].device)
 
+        print(batch['pos'].device)
+
         inv_same_dict = compute_invariance_r_to_r(feat_ind, batch['pos'], adj_dict)
         inv_low_high_dict = compute_invariance_r_minus_1_to_r(feat_ind, batch['pos'], inc_dict)
 
