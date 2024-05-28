@@ -1,0 +1,12 @@
+in_channels: null # This will be set by the dataset
+hidden_channels: 77
+out_channels: null # This will be set by the dataset
+n_layers: 7
+max_dim: 2
+inv_dims:
+  rank_0: 
+    rank_0: 3
+    rank_1: 3
+  rank_1:
+    rank_1: 6
+    rank_2: 6

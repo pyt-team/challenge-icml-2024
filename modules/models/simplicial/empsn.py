@@ -7,30 +7,64 @@ from typing import Tuple, Dict, List, Literal
 from modules.models.model_utils import decompose_batch
 
 
-class EMPSN(nn.Module):
-    """
+class EMPSNModel(nn.Module):
+    r"""
     E(n) Equivariant Message Passing Simplicial Networks (EMPSN)
+
+    Parameters
+    ----------
+    model_config : Dict | DictConfig
+        Model configuration.
+    dataset_config : Dict | DictConfig
+        Dataset configuration.
     """
-    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int, num_layers: int, max_dim: int) -> None: 
+
+    def __init__(self, model_config, dataset_config):
+        in_channels = (
+            dataset_config["num_features"]
+            if isinstance(dataset_config["num_features"], int)
+            else dataset_config["num_features"][0]
+        )
+        hidden_channels = model_config["hidden_channels"]
+        out_channels = dataset_config["num_classes"]
+        n_layers = model_config["n_layers"]
+        max_dim = model_config["max_dim"]
+        inv_dims = model_config["inv_dims"]
+
+        super().__init__()
+        self.base_model = EMPSN(
+            in_channels=in_channels,
+            hidden_channels=hidden_channels,
+            out_channels=out_channels,
+            max_dim=max_dim,
+            n_layers=n_layers,
+            inv_dims=inv_dims
+        )
+    def forward(self, data):
+        r"""Forward pass of the model.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            Input data.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor.
+        """
+        x = self.base_model(data)
+        return x
+
+class EMPSN(nn.Module):
+    def __init__(self, in_channels: int, hidden_channels: int, out_channels: int, n_layers: int, max_dim: int, inv_dims: Dict) -> None: 
         super().__init__()
 
         self.max_dim = max_dim
         self.feature_embedding = nn.Linear(in_channels, hidden_channels)
 
-        # Create `num_layers` layers with sum aggregation and SiLU update function
-        tmp_dict = {
-            "rank_0": {
-                f"rank_0": 3,
-                f"rank_1": 3
-            },
-            "rank_1": {
-                f"rank_1": 6,
-                f"rank_2": 6
-            }
-        }
-
         self.layers = nn.ModuleList(
-            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu", aggr_update_func=None, n_inv=tmp_dict) for _ in range(num_layers)]
+            [EMPSNLayer(hidden_channels, self.max_dim, aggr_func="sum", update_func="silu", aggr_update_func=None, n_inv=inv_dims) for _ in range(n_layers)]
         )
 
         # Pre-pooling operation

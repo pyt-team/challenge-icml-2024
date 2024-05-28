@@ -1,0 +1,7 @@
+transform_type: 'lifting'
+transform_name: "SimplicialVietorisRipsLifting"
+complex_dim: 2
+preserve_edge_attr: False
+signed: False
+feature_lifting: ProjectionElementWiseMean
+delta: 3

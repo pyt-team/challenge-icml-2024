@@ -16,12 +16,23 @@ def main(args):
     num_input = 15
     num_out = 1
 
+    inv_dims = {
+        'rank_0': {
+            'rank_0': 3,
+            'rank_1': 3,
+        },
+        'rank_1': {
+            'rank_1': 6,
+            'rank_2': 6,
+        }
+    }
     model = EMPSN(
             in_channels=num_input,
             hidden_channels=args.num_hidden,
             out_channels=num_out,
-            num_layers=args.num_layers,
-            max_dim=args.dim
+            n_layers=args.num_layers,
+            max_dim=args.dim,
+            inv_dims=inv_dims
         ).to(args.device)
 
     # Setup wandb

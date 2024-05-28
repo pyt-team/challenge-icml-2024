@@ -1,0 +1,15 @@
+transform_name: "LabelPreproc"
+transform_type: "data manipulation"
+
+target_name: alpha
+qm9_to_ev: 
+  U0: 27.2114
+  U: 27.2114
+  G: 27.2114
+  H: 27.2114
+  zpve: 27211.4
+  gap: 27.2114
+  homo: 27.2114
+  lumo': 27.2114
+
+targets: ['mu', 'alpha', 'homo', 'lumo', 'gap', 'r2', 'zpve', 'U0', 'U', 'H', 'G', 'Cv', 'U0_atom', 'U_atom', 'H_atom', 'G_atom', 'A', 'B', 'C']

@@ -39,9 +39,9 @@ def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: 
 class BaseSimplicialVRLifting(Graph2SimplicialLifting):
     r""" Base class for lifting graphs to simplicial complexes using Vietoris-Rips complex.
     """
-    def __init__(self, dis: float = 0, **kwargs):
+    def __init__(self, delta: float = 0, **kwargs):
         super().__init__(**kwargs)
-        self.dis = dis
+        self.delta = delta
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to a simplicial complex by using the Vietoris-Rips lift
@@ -60,7 +60,7 @@ class BaseSimplicialVRLifting(Graph2SimplicialLifting):
 
 
         # Lift graph to Simplicial Complex
-        simplicial_complex = rips_lift(data, self.complex_dim, self.dis)
+        simplicial_complex = rips_lift(data, self.complex_dim, self.delta)
 
         # Retrieve features as a directory
         feature_dict = {}
@@ -90,6 +90,7 @@ class BaseSimplicialVRLifting(Graph2SimplicialLifting):
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)
         return SimplexData(**initial_data, **lifted_topology)
+
 class InvariantSimplicialVietorisRipsLifting(BaseSimplicialVRLifting):
     r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
 

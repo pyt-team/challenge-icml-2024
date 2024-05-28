@@ -108,6 +108,11 @@ class GraphLoader(AbstractLoader):
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
 
+        elif self.parameters.data_name in ["QM9"]:
+            pre_filter = None #TODO Prefilter based on condition 
+            dataset = torch_geometric.datasets.QM9(
+                root=root_data_dir,
+            )
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"

@@ -8,8 +8,8 @@ from torch_geometric.datasets import QM9
 import torch_geometric.transforms as T
 
 from data_transform import InputPreprocTransform, LabelPreprocTransform, qm9_to_ev, filter_not_enough_simplices_alpha
-from modules.transforms.liftings.graph2simplicial.vietoris_rips_lift import SimplicialVietorisRipsLifting, InvariantSimplicialVietorisRipsLifting
-from modules.transforms.liftings.graph2simplicial.alpha_complex_lift import SimplicialAlphaComplexLifting
+from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import SimplicialVietorisRipsLifting, InvariantSimplicialVietorisRipsLifting
+from modules.transforms.liftings.graph2simplicial.alpha_complex_lifting import SimplicialAlphaComplexLifting
 
 LIFT_TYPE_DICT = {
     'rips': SimplicialVietorisRipsLifting,
@@ -36,14 +36,14 @@ def _load_debug(args):
     pre_filter = None
     if args.lift_type == 'alpha':
         pre_filter = filter_not_enough_simplices_alpha
-    dataset = QM9(root=data_root, pre_filter=pre_filter)
+    dataset = QM9(root=data_root, pre_filter=pre_filter, force_reload=True)
     print('About to prepare data')
     TRANSFORM_DICT = LIFT_INV_TYPE_DICT if args.pre_proc else LIFT_TYPE_DICT 
     transform = T.Compose([
         InputPreprocTransform(),
-        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, dis=args.dis, feature_lifting='ProjectionElementWiseMean'),
+        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, delta=args.dis, feature_lifting='ProjectionElementWiseMean'),
         ])
-    dataset = [transform(data) for data in dataset[:1200]]
+    dataset = [transform(data) for data in dataset[:7]]
     print('Preparing labels...')
     label_transform = LabelPreprocTransform(target_name=args.target_name)
     dataset = [label_transform(data) for data in tqdm(dataset)]
@@ -57,7 +57,7 @@ def _load_normal(args):
     TRANSFORM_DICT = LIFT_INV_TYPE_DICT if args.pre_proc else LIFT_TYPE_DICT 
     transform = T.Compose([
         InputPreprocTransform(),
-        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, dis=args.dis, feature_lifting='ProjectionElementWiseMean'),
+        TRANSFORM_DICT[args.lift_type](complex_dim=args.dim, delta=args.dis, feature_lifting='ProjectionElementWiseMean'),
         ])
     pre_filter = filter_not_enough_simplices_alpha if args.lift_type == 'alpha' else None
     print('Preparing data...')
@@ -73,7 +73,7 @@ def _load_normal(args):
 def generate_loaders_qm9(args):
     if args.debug:
         dataset = _load_debug(args)
-        n_train, n_test = 1000, 1100
+        n_train, n_test = 3, 5
     else:
         dataset = _load_normal(args)
         n_train, n_test = 100000, 110000
