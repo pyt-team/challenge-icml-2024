@@ -62,11 +62,11 @@ def _load_normal(args):
     pre_filter = filter_not_enough_simplices_alpha if args.lift_type == 'alpha' else None
     print('Preparing data...')
     dataset = QM9(root=data_root, pre_transform=transform, pre_filter=pre_filter)
+    dataset = dataset.shuffle()
     print('Preparing labels...')
     label_transform = LabelPreprocTransform(target_name=args.target_name)
     dataset = [label_transform(data) for data in tqdm(dataset)]
     print('Preparation done!')
-    dataset = dataset.shuffle()
 
     return dataset
 
