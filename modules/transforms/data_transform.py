@@ -16,7 +16,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
 from modules.transforms.liftings.graph2simplicial.independent_set_lifting import (
-    SimplicialIndependentSetsLifting
+    SimplicialIndependentSetsLifting,
 )
 
 TRANSFORMS = {
