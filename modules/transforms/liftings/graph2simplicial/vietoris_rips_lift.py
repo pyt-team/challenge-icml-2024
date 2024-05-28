@@ -8,9 +8,8 @@ from toponetx.classes import SimplicialComplex
 import torch
 
 
-from modules.data.utils.utils import get_complex_connectivity
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
-from modules.transforms.data_manipulations.manipulations import compute_invariance_r_minus_1_to_r, compute_invariance_r_to_r
+from modules.data.utils.utils import compute_invariance_r_minus_1_to_r, compute_invariance_r_to_r, SimplexData, get_complex_connectivity
 
 
 def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: bool = True) -> SimplicialComplex:
@@ -34,34 +33,6 @@ def rips_lift(graph: torch_geometric.data.Data, dim: int, dis: float, fc_nodes: 
             simplex_tree.insert(edge)
 
     return SimplicialComplex.from_gudhi(simplex_tree)
-
-class SimplexData(torch_geometric.data.Data):
-    def __inc__(self, key: str, value, *args, **kwargs):
-        if 'adjacency' in key:
-            rank = int(key.split('_')[-1])
-            return torch.tensor([getattr(self, f'x_{rank}').size(0)])
-            #return torch.tensor([[getattr(self, f'x_{rank}').size(0)], [getattr(self, f'x_{rank}').size(0)]])
-        elif 'incidence' in key:
-            rank = int(key.split('_')[-1])
-            if rank == 0:
-                return torch.tensor([getattr(self, f'x_{rank}').size(0)])
-            return torch.tensor([[getattr(self, f'x_{rank-1}').size(0)], [getattr(self, f'x_{rank}').size(0)]])
-        elif key == 'x_0' or key == 'x_idx_0':
-            return torch.tensor([getattr(self, f'x_0').size(0)])
-        elif key == 'x_1' or key == 'x_idx_1':
-            return torch.tensor([getattr(self, f'x_0').size(0)])
-        elif key == 'x_2' or key == 'x_idx_2':
-            return torch.tensor([getattr(self, f'x_0').size(0)])
-        elif 'index' in key:
-            return self.num_nodes
-        else:
-            return super().__inc__(key, value, *args, **kwargs)
-
-    def __cat_dim__(self, key: str, value, *args, **kwargs):
-        if 'adjacency' in key or 'incidence' in key or 'index' in key:
-            return 1
-        else:
-            return 0
 
 
 
@@ -181,10 +152,6 @@ class InvariantSimplicialVietorisRipsLifting(BaseSimplicialVRLifting):
             list(simplicial_complex.get_simplex_attributes("features", 0).values())
         )
         return lifted_topology
-
-
-
-
 
 
 

@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 
-from modules.transforms.data_manipulations.manipulations import compute_invariance_r_to_r, compute_invariance_r_minus_1_to_r
+from modules.data.utils.utils import compute_invariance_r_to_r, compute_invariance_r_minus_1_to_r
 
 def get_invariances(batch, max_rank):
     if 'inv_same_0' in batch.keys():
