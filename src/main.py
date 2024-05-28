@@ -68,7 +68,6 @@ def main(args):
             optimizer.zero_grad()
 
             batch = batch.to(args.device)
-            batch['pos'] = batch['pos'].to(args.device)
             pred = model(batch)
             loss = criterion(pred, (batch.y - mean) / mad)
             mae = criterion(pred * mad + mean, batch.y)
