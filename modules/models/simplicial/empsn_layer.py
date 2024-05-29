@@ -200,10 +200,8 @@ class EMPSNLayer(torch.nn.Module):
         h = {}
         for rank, feature in features.items():
             feat_list = [feature]
-            for rank_str, msg in aggregation_dict.items():
-                if rank_str == rank:
-                    for msg_i in msg["message"]:
-                        feat_list.append(msg_i)
+            for msg_i in aggregation_dict[rank]["message"]:
+                feat_list.append(msg_i)
             h[rank] = torch.cat(feat_list, dim=1)
 
         h = {
