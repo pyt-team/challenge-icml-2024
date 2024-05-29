@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
 
     parsed_args = parser.parse_args()
-    parsed_args.device = "gpu" if torch.cuda.is_available() else "cpu"
+    parsed_args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     set_seed(parsed_args.seed)
     main(parsed_args)
