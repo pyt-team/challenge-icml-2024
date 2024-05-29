@@ -58,7 +58,7 @@ def main(args):
 
     print('Almost at training...')
 
-    wandb_logger = WandbLogger(log_model="all")
+    wandb_logger = WandbLogger()
 
     empsn = LitEMPSN(model, mae=mad, mad=mad, mean=mean, lr=args.lr, weight_decay=args.weight_decay)
     trainer = L.Trainer(max_epochs=args.epochs, gradient_clip_val=args.gradient_clip, accelerator=args.device, devices=1, logger=wandb_logger)# accelerator='gpu', devices=1)
