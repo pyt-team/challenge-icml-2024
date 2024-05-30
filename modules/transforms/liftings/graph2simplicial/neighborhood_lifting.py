@@ -1,7 +1,9 @@
+import networkx as nx
 import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
+from modules.data.utils.utils import get_complex_connectivity
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
 
@@ -15,6 +17,7 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
     """
 
     def __init__(self, **kwargs):
+        self.contains_edge_attr = False
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -30,8 +33,8 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
         dict
             The lifted topology.
         """
-        graph = self._generate_graph_from_data(data)
         undir_edge_index = torch_geometric.utils.to_undirected(data.edge_index)
+
         simplices = [
             set(
                 undir_edge_index[1, j].tolist()
@@ -39,9 +42,15 @@ class NeighborhoodComplexLifting(Graph2SimplicialLifting):
             )
             for i in torch.unique(undir_edge_index[0])
         ]
-        print(simplices)
+
+        node_features = {i: data.x[i, :] for i in range(data.x.shape[0])}
+
         simplicial_complex = SimplicialComplex(simplices)
         self.complex_dim = simplicial_complex.dim
-        print(simplicial_complex, self.complex_dim)
+        simplicial_complex.set_simplex_attributes(node_features, name="features")
 
-        return self._get_lifted_topology(simplicial_complex, graph)
+        graph = simplicial_complex.graph_skeleton()
+
+        lifted_topology = self._get_lifted_topology(simplicial_complex, graph)
+
+        return lifted_topology
