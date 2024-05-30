@@ -61,7 +61,7 @@ def main(args):
     wandb_logger = WandbLogger()
 
     empsn = LitEMPSN(model, mae=mad, mad=mad, mean=mean, lr=args.lr, weight_decay=args.weight_decay)
-    trainer = L.Trainer(max_epochs=args.epochs, gradient_clip_val=args.gradient_clip, accelerator=args.device, devices=1, logger=wandb_logger)# accelerator='gpu', devices=1)
+    trainer = L.Trainer(max_epochs=args.epochs, gradient_clip_val=args.gradient_clip, enable_checkpointing=False, accelerator=args.device, devices=1, logger=wandb_logger)# accelerator='gpu', devices=1)
     trainer.fit(empsn, train_dataloaders=train_loader, val_dataloaders=val_loader)
     trainer.test(empsn, dataloaders=test_loader)
 
