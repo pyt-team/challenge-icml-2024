@@ -15,8 +15,8 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
-    SimplicialVietorisRipsLifting,
+from modules.transforms.liftings.graph2simplicial.graph_induced_lifting import (
+    SimplicialGraphInducedLifting,
 )
 
 TRANSFORMS = {
@@ -24,7 +24,7 @@ TRANSFORMS = {
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
-    "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
+    "SimplicialGraphInducedLifting": SimplicialGraphInducedLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
