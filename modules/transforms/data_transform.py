@@ -9,6 +9,9 @@ from modules.transforms.data_manipulations.manipulations import (
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
+from modules.transforms.liftings.graph2cell.neighborhood_lifting import (
+    NeighborhoodLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
@@ -23,6 +26,8 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Graph -> Cell Complex
+    "NeighborhoodLifting": NeighborhoodLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
