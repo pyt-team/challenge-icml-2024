@@ -1,5 +1,5 @@
 transform_type: 'lifting'
-transform_name: "SimplicialGraphInducedLifting"
+transform_name: "SimplicialEccentricityLifting"
 complex_dim: 3
 preserve_edge_attr: False
 signed: True
