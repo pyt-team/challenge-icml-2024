@@ -3,21 +3,23 @@
 import torch
 
 from modules.data.utils.utils import load_manual_graph
-from modules.transforms.liftings.graph2simplicial.clique_lifting import (
-    SimplicialCliqueLifting,
+from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
+    SimplicialVietorisRipsLifting,
 )
 
 
-class TestSimplicialCliqueLifting:
-    """Test the SimplicialCliqueLifting class."""
+class TestSimplicialVietorisRipsLifting:
+    """Test the SimplicialVietorisRipsLifting class."""
 
     def setup_method(self):
         # Load the graph
         self.data = load_manual_graph()
 
         # Initialise the SimplicialCliqueLifting class
-        self.lifting_signed = SimplicialCliqueLifting(complex_dim=3, signed=True)
-        self.lifting_unsigned = SimplicialCliqueLifting(complex_dim=3, signed=False)
+        self.lifting_signed = SimplicialVietorisRipsLifting(complex_dim=3, signed=True)
+        self.lifting_unsigned = SimplicialVietorisRipsLifting(
+            complex_dim=3, signed=False
+        )
 
     def test_lift_topology(self):
         """Test the lift_topology method."""
@@ -26,62 +28,60 @@ class TestSimplicialCliqueLifting:
         lifted_data_signed = self.lifting_signed.forward(self.data.clone())
         lifted_data_unsigned = self.lifting_unsigned.forward(self.data.clone())
 
-        expected_incidence_1 = torch.tensor(
+        expected_incidence_1_singular_values_unsigned = torch.tensor(
+            [2.8412, 2.1378, 1.9299, 1.7321, 1.5809, 1.4142, 1.2617, 0.7358]
+        )
+
+        expected_incidence_1_singular_values_signed = torch.tensor(
             [
-                [-1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0, 0.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, -1.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+                2.6622e00,
+                2.2830e00,
+                2.0000e00,
+                2.0000e00,
+                1.6697e00,
+                1.4142e00,
+                9.5538e-01,
+                1.7728e-07,
             ]
         )
 
-        assert (
-            abs(expected_incidence_1) == lifted_data_unsigned.incidence_1.to_dense()
-        ).all(), "Something is wrong with unsigned incidence_1 (nodes to edges)."
-        assert (
-            expected_incidence_1 == lifted_data_signed.incidence_1.to_dense()
-        ).all(), "Something is wrong with signed incidence_1 (nodes to edges)."
+        U, S_unsigned, V = torch.svd(lifted_data_unsigned.incidence_1.to_dense())
+        U, S_signed, V = torch.svd(lifted_data_signed.incidence_1.to_dense())
+        assert torch.allclose(
+            expected_incidence_1_singular_values_unsigned, S_unsigned, atol=1.0e-04
+        ), "Something is wrong with unsigned incidence_1 (nodes to edges)."
+        assert torch.allclose(
+            expected_incidence_1_singular_values_signed, S_signed, atol=1.0e-04
+        ), "Something is wrong with signed incidence_1 (nodes to edges)."
 
-        expected_incidence_2 = torch.tensor(
-            [
-                [1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                [-1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
-                [0.0, -1.0, -1.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, -1.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, -1.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0, 0.0, 1.0, 0.0, -1.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-            ]
+        expected_incidence_2_singular_values_unsigned = torch.tensor(
+            [2.5207, 2.0000, 1.5886, 1.4142, 1.4142, 1.0595]
         )
 
-        assert (
-            abs(expected_incidence_2) == lifted_data_unsigned.incidence_2.to_dense()
-        ).all(), "Something is wrong with unsigned incidence_2 (edges to triangles)."
-        assert (
-            expected_incidence_2 == lifted_data_signed.incidence_2.to_dense()
-        ).all(), "Something is wrong with signed incidence_2 (edges to triangles)."
-
-        expected_incidence_3 = torch.tensor(
-            [[-1.0], [1.0], [-1.0], [0.0], [1.0], [0.0]]
+        expected_incidence_2_singular_values_signed = torch.tensor(
+            [2.2738e00, 2.0000e00, 2.0000e00, 1.8196e00, 1.2324e00, 3.2893e-08]
         )
 
-        assert (
-            abs(expected_incidence_3) == lifted_data_unsigned.incidence_3.to_dense()
-        ).all(), (
-            "Something is wrong with unsigned incidence_3 (triangles to tetrahedrons)."
-        )
-        assert (
-            expected_incidence_3 == lifted_data_signed.incidence_3.to_dense()
-        ).all(), (
-            "Something is wrong with signed incidence_3 (triangles to tetrahedrons)."
-        )
+        U, S_unsigned, V = torch.svd(lifted_data_unsigned.incidence_2.to_dense())
+        U, S_signed, V = torch.svd(lifted_data_signed.incidence_2.to_dense())
+
+        assert torch.allclose(
+            expected_incidence_2_singular_values_unsigned, S_unsigned, atol=1.0e-04
+        ), "Something is wrong with unsigned incidence_2 (edges to triangles)."
+        assert torch.allclose(
+            expected_incidence_2_singular_values_signed, S_signed, atol=1.0e-04
+        ), "Something is wrong with signed incidence_2 (edges to triangles)."
+
+        expected_incidence_3_singular_values_unsigned = torch.tensor([2.0000])
+
+        expected_incidence_3_singular_values_signed = torch.tensor([2.0000])
+
+        U, S_unsigned, V = torch.svd(lifted_data_unsigned.incidence_3.to_dense())
+        U, S_signed, V = torch.svd(lifted_data_signed.incidence_3.to_dense())
+
+        assert torch.allclose(
+            expected_incidence_3_singular_values_unsigned, S_unsigned, atol=1.0e-04
+        ), "Something is wrong with unsigned incidence_3 (triangles to tetrahedrons)."
+        assert torch.allclose(
+            expected_incidence_3_singular_values_signed, S_signed, atol=1.0e-04
+        ), "Something is wrong with signed incidence_3 (triangles to tetrahedrons)."
