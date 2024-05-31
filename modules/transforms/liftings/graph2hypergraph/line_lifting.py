@@ -21,7 +21,7 @@ class HypergraphLineLifting(Graph2HypergraphLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to hypergraph domain by considering k-nearest neighbors.
+        r"""Lifts the topology of a graph to hypergraph domain via line hypergraph construction.
 
         Parameters
         ----------
@@ -33,40 +33,28 @@ class HypergraphLineLifting(Graph2HypergraphLifting):
         dict
             The lifted topology.
         """
-        num_nodes = data.x.shape[0]
-        data.pos = data.x
-        num_hyperedges = num_nodes
-        incidence_1 = torch.zeros(num_nodes, num_nodes)
-        data_lifted = self.transform(data)
-        # check for loops, since KNNGraph is inconsistent with nodes with equal features
-        if self.loop:
-            for i in range(num_nodes):
-                if not torch.any(
-                    torch.all(data_lifted.edge_index == torch.tensor([[i, i]]).T, dim=0)
-                ):
-                    connected_nodes = data_lifted.edge_index[
-                        0, data_lifted.edge_index[1] == i
-                    ]
-                    dists = torch.sqrt(
-                        torch.sum(
-                            (data.pos[connected_nodes] - data.pos[i].unsqueeze(0) ** 2),
-                            dim=1,
-                        )
-                    )
-                    furthest = torch.argmax(dists)
-                    idx = torch.where(
-                        torch.all(
-                            data_lifted.edge_index
-                            == torch.tensor([[connected_nodes[furthest], i]]).T,
-                            dim=0,
-                        )
-                    )[0]
-                    data_lifted.edge_index[:, idx] = torch.tensor([[i, i]]).T
 
-        incidence_1[data_lifted.edge_index[1], data_lifted.edge_index[0]] = 1
-        incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
+        # nodes are the edges in the original graph
+        num_nodes = data.edge_index.shape[1]
+        # hyperedges are the vertices in the original graph
+        num_hyperedges = data.x.shape[0]
+
+        x_0 = torch.Tensor(
+            [torch.mean(val, dtype=torch.float) for val in data.edge_index.T]
+        ).reshape(-1, 1)
+
+        incidence_1 = torch.zeros(num_nodes, num_hyperedges)
+
+        for i, val in enumerate(data.edge_index.T):
+            incidence_1[i, val[0]] = 1
+            incidence_1[i, val[1]] = 1
+
+        incidence_1 = incidence_1.to_sparse_coo()
+
         return {
             "incidence_hyperedges": incidence_1,
+            # "num_nodes": num_nodes,
             "num_hyperedges": num_hyperedges,
-            "x_0": data.x,
+            "x_0": x_0,
+            "x_1": data.x,
         }
