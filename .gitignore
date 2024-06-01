@@ -168,3 +168,6 @@ cython_debug/
 .vscode/
 
 jobs/outputs/
+
+*.tex
+*.bib
