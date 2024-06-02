@@ -31,18 +31,9 @@ networks.
 
 ### 2.1 Message passing
 Let $G = (V,E)$ be a graph consisting of nodes $V$ and edges $E$. Then let each node $v_i \in V$ and edge $e_{ij} \in E$ have an associated node feature $\mathbf{f}_i \in \mathbb{R}^{c_n}$ and edge feature $\textbf{a}_{ij} \in \mathbb{R}^{c_e}$, with dimensionality $c_n, c_e \in \mathbb{N}_{>0}$. In message passing, nodes have hidden states (features). We update nodes' features iteratively via the following procedure:
-
-$$
-\mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \text{ (1)}
-$$
-
-$$
-\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \text{ (2)}
-$$
-
-$$
-\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \text{ (3)}
-$$
+$$\mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1}$$
+$$\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}$$
+$$\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3}$$
 
 First, we find messages from $v_j$ to $v_i$ (equation 1). We then aggregate messages to $v_i$, with $\text{Agg}$ being any permutation invariant function over the neighbors (equation 2). Finally, we update the hidden state (features) of all nodes $\mathbf{f}_i$ (equation 3). $\mathcal{N}(i)$ denotes the set of neighbours of node $v_i$, and $\phi_m$ and $\phi_f$ are multi-layer perceptrons. This sequence of steps is one iteration and is performed by what we call a message-passing layer.
 
