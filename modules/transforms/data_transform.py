@@ -15,12 +15,16 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.graph2simplicial.dnd_lifting import (
+    SimplicialDnDLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
+    "SimplicialDnDLifting": SimplicialDnDLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
