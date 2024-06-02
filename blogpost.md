@@ -36,13 +36,13 @@ $$
 \mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1}
 $$
 $$
-\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\operatorname{Agg}} \mathbf{m}_{i j} \tag{2}
+\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}
 $$
 $$
 \mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3}
 $$
 
-First, we find messages from $v_j$ to $v_i$ (equation 1). We then aggregate messages to $v_i$, with $\operatorname{Agg}$ being any permutation invariant function over the neighbors (equation 2). Finally, we update the hidden state (features) of all nodes $\mathbf{f}_i$ (equation 3). $\mathcal{N}(i)$ denotes the set of neighbours of node $v_i$, and $\phi_m$ and $\phi_f$ are multi-layer perceptrons. This sequence of steps is one iteration and is performed by what we call a message-passing layer.
+First, we find messages from $v_j$ to $v_i$ (equation 1). We then aggregate messages to $v_i$, with $\text{Agg}$ being any permutation invariant function over the neighbors (equation 2). Finally, we update the hidden state (features) of all nodes $\mathbf{f}_i$ (equation 3). $\mathcal{N}(i)$ denotes the set of neighbours of node $v_i$, and $\phi_m$ and $\phi_f$ are multi-layer perceptrons. This sequence of steps is one iteration and is performed by what we call a message-passing layer.
 
 After passing our input graph's features through several successive message-passing layers, permutation-invariant aggregation is applied to all final hidden states of the nodes in order to get a hidden state that represents the entire graph.
 
@@ -73,7 +73,7 @@ _Figure 2: Vietoris-Rips lift._
 
 We may also consider alpha complex lifting; the alpha complex is a fundamental data structure from computational geometry. 
 
-In the alpha complex, a subset $ \sigma = \{x_{i0},...,x_{ik} \}\subset S$ belongs to $\operatorname{Alpha}(S,r)$ if there exists a point $y \in \mathbb{R}^m$ that is equidistant from every member of $\sigma$, so that 
+In the alpha complex, a subset $ \sigma = \{x_{i0},...,x_{ik} \}\subset S$ belongs to $\text{Alpha}(S,r)$ if there exists a point $y \in \mathbb{R}^m$ that is equidistant from every member of $\sigma$, so that 
 $$
 \rho := || y- x_{i0}||=...=||y-x_{ik}|| \leq r
 $$
@@ -81,9 +81,9 @@ and thus $||y-x|| \leq r\ \ \  \forall x \in S$.
 
 Formally, the alpha complex is defined as the collection:
 $$
-\operatorname{Alpha}(S, r)=\left\{\sigma \subset S: \bigcap_{x \in \sigma} V_x(r) \neq \emptyset\right\}
+\text{Alpha}(S, r)=\left\{\sigma \subset S: \bigcap_{x \in \sigma} V_x(r) \neq \emptyset\right\}
 $$
-A subset $\sigma $ of size $k+1$ is called a $k$-dimensional simplex of $\operatorname{Alpha}(S,r)$. [@carlsson_computing_2023]
+A subset $\sigma $ of size $k+1$ is called a $k$-dimensional simplex of $\text{Alpha}(S,r)$. [@carlsson_computing_2023]
 
 ### 2.3 Equivariant Message Passing Networks
 
@@ -99,13 +99,13 @@ $$
 A frequently utilized model for geometric graphs is the $E(n)$ Equivariant Graph Neural Network (EGNN). This model enhances the message-passing process by incorporating positional data while maintaining equivariance to $E(n)$ [12]. This is crucial because, in certain scenarios, the nodes within a graph are located in Euclidean space, creating what is known as a geometric graph. This spatial information can be integrated into the message-passing framework to incorporate physical attributes to leverage geometric data. The message function is adapted to depend on $E(n)$ invariant information, such as the distance between two nodes. Consequently, the initial step in the message-passing process is modified as follows:
 
 $$
-\mathbf{m}_{ij}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \operatorname{lnv}\left(\mathbf{x}_i, \mathbf{x}_j\right), \mathbf{a}_{ij}\right)
+\mathbf{m}_{ij}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \text{lnv}\left(\mathbf{x}_i, \mathbf{x}_j\right), \mathbf{a}_{ij}\right)
 $$
 
 having that for all $g \in E(n)$
 
 $$
-\operatorname{lnv}\left(g \cdot \mathbf{x}_i, g \cdot \mathbf{x}_j\right)=\operatorname{lnv}\left(\mathbf{x}_i, \mathbf{x}_j\right)
+\text{lnv}\left(g \cdot \mathbf{x}_i, g \cdot \mathbf{x}_j\right)=\text{lnv}\left(\mathbf{x}_i, \mathbf{x}_j\right)
 $$
 
 Then, for every layer, the position of the nodes is updated as follows:
@@ -126,10 +126,10 @@ Message Passing Simplicial Networks (MPSNs) offer a message-passing framework th
 2. Upper-adjacency's $\mathcal{N}_{\uparrow}(\sigma)=\{\tau \mid \exists \delta, \tau \prec \delta \wedge \sigma \prec \delta\}$ (e.g. if $\sigma$ is a triangle, a upper-adjacent simplex could be another triangle that shares a common edge with $\sigma$)
 
 Then, as we saw in \ref{messpass}, the messages from adjacent simplices have to be aggregated to a simplex $\sigma$. For example, all boundary-adjacent simplex messages are aggregated as follows:
-$$\mathbf{m}_{\mathcal{B}}(\sigma)=\underset{\tau \in \mathcal{B}(\sigma)}{\operatorname{Agg}}\left(\phi_{\mathcal{B}}\left(\mathbf{f}_\sigma, \mathbf{f}_\tau\right)\right)$$
+$$\mathbf{m}_{\mathcal{B}}(\sigma)=\underset{\tau \in \mathcal{B}(\sigma)}{\text{Agg}}\left(\phi_{\mathcal{B}}\left(\mathbf{f}_\sigma, \mathbf{f}_\tau\right)\right)$$
 for $\phi_{\mathcal{B}}$ is a MLP. Alternatively, we incorporate the 2 message types in the updates as follows:
 $$\mathbf{f}_\sigma^{\prime}=\phi_f\left(\mathbf{f}_\sigma, \mathbf{m}_{\mathcal{B}}(\sigma), \mathbf{m}_{\mathcal{N}_{\downarrow}}(\sigma) \right) $$
 Lastly, for a $k$ dimensional simplicial complex $\mathcal{K}$
-$$\mathbf{h}_{\mathcal{K}}:=\bigoplus_{i=0}^k \operatorname{Agg}_{\substack{\sigma \in \mathcal{K},|\sigma|=i+1}} \mathbf{h}_\sigma$$
+$$\mathbf{h}_{\mathcal{K}}:=\bigoplus_{i=0}^k \text{Agg}_{\substack{\sigma \in \mathcal{K},|\sigma|=i+1}} \mathbf{h}_\sigma$$
 where $\mathbf{h}_{\mathcal{K}}$ is the hidden state representing the entire complex, and $\bigoplus$ is the concatenation. For clarity, if the network then updates the positions of the nodes in each layer, this makes the network E(n) equivariant; if the network solely passes the invariant information without altering the geometric locations then it's just E(n) invariant.
 
