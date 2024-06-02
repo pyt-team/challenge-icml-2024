@@ -129,3 +129,29 @@ Lastly, for a $k$ dimensional simplicial complex $\mathcal{K}$
 $$\mathbf{h}_{\mathcal{K}}:=\bigoplus_{i=0}^k \text{Agg}_{\substack{\sigma \in \mathcal{K},|\sigma|=i+1}} \mathbf{h}_\sigma$$
 where $\mathbf{h}_{\mathcal{K}}$ is the hidden state representing the entire complex, and $\bigoplus$ is the concatenation. For clarity, if the network then updates the positions of the nodes in each layer, this makes the network E(n) equivariant; if the network solely passes the invariant information without altering the geometric locations then it's just E(n) invariant.
 
+## 3 Methodology
+
+### 3.1 Lifted representation of the dataset
+
+Here's the text converted to Markdown format:
+
+---
+
+QM9 is a dataset of stable small organic molecules with geometric, energetic, and thermodynamic properties. It contains important quantum chemical properties and serves as a standard benchmark for machine learning methods or systems of identifications of the contained molecular properties. The QM9 dataset consists of molecular graphs with 19 graph-level features. The nodes of the molecular graphs are atoms embedded in a three-dimensional Euclidean space. The goal of the methodology for QM9 is graph feature prediction, and since the features are continuous values, this is a regression task. The molecular graphs present in QM9 contain no higher-order topological information. To address this limitation, we propose to lift the graph structure to facilitate the construction of different order simplices.
+
+To do this, we *lift* the point cloud to a Vietoris-Rips complex based on a parameter $\delta$ as described in Figure 2. There is a limit on the maximum rank of the simplices; however, due to naturally occurring phenomena, it can be constrained. For this particular set of experiments, it is restricted to rank 2. Additionally, this work presents two types of communication among simplices: 1) from $r$-simplices to $r$-simplices and 2) from $(r-1)$-simplices to $r$-simplices, however, we do not use $2$-simplices to $2$-simplices, as in [3]. It is not exactly clear why, other than the increased computational cost might be too high for the added benefit.
+
+In addition to lifting of the structure to a higher-order topological structure, we will also lift the features to embed each $r$-simplex with a certain feature vector. We experiment with three methods: 1) A sum projection of the lower boundary of the simplex; 2) a mean projection of the lower boundary simplices; and 3) a mean of the 0-simplex components composing all lower boundary simplices, as shown in the figure and as worked out in [3]. Additionally, we also used a lift to the Alpha Complex. The alpha complex is a subcomplex of the Čech complex under the condition that the radius of the Čech complex is chosen to be $\sqrt{\alpha}$, where $\alpha$ is the parameter defining the alpha complex. Identical to the simplicial complexes, Alpha complexes are constructed until the second order. The motivation for this upper limit is to contain computational demands of training EMPSN within reasonable bounds. The invariant information is included as abstract edge attribute information between a simplex boundary within a communication framework. The simplex boundary features are shown in the table below:
+
+| Simplex adjacency relation | 0 to 0                               | 0 to 1                               | 1 to 1                               | 1 to 2                                    |
+|-----------------------------|--------------------------------------|--------------------------------------|--------------------------------------|-------------------------------------------|
+| Feature 1                   | $\|x_{\mathbf{p}_i} - x_{\mathbf{p}_j}\|$ | $\|x_{\mathbf{p}_i} - x_{\mathbf{p}_j}\|$ | $\|x_{\mathbf{p}_i} - x_{\mathbf{a}}\|$ | $\|x_{\mathbf{p}_i} - x_{\mathbf{a}}\|$ |
+| Feature 2                   | 0                                    | 0                                    | $\|x_{\mathbf{p}_i} - x_{\mathbf{b}}\|$ | $\|x_{\mathbf{p}_i} - x_{\mathbf{b}}\| + \|x_{\mathbf{p}_i} - x_{\mathbf{a}}\|$ |
+| Feature 3                   | 0                                    | $\|x_{\mathbf{p}_i} - x_{\mathbf{p}_j}\|$ | $\|x_{\mathbf{a}} - x_{\mathbf{b}}\|$ | $V(S_2)$                                  |
+| Feature 4                   | -                                    | -                                    | $\|x_{\mathbf{p}_i} - x_{\mathbf{a}}\|$ | $\|x_{\mathbf{p}_i} - x_{\mathbf{a}}\|$ |
+| Feature 5                   | -                                    | -                                    | $\|x_{\mathbf{p}_i} - x_{\mathbf{b}}\|$ | $\angle \mathbf{p}_i + \angle \mathbf{p}_j$ |
+| Feature 6                   | -                                    | -                                    | $\angle \mathbf{p}_i$                 | $\angle \mathbf{a}$                       |
+
+Table 1: Metadata of E(n) invariant features of simplex adjacencies
+
+In this table, the same point variables are used as in the original paper. $V(S_2)$ denotes the volume of the second order simplex, corresponding to the Volume feature in section 3.2 of the original paper.  As can be seen, some values occur twice in a simplex adjacency relation. The second time the same value occurs is because the volume of a 1d simplex is identical to the distance between its points.
