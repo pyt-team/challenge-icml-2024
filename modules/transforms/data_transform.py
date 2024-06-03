@@ -6,8 +6,11 @@ from modules.transforms.data_manipulations.manipulations import (
     NodeDegrees,
     NodeFeaturesToFloat,
     OneHotDegreeFeatures,
+    FilterEnoughSimplices,
+    InputPreproc,
+    LabelPreproc
 )
-from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
+from modules.transforms.feature_liftings.feature_liftings import ProjectionSum, ProjectionMean
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
@@ -15,22 +18,37 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
+    SimplicialVietorisRipsLifting,
+    InvariantSimplicialVietorisRipsLifting 
+)
+
+from modules.transforms.liftings.graph2simplicial.alpha_complex_lifting import (
+    SimplicialAlphaComplexLifting
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
+    "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
+    "InvariantSimplicialVietorisRipsLifting": InvariantSimplicialVietorisRipsLifting,
+    "SimplicialAlphaComplexLifting": SimplicialAlphaComplexLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
+    "ProjectionMean": ProjectionMean,
     # Data Manipulations
     "Identity": IdentityTransform,
     "NodeDegrees": NodeDegrees,
     "OneHotDegreeFeatures": OneHotDegreeFeatures,
     "NodeFeaturesToFloat": NodeFeaturesToFloat,
     "KeepOnlyConnectedComponent": KeepOnlyConnectedComponent,
+    "FilterEnoughSimplices": FilterEnoughSimplices,
+    "InputPreproc": InputPreproc,
+    "LabelPreproc": LabelPreproc,
 }
 
 

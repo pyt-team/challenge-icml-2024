@@ -1,0 +1,14 @@
+data_domain: graph
+data_type: QM9
+data_name: QM9
+data_dir: datasets/${data_domain}/${data_type}
+#data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
+
+# Dataset parameters
+num_features: 15 # After preprocessing is 15
+num_classes: 19
+task: regression 
+loss_type: mean_absolute_error
+monitor_metric: accuracy
+task_level: graph
+

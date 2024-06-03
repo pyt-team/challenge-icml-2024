@@ -1,0 +1,4 @@
+transform_name: "FilterEnoughSimplices"
+transform_type: "data manipulation"
+
+max_dim: 2

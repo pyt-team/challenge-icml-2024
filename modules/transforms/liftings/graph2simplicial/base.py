@@ -6,6 +6,8 @@ from modules.data.utils.utils import get_complex_connectivity
 from modules.transforms.liftings.lifting import GraphLifting
 
 
+
+
 class Graph2SimplicialLifting(GraphLifting):
     r"""Abstract class for lifting graphs to simplicial complexes.
 
@@ -43,9 +45,12 @@ class Graph2SimplicialLifting(GraphLifting):
         lifted_topology = get_complex_connectivity(
             simplicial_complex, self.complex_dim, signed=self.signed
         )
+
+        # Set features of the 0-cell
         lifted_topology["x_0"] = torch.stack(
             list(simplicial_complex.get_simplex_attributes("features", 0).values())
         )
+
         # If new edges have been added during the lifting process, we discard the edge attributes
         if self.contains_edge_attr and simplicial_complex.shape[1] == (
             graph.number_of_edges()

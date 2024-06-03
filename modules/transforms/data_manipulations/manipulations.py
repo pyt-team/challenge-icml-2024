@@ -1,7 +1,11 @@
 import torch
 import torch_geometric
+import torch_geometric.transforms
 from torch_geometric.utils import one_hot
+from typing import Dict
 
+from toponetx.classes import SimplicialComplex
+import gudhi
 
 class IdentityTransform(torch_geometric.transforms.BaseTransform):
     r"""An identity transform that does nothing to the input data."""
@@ -303,4 +307,77 @@ class KeepSelectedDataFields(torch_geometric.transforms.BaseTransform):
             if key not in self.parameters["keep_fields"]:
                 del data[key]
 
+        return data
+
+
+class FilterEnoughSimplices(torch_geometric.transforms.BaseTransform):
+    r"""A transform that filters out Simplicial Complexes with a maximum simplex
+        dimension lower than `k`.
+
+    Parameters
+    ----------
+    **kwargs : optional
+        Parameters for the transform.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.type = "filter_enough_simplices"
+        self.parameters = kwargs
+
+    def forward(self, data: torch_geometric.data.Data):
+        r"""Apply the transform to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The transformed data.
+        """
+        pos = data.pos
+
+        # Create a list of each node tensor position 
+        points = [pos[i].tolist() for i in range(pos.shape[0])]
+
+        # Lift the graph to an AlphaComplex
+        alpha_complex = gudhi.AlphaComplex(points=points)
+        simplex_tree: gudhi.SimplexTree = alpha_complex.create_simplex_tree(default_filtration_value=True)
+        simplex_tree.prune_above_dimension(self.parameters["max_dim"])
+        simplicial_complex = SimplicialComplex.from_gudhi(simplex_tree)
+
+        return simplicial_complex.maxdim > 1
+class InputPreproc(torch_geometric.transforms.BaseTransform):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.type = "input_preproc"
+        self.parameters = kwargs
+
+    def __call__(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        one_hot = data.x[:, :5]
+        Z_max = 9
+        Z = data.x[:, 5]
+        Z_tilde = (Z / Z_max).unsqueeze(1).repeat(1, 5)
+        data.x = torch.cat((one_hot, Z_tilde * one_hot, Z_tilde * Z_tilde * one_hot), dim=1)
+
+        return data
+
+class LabelPreproc(torch_geometric.transforms.BaseTransform):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.type = 'label_preproc'
+        self.parameters = kwargs
+
+    def __call__(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        targets = self.parameters['targets']
+        qm9_to_ev = self.parameters['qm9_to_ev']
+
+        index = targets.index(self.parameters['target_name'])
+        data.y = data.y[0, index]
+
+        if self.parameters['target_name'] in qm9_to_ev:
+            data.y *= qm9_to_ev[self.target_name]
         return data

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --job-name=install_env
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --time=01:00:00
+#SBATCH --mem=59000M
+#SBATCH --output=jobs/outputs/install_env%A.out
+#SBATCH --error=jobs/outputs/install_env%A_error.out
+
+module purge
+module load 2022
+module load Anaconda3/2022.05
+
+source /sw/arch/RHEL8/EB_production/2022/software/Anaconda3/2022.05/etc/profile.d/conda.sh
+
+conda create -n topox python=3.11.3
+conda activate topox
+
+pip install -e '.[all]'
+
+CUDA=cu$(python -c "import torch; print(torch.version.cuda.replace('.', ''))")
+pip install torch==2.0.1 --extra-index-url https://download.pytorch.org/whl/${CUDA}
+pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.0.1+${CUDA}.html
+pip install torch-cluster -f https://data.pyg.org/whl/torch-2.0.0+${CUDA}.html
+
+echo "Finished!"
