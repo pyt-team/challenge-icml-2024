@@ -30,7 +30,7 @@ ing, simplicial complexes, equivariant message passing networks and message pass
 networks.
 
 ### 2.1 Message passing
-Let $G = (V,E)$ be a graph consisting of nodes $V$ and edges $E$. Then let each node $v_i \in V$ and edge $e_{ij} \in E$ have an associated node feature $$ \\ \mathbf{f}_i \in \mathbb{R}^{c_n} $$ and edge feature $\textbf{a}_{ij} \in \mathbb{R}^{c_e} \\, with dimensionality $c_n, c_e \in \mathbb{N}_{>0}$. In message passing, nodes have hidden states (features). We update nodes' features iteratively via the following procedure:
+Let $G = (V,E)$ be a graph consisting of nodes $V$ and edges $E$. Then let each node $v_i \in V$ and edge $e_{ij} \in E$ have an associated node feature \\( \mathbf{f}_i \in \mathbb{R}^{c_n} \\) and edge feature $\textbf{a}_{ij} \in \mathbb{R}^{c_e} \\, with dimensionality $c_n, c_e \in \mathbb{N}_{>0}$. In message passing, nodes have hidden states (features). We update nodes' features iteratively via the following procedure:
 
 \\ \mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1} \\
 
