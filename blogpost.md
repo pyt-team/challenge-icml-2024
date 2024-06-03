@@ -70,27 +70,27 @@ _Figure 2: Vietoris-Rips lift._
 We may also consider alpha complex lifting; the alpha complex is a fundamental data structure from computational geometry. 
 
 In the alpha complex, a subset $ \sigma = \{x_{i0},...,x_{ik} \}\subset S$ belongs to $\text{Alpha}(S,r)$ if there exists a point $y \in \mathbb{R}^m$ that is equidistant from every member of $\sigma$, so that 
-$$
+$
 \rho := || y- x_{i0}||=...=||y-x_{ik}|| \leq r
-$$
+$
 and thus $||y-x|| \leq r\ \ \  \forall x \in S$. 
 
 Formally, the alpha complex is defined as the collection:
-$$
+$
 \text{Alpha}(S, r)=\left\{\sigma \subset S: \bigcap_{x \in \sigma} V_x(r) \neq \emptyset\right\}
-$$
+$
 A subset $\sigma $ of size $k+1$ is called a $k$-dimensional simplex of $\text{Alpha}(S,r)$. [@carlsson_computing_2023]
 
 ### 2.3 Equivariant Message Passing Networks
 
 Firstly, it is important to define what equivariance is. Suppose $G$ is a group and $X$ and $Y$ are sets on which $G$ acts. A function $f: X \rightarrow Y$ is called equivariant with respect to $G$ if it commutes with the group action. In other words, applying a transformation $g \in G$ followed by the function $f$ yields the same result as first applying $f$ and then the transformation. Formally, 
 
-$$
+$
 \begin{align*}
 & f(g \cdot x)=g \cdot f(x) && \text {equivariance} \\
 & f(g \cdot x)=f(x) &&\text {invariance}
 \end{align*}
-$$
+$
 
 A frequently utilized model for geometric graphs is the $E(n)$ Equivariant Graph Neural Network (EGNN). This model enhances the message-passing process by incorporating positional data while maintaining equivariance to $E(n)$ [12]. This is crucial because, in certain scenarios, the nodes within a graph are located in Euclidean space, creating what is known as a geometric graph. This spatial information can be integrated into the message-passing framework to incorporate physical attributes to leverage geometric data. The message function is adapted to depend on $E(n)$ invariant information, such as the distance between two nodes. Consequently, the initial step in the message-passing process is modified as follows:
 
