@@ -39,8 +39,9 @@ $$\mathbf{m}_{ij}=\phi_m(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{ij}) \tag{1}$$
 
 $$\mathbf{m}_{ij}=\phi_m(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_i) \tag{1}$$
 
-$$\mathbf{m}_{ij}=\phi_m(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{ij}) \tag{1}$$
-
+$$
+\mathbf{m}_{ij} = \phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{ij}\right) \tag{1}
+$$
 <!-- $$\mathbf{m}_{ij}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1}$$ -->
 
 $$\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}$$
