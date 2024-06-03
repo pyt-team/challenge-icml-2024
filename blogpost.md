@@ -1,3 +1,8 @@
+<script
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+  type="text/javascript">
+</script>
+
 ## 1 Introduction
 
 Over the past few years, deep learning research has seen significant progress in solving graph learning tasks. A crucial aspect of such problems is maintaining equivariance to transformations, such as rotations and translations, allowing for instance, to reliably predict physical properties of molecules. In this section, we will provide an overview of the predominant methods used in this domain, along with an introduction to a new method: E(n) Equivariant Simplicial Message Passing Networks (EMPSNs) [3].
@@ -36,7 +41,7 @@ Let $G = (V,E)$ be a graph consisting of nodes $V$ and edges $E$. Then let each 
 
 \\\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}\\
 
-\\\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3} \\
+$$\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3} $$
 
 First, we find messages from $v_j$ to $v_i$ (equation 1). We then aggregate messages to $v_i$, with $\text{Agg}$ being any permutation invariant function over the neighbors (equation 2). Finally, we update the hidden state (features) of all nodes $\mathbf{f}_i$ (equation 3). $\mathcal{N}(i)$ denotes the set of neighbours of node $v_i$, and $\phi_m$ and $\phi_f$ are multi-layer perceptrons. This sequence of steps is one iteration and is performed by what we call a message-passing layer.
 
