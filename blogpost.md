@@ -32,11 +32,11 @@ networks.
 ### 2.1 Message passing
 Let $G = (V,E)$ be a graph consisting of nodes $V$ and edges $E$. Then let each node $v_i \in V$ and edge $e_{ij} \in E$ have an associated node feature $\mathbf{f}_i \in \mathbb{R}^{c_n}$ and edge feature $\textbf{a}_{ij} \in \mathbb{R}^{c_e}$, with dimensionality $c_n, c_e \in \mathbb{N}_{>0}$. In message passing, nodes have hidden states (features). We update nodes' features iteratively via the following procedure:
 
-$$\mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1}$$
+$\mathbf{m}_{i j}=\phi_m\left(\mathbf{f}_i, \mathbf{f}_j, \mathbf{a}_{i j}\right) \tag{1}$
 
-$$\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}$$
+$\mathbf{m}_i=\underset{j \in \mathcal{N}(i)}{\text{Agg}} \mathbf{m}_{i j} \tag{2}$
 
-$$\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3}$$
+$\mathbf{f}_i^{\prime}=\phi_f\left(\mathbf{f}_i, \mathbf{m}_i\right) \tag{3}$
 
 First, we find messages from $v_j$ to $v_i$ (equation 1). We then aggregate messages to $v_i$, with $\text{Agg}$ being any permutation invariant function over the neighbors (equation 2). Finally, we update the hidden state (features) of all nodes $\mathbf{f}_i$ (equation 3). $\mathcal{N}(i)$ denotes the set of neighbours of node $v_i$, and $\phi_m$ and $\phi_f$ are multi-layer perceptrons. This sequence of steps is one iteration and is performed by what we call a message-passing layer.
 
@@ -70,27 +70,27 @@ _Figure 2: Vietoris-Rips lift._
 We may also consider alpha complex lifting; the alpha complex is a fundamental data structure from computational geometry. 
 
 In the alpha complex, a subset $ \sigma = \{x_{i0},...,x_{ik} \}\subset S$ belongs to $\text{Alpha}(S,r)$ if there exists a point $y \in \mathbb{R}^m$ that is equidistant from every member of $\sigma$, so that 
-$$
+$
 \rho := || y- x_{i0}||=...=||y-x_{ik}|| \leq r
-$$
+$
 and thus $||y-x|| \leq r\ \ \  \forall x \in S$. 
 
 Formally, the alpha complex is defined as the collection:
-$$
+$
 \text{Alpha}(S, r)=\left\{\sigma \subset S: \bigcap_{x \in \sigma} V_x(r) \neq \emptyset\right\}
-$$
+$
 A subset $\sigma $ of size $k+1$ is called a $k$-dimensional simplex of $\text{Alpha}(S,r)$. [@carlsson_computing_2023]
 
 ### 2.3 Equivariant Message Passing Networks
 
 Firstly, it is important to define what equivariance is. Suppose $G$ is a group and $X$ and $Y$ are sets on which $G$ acts. A function $f: X \rightarrow Y$ is called equivariant with respect to $G$ if it commutes with the group action. In other words, applying a transformation $g \in G$ followed by the function $f$ yields the same result as first applying $f$ and then the transformation. Formally, 
 
-$$
+$
 \begin{align*}
 & f(g \cdot x)=g \cdot f(x) && \text {equivariance} \\
 & f(g \cdot x)=f(x) &&\text {invariance}
 \end{align*}
-$$
+$
 
 A frequently utilized model for geometric graphs is the $E(n)$ Equivariant Graph Neural Network (EGNN). This model enhances the message-passing process by incorporating positional data while maintaining equivariance to $E(n)$ [12]. This is crucial because, in certain scenarios, the nodes within a graph are located in Euclidean space, creating what is known as a geometric graph. This spatial information can be integrated into the message-passing framework to incorporate physical attributes to leverage geometric data. The message function is adapted to depend on $E(n)$ invariant information, such as the distance between two nodes. Consequently, the initial step in the message-passing process is modified as follows:
 
