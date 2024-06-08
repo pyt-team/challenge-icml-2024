@@ -1,0 +1,6 @@
+transform_type: 'lifting'
+transform_name: "SimplicialIndependentSetLifting"
+complex_dim: 3
+preserve_edge_attr: False
+signed: False
+feature_lifting: ProjectionSum
