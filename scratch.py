@@ -19,6 +19,7 @@ res = lifting_unsigned.lift_topology(data.clone())
 dataset = GeometricShapes(root="data/GeometricShapes")
 dataset.transform = T.SamplePoints(num=256)
 points = dataset[0]
+points.x = torch.ones((256, 1))
 
 knn = GraphKNNLifting(k=5)
 res = knn.lift_topology(points)

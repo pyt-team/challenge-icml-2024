@@ -1,12 +1,14 @@
 import pudb
+import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
 from modules.data.utils.utils import get_complex_connectivity
+from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
 
 
-class GraphKNNLifting(PointCloud2GraphLifting):
+class GraphKNNLifting(PointCloud2GraphLifting, Graph2SimplicialLifting):
     r"""Lifts point cloud data to graph by creating its k-NN graph
 
     Parameters
@@ -34,13 +36,7 @@ class GraphKNNLifting(PointCloud2GraphLifting):
         # Pull in node features
         transform = torch_geometric.transforms.KNNGraph()
         graph_data = transform(data)
+        graph = self._generate_graph_from_data(graph_data)
         # Create dummy simplicial complex
-        simplicial_complex = SimplicialComplex(graph_data)
-
-        # Hack around, create a 1-simplicial complex
-        pudb.set_trace()
-        lifted_topology = get_complex_connectivity(simplicial_complex, 0)
-        lifted_topology["x_0"] = torch.stack(
-            list(simplicial_complex.get_cell_attributes("features", 0).values())
-        )
-        return lifted_topology
+        simplicial_complex = SimplicialComplex(graph)
+        return self._get_lifted_topology(simplicial_complex, graph)
