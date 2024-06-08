@@ -39,7 +39,7 @@ class SimplicialIndependentSetsLifting(Graph2SimplicialLifting):
         graph = self._generate_graph_from_data(data)
         complement_graph = nx.complement(graph)
 
-        # Since we lose the original edges, not sure we can keep the edge features ? Should we prevent it ?
+        # Since we lose the original edges, not sure we can keep the edge features ? Should we warn ?
         self.contains_edge_attr = False
 
         # Propagate node features to complement
