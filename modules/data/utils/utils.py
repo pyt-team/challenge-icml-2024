@@ -50,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -281,6 +281,14 @@ def load_hypergraph_pickle_dataset(cfg):
     print("Final num_class", data.num_class)
 
     return data
+
+
+def load_random_points(num_classes: int = 2, num_points: int = 8):
+    """Create a toy point cloud dataset"""
+    points = torch.tensor(np.random.rand(num_points, 2))
+    classes = torch.tensor(np.random.randint(num_classes, size=num_points))
+    features = torch.tensor(np.random.randint(3, size=num_points))
+    return torch_geometric.data.Data(x=features, y=classes, pos=points)
 
 
 def load_manual_graph():

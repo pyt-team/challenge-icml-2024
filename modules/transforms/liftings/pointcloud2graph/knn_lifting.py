@@ -1,14 +1,11 @@
 import pudb
 import torch
 import torch_geometric
-from toponetx.classes import SimplicialComplex
 
-from modules.data.utils.utils import get_complex_connectivity
-from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
 
 
-class GraphKNNLifting(PointCloud2GraphLifting, Graph2SimplicialLifting):
+class GraphKNNLifting(PointCloud2GraphLifting):
     r"""Lifts point cloud data to graph by creating its k-NN graph
 
     Parameters
@@ -17,8 +14,10 @@ class GraphKNNLifting(PointCloud2GraphLifting, Graph2SimplicialLifting):
         Additional arguments for the class
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, k: int = 1, **kwargs):
         super().__init__(**kwargs)
+        self.k = k
+        self.transform = torch_geometric.transforms.KNNGraph(k=k)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts a point cloud dataset to a graph by constructing its k-NN graph.
@@ -33,10 +32,11 @@ class GraphKNNLifting(PointCloud2GraphLifting, Graph2SimplicialLifting):
         dict
             The lifted topology
         """
-        # Pull in node features
-        transform = torch_geometric.transforms.KNNGraph()
-        graph_data = transform(data)
-        graph = self._generate_graph_from_data(graph_data)
-        # Create dummy simplicial complex
-        simplicial_complex = SimplicialComplex(graph)
-        return self._get_lifted_topology(simplicial_complex, graph)
+        #
+        graph_data = self.transform(data)
+        topology = {
+            "shape": [graph_data.x.shape[0], graph_data.edge_index.shape[1]],
+            "edge_index": graph_data.edge_index,
+            "num_nodes": graph_data.x.shape[0],
+        }
+        return topology
