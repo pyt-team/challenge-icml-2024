@@ -1,4 +1,3 @@
-import pudb
 import torch
 import torch_geometric
 
@@ -32,7 +31,6 @@ class GraphKNNLifting(PointCloud2GraphLifting):
         dict
             The lifted topology
         """
-        #
         graph_data = self.transform(data)
         topology = {
             "shape": [graph_data.x.shape[0], graph_data.edge_index.shape[1]],
