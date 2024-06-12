@@ -111,7 +111,7 @@ def load_simplicial_dataset(cfg):
         2: "face_feat",
         3: "tetrahedron_feat",
     }
-    for rank_idx in range(max_rank + 1):
+    for rank_idx in range(max_rank):
         try:
             features[f"x_{rank_idx}"] = torch.tensor(
                 np.stack(
@@ -282,6 +282,61 @@ def load_hypergraph_pickle_dataset(cfg):
 
     return data
 
+
+def load_manual_simplicial_complex():
+    """ Create a manual simplicial complex for testing purposes.
+    """
+    num_feats = 2
+    one_cells = [i for i in range(5)]
+    two_cells = [
+        [0, 1],
+        [0, 2],
+        [1, 2],
+        [1, 3],
+        [2, 3],
+        [0, 4],
+        [2, 4]
+    ]
+    three_cells = [
+        [0, 1, 2],
+        [1, 2, 3],
+        [0, 2, 4]
+    ]
+    incidence_1 = [
+        [1, 1, 0, 0, 0, 1, 0],
+        [1, 0, 1, 1, 0, 0, 0],
+        [0, 1, 1, 0, 1, 0, 1],
+        [0, 0, 0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1]
+    ]
+    incidence_2 = [
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 1]
+
+    ]
+    
+
+    y = [1]
+
+    return torch_geometric.data.Data(
+        x_0=torch.rand(len(one_cells), num_feats),
+        x_1=torch.rand(len(two_cells), num_feats),
+        x_2=torch.rand(len(three_cells), num_feats),
+        x_3=torch.rand(len(three_cells), num_feats),
+        incidence_0=torch.zeros((1, 5)).to_sparse(),
+        adjacency_0=torch.zeros((5, 5)).to_sparse(),
+        incidence_1=torch.tensor(incidence_1).to_sparse(),
+        incidence_2=torch.tensor(incidence_2).to_sparse(),
+        adjacency_1=torch.zeros((len(one_cells), len(one_cells))).to_sparse(),
+        adjacency_2=torch.zeros((len(two_cells), len(two_cells))).to_sparse(),
+        num_nodes=len(one_cells),
+        y=torch.tensor(y),
+    )
 
 def load_manual_graph():
     """Create a manual graph for testing purposes."""
