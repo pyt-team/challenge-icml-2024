@@ -15,6 +15,9 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.graph2combinatorial.n_hop_lifting import (
+    NHopLifting
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -23,6 +26,8 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Graph -> Combinatorial Complex
+    "NHopLifting": NHopLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
