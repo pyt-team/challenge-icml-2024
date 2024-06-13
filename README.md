@@ -7,7 +7,7 @@ Here, the elements are the following:
 - **Edges**: Bonds between atoms.
 - **2-cells**: Rings in the molecule.
 
-This pull request is done under the team formed by: Bertran Miquel Oliver, Manel Gil, Alexis Molina
+This pull request is done under the team formed by: Bertran Miquel Oliver, Manel Gil Sorribes, Alexis Molina
 
 ## Questions
 

@@ -54,9 +54,7 @@ class CellRingLifting(Graph2CellLifting):
         # Hence, the molecule will not be generated
         # These points should be removed from the dataset
         try:
-            mol = Chem.MolFromSmiles(self.data.smiles)
-            mol = Chem.rdmolops.RemoveHs(mol)
-            return mol
+            return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
         except:
             return None
 
