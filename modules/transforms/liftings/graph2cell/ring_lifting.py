@@ -111,7 +111,7 @@ class CellRingLifting(Graph2CellLifting):
 
         self.mol = self._generate_mol_from_data()
         if self.mol is None:
-            pass  # remove that data point
+            exit(1)
         else:
             G = self._generate_graph_from_mol(self.mol)
             cell_complex = CellComplex(G)
