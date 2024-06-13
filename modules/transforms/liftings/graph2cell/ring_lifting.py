@@ -53,10 +53,11 @@ class CellRingLifting(Graph2CellLifting):
         # Not always the data will have the correct SMILE
         # Hence, the molecule will not be generated
         # These points should be removed from the dataset
-        try:
-            return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
-        except:
+        self.mol = Chem.MolFromSmiles(self.data.smiles)
+        if self.mol is None:
             return None
+        else:
+            return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
 
     def _generate_graph_from_mol(self, mol: Chem.Mol) -> nx.Graph:
         r"""Generates a NetworkX graph from the input molecule.
@@ -117,6 +118,6 @@ class CellRingLifting(Graph2CellLifting):
             cell_complex = CellComplex(G)
 
             # add rings as 2-cells
-            cell_complex.add_cells_from(self.get_rings(mol), rank=self.complex_dim)
+            cell_complex.add_cells_from(self.get_rings(self.mol), rank=self.complex_dim)
 
             return self._get_lifted_topology(cell_complex, G)
