@@ -104,6 +104,8 @@ class GraphLoader(AbstractLoader):
             dataset = datasets[0] + datasets[1] + datasets[2]
             dataset = ConcatToGeometricDataset(dataset)
 
+        elif self.parameters.data_name == "QM9":
+            dataset = torch_geometric.datasets.QM9(root=root_data_dir)
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
