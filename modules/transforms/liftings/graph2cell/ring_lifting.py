@@ -1,6 +1,7 @@
 import networkx as nx
 import torch
 import torch_geometric
+from rdkit import Chem
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting

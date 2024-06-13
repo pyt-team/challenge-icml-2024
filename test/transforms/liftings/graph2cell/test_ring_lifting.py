@@ -1,6 +1,4 @@
 import torch
-from rdkit import Chem
-from torch_geometric.data import Data
 
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2cell.ring_lifting import CellRingLifting
