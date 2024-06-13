@@ -56,8 +56,7 @@ class CellRingLifting(Graph2CellLifting):
         self.mol = Chem.MolFromSmiles(self.data.smiles)
         if self.mol is None:
             return None
-        else:
-            return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
+        return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
 
     def _generate_graph_from_mol(self, mol: Chem.Mol) -> nx.Graph:
         r"""Generates a NetworkX graph from the input molecule.
