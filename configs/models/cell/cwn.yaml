@@ -1,6 +1,6 @@
 in_channels_0: null # This will be set by the dataset
 in_channels_1: null # This will be set by the dataset
 in_channels_2: null # This will be set by the dataset
-hidden_channels: 11
+hidden_channels: 32
 out_channels: null # This will be set by the dataset
 n_layers: 2

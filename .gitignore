@@ -31,7 +31,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# do not ignore requirements.txt
+# do not ignore requires.txt
 !challenge_icml_2024.egg-info/requires.txt
 
 # PyInstaller
