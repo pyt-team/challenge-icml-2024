@@ -56,7 +56,7 @@ class CellRingLifting(Graph2CellLifting):
         self.mol = Chem.MolFromSmiles(self.data.smiles)
         if self.mol is None:
             return None
-        return Chem.rdmolops.RemoveHs(Chem.MolFromSmiles(self.data.smiles))
+        return Chem.rdmolops.RemoveHs(self.mol)
 
     def _generate_graph_from_mol(self, mol: Chem.Mol) -> nx.Graph:
         r"""Generates a NetworkX graph from the input molecule.
@@ -100,9 +100,6 @@ class CellRingLifting(Graph2CellLifting):
         ----------
         data : torch_geometric.data.Data | dict
             The input data to be lifted.
-
-        rings : torch.Tensor
-            The ring information for each molecule
 
         Returns
         -------
