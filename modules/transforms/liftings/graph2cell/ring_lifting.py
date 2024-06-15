@@ -21,7 +21,9 @@ class CellRingLifting(Graph2CellLifting):
         super().__init__()
         self.complex_dim = 2
 
-    def get_rings(self, mol: Chem.Mol) -> torch.Tensor:
+    def get_rings(
+            self, data: torch_geometric.data.Data | dict
+        ) -> torch.Tensor:
         r"""Returns the ring information for each molecule.
 
         Parameters
@@ -35,10 +37,18 @@ class CellRingLifting(Graph2CellLifting):
             The ring information.
         """
 
-        return [list(ring) for ring in Chem.GetSymmSSSR(mol)]
+        # transform data to molecule and compute rings
+        mol = self._generate_mol_from_data(data)
+        rings = Chem.GetSymmSSSR(mol)
 
-    def _generate_mol_from_data(self) -> Chem.Mol:
-        r"""Converts the data to a molecule and removes the hydrogens.
+        return [list(ring) for ring in rings]
+
+        
+    def _generate_mol_from_data(
+            self, data: torch_geometric.data.Data | dict
+        ) -> Chem.Mol:
+        r"""Converts the data to a molecule through the SMILES
+            and removes the hydrogens.
 
         Parameters
         ----------
@@ -50,40 +60,8 @@ class CellRingLifting(Graph2CellLifting):
         Chem.Mol
             The molecule.
         """
-        # Not always the data will have the correct SMILE
-        # Hence, the molecule will not be generated
-        # These points should be removed from the dataset
-        self.mol = Chem.MolFromSmiles(self.data.smiles)
-        if self.mol is None:
-            return None
-        return Chem.rdmolops.RemoveHs(self.mol)
-
-    def _generate_graph_from_mol(self, mol: Chem.Mol) -> nx.Graph:
-        r"""Generates a NetworkX graph from the input molecule.
-
-        Parameters
-        ----------
-        mol : Chem.Mol
-            The input molecule.
-
-        Returns
-        -------
-        nx.Graph
-            The graph.
-        """
-        G = nx.Graph()
-
-        for atom in mol.GetAtoms():
-            G.add_node(atom.GetIdx(), atom=atom.GetSymbol())
-
-        for bond in mol.GetBonds():
-            G.add_edge(
-                bond.GetBeginAtomIdx(),
-                bond.GetEndAtomIdx(),
-                bond=bond.GetBondTypeAsDouble(),
-            )
-
-        return G
+        mol = Chem.MolFromSmiles(data.smiles)
+        return Chem.rdmolops.RemoveHs(mol)
 
     def lift_topology(
         self, data: torch_geometric.data.Data | dict
@@ -106,14 +84,13 @@ class CellRingLifting(Graph2CellLifting):
         torch_geometric.data.Data | dict
             The lifted data."""
 
-        self.mol = self._generate_mol_from_data()
-        if self.mol is None:
-            exit(1)
-        else:
-            G = self._generate_graph_from_mol(self.mol)
-            cell_complex = CellComplex(G)
+        G = self._generate_graph_from_data(data)
+        cell_complex = CellComplex(G)
+        rings = self.get_rings(data)
+        # add rings as 2-cells
+        cell_complex.add_cells_from(
+                rings, 
+                rank=self.complex_dim
+            )
 
-            # add rings as 2-cells
-            cell_complex.add_cells_from(self.get_rings(self.mol), rank=self.complex_dim)
-
-            return self._get_lifted_topology(cell_complex, G)
+        return self._get_lifted_topology(cell_complex, G)
