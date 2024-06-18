@@ -31,9 +31,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# do not ignore requires.txt
-!challenge_icml_2024.egg-info/requires.txt
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
