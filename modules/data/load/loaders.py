@@ -17,6 +17,10 @@ from modules.data.utils.utils import (
     load_simplicial_dataset,
 )
 
+# silent RDKit warnings
+from rdkit import RDLogger
+RDLogger.DisableLog("rdApp.*")
+
 
 class GraphLoader(AbstractLoader):
     r"""Loader for graph datasets.
