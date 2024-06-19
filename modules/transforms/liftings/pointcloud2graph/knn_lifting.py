@@ -1,4 +1,3 @@
-import torch
 import torch_geometric
 
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
