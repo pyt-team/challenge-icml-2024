@@ -136,7 +136,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         if hasattr(data, "num_edges"):
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -249,7 +249,7 @@ def plot_manual_graph(data, title=None):
                 edges.append(torch.where(edge != 0)[0].numpy())
                 edge_mapper[edge_idx] = sorted(node_idxs)
             edges = np.array(edges)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             edges = data.edge_index.T.tolist()
             edge_mapper = {}
             for e, edge in enumerate(edges):
