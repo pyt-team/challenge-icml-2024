@@ -233,5 +233,4 @@ class PointCloudLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         data = load_random_points(num_classes=self.cfg["num_classes"])
-        dataset = CustomDataset([data], self.cfg["data_dir"])
-        return dataset
+        return CustomDataset([data], self.cfg["data_dir"])

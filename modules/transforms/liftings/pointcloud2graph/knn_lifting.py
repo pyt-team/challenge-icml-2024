@@ -31,9 +31,8 @@ class GraphKNNLifting(PointCloud2GraphLifting):
             The lifted topology
         """
         graph_data = self.transform(data)
-        topology = {
+        return {
             "shape": [graph_data.x.shape[0], graph_data.edge_index.shape[1]],
             "edge_index": graph_data.edge_index,
             "num_nodes": graph_data.x.shape[0],
         }
-        return topology
