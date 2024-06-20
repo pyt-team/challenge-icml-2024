@@ -42,11 +42,7 @@ class GraphLoader(AbstractLoader):
 
     def filter_qm9_dataset(self, dataset):
         """Filter the QM9 dataset to remove invalid SMILES strings."""
-        valid_data_list = []
-        for data in dataset:
-            if self.is_valid_smiles(data.smiles):
-                valid_data_list.append(data)
-        return valid_data_list
+        return [data for data in dataset if self.is_valid_smiles(data.smiles)]
 
     def load(self) -> torch_geometric.data.Dataset:
         r"""Load graph dataset.
@@ -126,9 +122,10 @@ class GraphLoader(AbstractLoader):
         elif self.parameters.data_name == "QM9":
             dataset = torch_geometric.datasets.QM9(root=root_data_dir)
             # Filter the QM9 dataset to remove invalid SMILES strings
-            valid_data_list = self.filter_qm9_dataset(dataset)
-            dataset = CustomDataset(valid_data_list, self.data_dir)
-
+            valid_dataset = self.filter_qm9_dataset(dataset)
+            # dataset = ConcatToGeometricDataset(valid_dataset)
+            dataset = CustomDataset(valid_dataset, self.data_dir)
+            
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
