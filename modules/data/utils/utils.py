@@ -419,10 +419,7 @@ def load_manual_rings():
         [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     ]
-
     x = torch.tensor(x).float()
-
-    
 
     return torch_geometric.data.Data(
         x=x,
