@@ -1,4 +1,4 @@
-# Molecule Ring-Based Lifting (Graph to Cell)
+# Molecule Ring & Close Atoms Lifting (Graph to Combinatorial)
 This notebook imports QM9 dataset and applies a lifting from a graph molecular representation to a combinatorial complex. Then, a neural network is run using the loaded data.
 
 Using [QM9 dataset](https://paperswithcode.com/dataset/qm9), we implement a lifting from a molecule graph to a combinatorial complex based on two points:
