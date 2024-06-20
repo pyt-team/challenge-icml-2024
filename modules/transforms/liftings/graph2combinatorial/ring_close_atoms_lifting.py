@@ -154,13 +154,13 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     def lift_topology(
         self, data: torch_geometric.data.Data | dict
     ) -> torch_geometric.data.Data | dict:
-        r"""Lifts the topology of a graph to higher-order topological domains.
+        r"""Lifts the topology of a graph to a combinatorial complex.
         Following the steps:
         1. Convert the data to a molecule and remove the hydrogens.
         2. Generate the graph from the molecule. Take into account that this graph
             will not be the same as the starting one, since the hydrogens are removed.
-        3. Generate the cell complex from the graph.
-        4. Add the rings as 2-cells.
+        3. Generate the cell complex from the graph adding the rings as 2-cells.
+        4. Group the close atoms and add them as hyperedges.
 
         Parameters
         ----------
