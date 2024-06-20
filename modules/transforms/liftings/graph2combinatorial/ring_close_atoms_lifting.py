@@ -2,10 +2,10 @@ import networkx as nx
 import torch
 import torch_geometric
 from rdkit import Chem
-from toponetx.classes import CombinatorialComplex
+from toponetx.classes import CombinatorialComplex, CellComplex
 
 from modules.transforms.liftings.graph2combinatorial.base import Graph2CombinatorialLifting
-
+from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
 
 class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     r"""Lifts r-cell features to r+1-cells by molecular rings.
@@ -172,50 +172,37 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         torch_geometric.data.Data | dict
             The lifted data."""
 
+        # Combinaotrial complex is a combination of a cell complex and a hypergraph
+        # First create a cell complex and then add hyperedges
+
         G = self._generate_graph_from_data(data)
-        ccc = CombinatorialComplex(G)
+        ccc = CellComplex(G)
         
         # add rings as 2-cells
         rings = self.get_rings(data)
-        ccc.add_cell(
-                rings, 
+        for ring in rings:
+            ccc.add_cell(
+                ring, 
                 rank=self.complex_dim
-        )
-
+            )
+        
+        # Hypergraph stuff
         # add close atoms as hyperedges (rank = 1)
         close_atoms = self.find_close_atom_groups(data)
-        for group in close_atoms:
-            ccc.add_cell(
-                group,
-                rank=1
-            )
-
-        # Create the lifted topology dict for combinatorial complex case
-        # ccc_lifted_topology = self._get_lifted_topology(ccc, G)
-        # add hypergraphs elements to the dict
-        # ccc_lifted_topology = {}
-        # ccc_lifted_topology["num_hyperedges"] = data.x.shape[0]
-        # ccc_lifted_topology["x_0"] = data.x
+        num_hyperedges = len(close_atoms)
+        # create incidence matrix for hyperedges
+        incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
+        for i, group in enumerate(close_atoms):
+            for node in group:
+                incidence_1[node, i] = 1
         
-        # # incidence_1 = torch.zeros(data.num_nodes, data.num_nodes)
-        # # incidence_1[ccc.incidence_matrix(0, 1)] = 1
-        # incidence_1 = ccc.incidence_matrix(0, 1)
-        # # incidence_1 = ccc.incidence_matrix(0, 1)
-        # # ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(incidence_1).to_sparse_coo()
 
-        # return ccc_lifted_topology
+        # Create the lifted topology dict for the cell complex
+        ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
 
-        ccc_lifted_topology = self._get_lifted_topology(ccc, G)
-        # add hyperedges
-        ccc_lifted_topology["num_hyperedges"] = len(close_atoms)
+        # add hyperedges to the lifted topology
+        ccc_lifted_topology["num_hyperedges"] = num_hyperedges
         ccc_lifted_topology["x_0"] = data.x
-        # create a incidence matrix for hyperedges
-        # I want a row and a column for each node
-        # and a 1 if the node is in the hyperedge
-        # hyperedges or edges are stored in ccc.
-        incidence_1 = torch.zeros(data.num_nodes, data.num_nodes)
-        
-        print(ccc.incidence_1)
-        ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(ccc.incidence_1).to_sparse_coo()
+        ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(incidence_1).to_sparse_coo()
 
         return ccc_lifted_topology
