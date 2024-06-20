@@ -5,7 +5,8 @@ import rootutils
 import torch_geometric
 from omegaconf import DictConfig
 
-from rdkit import Chem
+# silent RDKit warnings
+from rdkit import Chem, RDLogger
 
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
@@ -17,8 +18,6 @@ from modules.data.utils.utils import (
     load_simplicial_dataset,
 )
 
-# silent RDKit warnings
-from rdkit import RDLogger
 RDLogger.DisableLog("rdApp.*")
 
 
@@ -125,7 +124,7 @@ class GraphLoader(AbstractLoader):
             valid_dataset = self.filter_qm9_dataset(dataset)
             # dataset = ConcatToGeometricDataset(valid_dataset)
             dataset = CustomDataset(valid_dataset, self.data_dir)
-            
+
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
