@@ -113,6 +113,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         distance_matrix = self.get_distance_matrix(data)
 
         # Get indices of atom pairs that are closer than the threshold
+        num_atoms = distance_matrix.size(0)
         return [
             (i, j)
             for i in range(num_atoms)
