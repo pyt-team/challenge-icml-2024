@@ -1,6 +1,6 @@
 import torch
 
-from modules.data.utils.utils import load_manual_graph
+from modules.data.utils.utils import load_manual_rings
 from modules.transforms.liftings.graph2cell.ring_lifting import CellRingLifting
 
 
@@ -9,7 +9,7 @@ class TestCellRingLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = load_manual_graph()
+        self.data = load_manual_rings()
 
         # Initialise the CellCyclesLifting class
         self.lifting = CellRingLifting()
