@@ -113,13 +113,12 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         distance_matrix = self.get_distance_matrix(data)
 
         # Get indices of atom pairs that are closer than the threshold
-        close_atoms = []
-        num_atoms = distance_matrix.size(0)  # data.num_nodes
-        for i in range(num_atoms):
-            for j in range(i + 1, num_atoms):
-                if distance_matrix[i, j] < float(self.threshold_distance):
-                    close_atoms.append((i, j))
-        return close_atoms  # , distance_matrix
+        return [
+            (i, j)
+            for i in range(num_atoms)
+            for j in range(i + 1, num_atoms)
+            if distance_matrix[i, j] < float(self.threshold_distance)
+        ]
 
     def find_close_atom_groups(self, data: torch_geometric.data.Data | dict) -> list:
         r"""Finds the groups of atoms that are close to each other within a molecule.
