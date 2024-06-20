@@ -11,7 +11,7 @@ import torch_geometric
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
-
+import scipy as sp
 
 def get_complex_connectivity(complex, max_rank, signed=False):
     r"""Gets the connectivity matrices for the complex.
@@ -64,6 +64,139 @@ def get_complex_connectivity(complex, max_rank, signed=False):
     connectivity["shape"] = practical_shape
     return connectivity
 
+def get_combinatorial_connectivity(combinatorial_complex, max_rank):
+    r"""Gets the connectivity matrices for the combinatorial complex.
+
+    Parameters
+    ----------
+    combinatorial_complex : topnetx.CombinatorialComplex
+        Combinatorial complex.
+    max_rank : int
+        Maximum rank of the complex.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    practical_shape = list(
+        np.pad(
+            list(combinatorial_complex.shape), (0, max_rank + 1 - len(combinatorial_complex.shape))
+        )
+    )
+    connectivity = {}
+    for rank_idx in range(max_rank + 1):
+        for connectivity_info in [
+            "incidence",
+            "down_laplacian",
+            "up_laplacian",
+            "adjacency",
+            "hodge_laplacian",
+        ]:
+            try:
+                if connectivity_info == "down_laplacian": # down_laplacian is not implemented in CombinatorialComplex
+                                                          # down_laplacian = incidence.T * incidence
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        combinatorial_complex.incidence_matrix(rank=rank_idx, to_rank=rank_idx+1).T
+                         @ 
+                        combinatorial_complex.incidence_matrix(rank=rank_idx, to_rank=rank_idx+1)
+                    )
+                elif connectivity_info == "up_laplacian": # up_laplacian is not implemented in CombinatorialComplex
+                                                          # up_laplacian = incidence * incidence.T
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        combinatorial_complex.incidence_matrix(rank=rank_idx, to_rank=rank_idx+1)
+                         @ 
+                        combinatorial_complex.incidence_matrix(rank=rank_idx, to_rank=rank_idx+1).T
+                    )
+
+                elif connectivity_info == "hodge_laplacian": # hodge_laplacian is not implemented in CombinatorialComplex
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = get_hodge_laplacian_matrix_combinatorial(combinatorial_complex, rank=rank_idx)
+
+                elif connectivity_info == "adjacency": 
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        getattr(combinatorial_complex, f"{connectivity_info}_matrix")(
+                            rank=rank_idx, via_rank=rank_idx+1
+                        )
+                    )
+                elif connectivity_info == "incidence":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        getattr(combinatorial_complex, f"{connectivity_info}_matrix")(
+                            rank=rank_idx, to_rank=rank_idx+1
+                        )
+                    )
+                else: connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                    getattr(combinatorial_complex, f"{connectivity_info}_matrix")(
+                        rank=rank_idx, via_rank=rank_idx+1
+                    )
+                )
+            except ValueError:  # noqa: PERF203
+                if connectivity_info == "incidence":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                        )
+                    )
+                else:
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                        )
+                    )
+    connectivity["shape"] = practical_shape
+    return connectivity
+
+def get_hodge_laplacian_matrix_combinatorial(
+    ccc,
+    rank: int,
+    # weight: str | None = None,
+    index: bool = False,
+) -> tuple[dict, sp.sparse.lil_matrix] | sp.sparse.lil_matrix:
+    """Compute Hodge Laplacian matrix of the path complex.
+
+    Parameters
+    ----------
+    rank : int
+        The dimension of the Hodge Laplacian matrix.
+
+    index : bool, default=False
+        If True, return Hodge Laplacian matrix with indices. Else, return Hodge Laplacian matrix without indices.
+
+    Returns
+    -------
+    tuple[dict, sp.sparse.lil_matrix] | sp.sparse.lil_matrix
+        When index is True, return a tuple of (idx_p, Laplacian) else return Laplacian.
+    """
+    if rank == 0:
+        row, column, B_next = ccc.incidence_matrix(
+            rank + 1, rank + 2, index=True # weight=weight
+        )
+        L_hodge = B_next @ B_next.transpose()
+        if index:
+            return row, L_hodge
+        return L_hodge
+    if rank < ccc.dim:
+        row, column, B_next = ccc.incidence_matrix(
+            rank + 1, rank + 2, index=True #, weight=weight
+        )
+        row, column, B = ccc.incidence_matrix(rank, rank+1, index=True) #weight=weight, 
+        L_hodge = B_next @ B_next.transpose() + B.transpose() @ B
+        # if not signed:
+        #     L_hodge = abs(L_hodge)
+        if index:
+            return column, L_hodge
+        return L_hodge
+    if rank == ccc.dim:
+        row, column, B = ccc.incidence_matrix(rank, rank + 1, index=True)  # weight=weight, 
+        L_hodge = B.transpose() @ B
+        # if not signed:
+        #     L_hodge = abs(L_hodge)
+        if index:
+            return column, L_hodge
+        return L_hodge
+
+    raise ValueError(
+        f"Rank should be larger than 0 and <= {ccc.dim} (maximal dimension simplices), got {rank}"
+    )
 
 def generate_zero_sparse_connectivity(m, n):
     r"""Generates a zero sparse connectivity matrix.

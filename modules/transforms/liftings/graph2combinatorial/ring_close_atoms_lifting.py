@@ -193,13 +193,29 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         # Create the lifted topology dict for combinatorial complex case
         # ccc_lifted_topology = self._get_lifted_topology(ccc, G)
         # add hypergraphs elements to the dict
-        ccc_lifted_topology = {}
-        ccc_lifted_topology["num_hyperedges"] = data.x.shape[0]
-        ccc_lifted_topology["x_0"] = data.x
+        # ccc_lifted_topology = {}
+        # ccc_lifted_topology["num_hyperedges"] = data.x.shape[0]
+        # ccc_lifted_topology["x_0"] = data.x
         
-        incidence_1 = torch.zeros((data.num_nodes, data.num_nodes))
-        incidence_1[ccc.incidence_matrix(0, 1)] = 1
+        # # incidence_1 = torch.zeros(data.num_nodes, data.num_nodes)
+        # # incidence_1[ccc.incidence_matrix(0, 1)] = 1
         # incidence_1 = ccc.incidence_matrix(0, 1)
-        ccc_lifted_topology["incidence_hyperedges"]  = torch.Tensor(incidence_1).to_sparse_coo()
+        # # incidence_1 = ccc.incidence_matrix(0, 1)
+        # # ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(incidence_1).to_sparse_coo()
+
+        # return ccc_lifted_topology
+
+        ccc_lifted_topology = self._get_lifted_topology(ccc, G)
+        # add hyperedges
+        ccc_lifted_topology["num_hyperedges"] = len(close_atoms)
+        ccc_lifted_topology["x_0"] = data.x
+        # create a incidence matrix for hyperedges
+        # I want a row and a column for each node
+        # and a 1 if the node is in the hyperedge
+        # hyperedges or edges are stored in ccc.
+        incidence_1 = torch.zeros(data.num_nodes, data.num_nodes)
+        
+        print(ccc.incidence_1)
+        ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(ccc.incidence_1).to_sparse_coo()
 
         return ccc_lifted_topology
