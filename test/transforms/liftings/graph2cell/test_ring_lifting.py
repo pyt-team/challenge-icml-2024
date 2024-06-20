@@ -18,7 +18,7 @@ class TestCellRingLifting:
         # Test the lift_topology method
         lifted_data = self.lifting.forward(self.data.clone())
 
-        expected_incidence_1 = tensor(
+        expected_incidence_1 = torch.tensor(
                 [
                     [1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
                     [1., 0., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0.],
@@ -39,7 +39,7 @@ class TestCellRingLifting:
             expected_incidence_1 == lifted_data.incidence_1.to_dense()
         ).all(), "Something is wrong with incidence_1."
 
-        expected_incidence_2 = tensor(
+        expected_incidence_2 = torch.tensor(
                 [
                     [0., 0.],
                     [0., 0.],
