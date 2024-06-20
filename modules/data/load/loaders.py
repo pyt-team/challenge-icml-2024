@@ -4,7 +4,6 @@ import numpy as np
 import rootutils
 import torch_geometric
 from omegaconf import DictConfig
-
 from rdkit import Chem
 
 from modules.data.load.base import AbstractLoader
@@ -38,11 +37,7 @@ class GraphLoader(AbstractLoader):
 
     def filter_qm9_dataset(self, dataset):
         """Filter the QM9 dataset to remove invalid SMILES strings."""
-        valid_data_list = []
-        for data in dataset:
-            if self.is_valid_smiles(data.smiles):
-                valid_data_list.append(data)
-        return valid_data_list
+        return [data for data in dataset if self.is_valid_smiles(data.smiles)]
 
     def load(self) -> torch_geometric.data.Dataset:
         r"""Load graph dataset.

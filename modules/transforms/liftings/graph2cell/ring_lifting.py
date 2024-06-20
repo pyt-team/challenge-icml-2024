@@ -1,4 +1,3 @@
-import networkx as nx
 import torch
 import torch_geometric
 from rdkit import Chem
@@ -21,9 +20,7 @@ class CellRingLifting(Graph2CellLifting):
         super().__init__()
         self.complex_dim = 2
 
-    def get_rings(
-            self, data: torch_geometric.data.Data | dict
-        ) -> torch.Tensor:
+    def get_rings(self, data: torch_geometric.data.Data | dict) -> torch.Tensor:
         r"""Returns the ring information for each molecule.
 
         Parameters
@@ -43,10 +40,9 @@ class CellRingLifting(Graph2CellLifting):
 
         return [list(ring) for ring in rings]
 
-        
     def _generate_mol_from_data(
-            self, data: torch_geometric.data.Data | dict
-        ) -> Chem.Mol:
+        self, data: torch_geometric.data.Data | dict
+    ) -> Chem.Mol:
         r"""Converts the data to a molecule through the SMILES
             and removes the hydrogens.
 
@@ -88,9 +84,6 @@ class CellRingLifting(Graph2CellLifting):
         cell_complex = CellComplex(G)
         rings = self.get_rings(data)
         # add rings as 2-cells
-        cell_complex.add_cells_from(
-                rings, 
-                rank=self.complex_dim
-            )
+        cell_complex.add_cells_from(rings, rank=self.complex_dim)
 
         return self._get_lifted_topology(cell_complex, G)
