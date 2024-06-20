@@ -2,15 +2,18 @@ import networkx as nx
 import torch
 import torch_geometric
 from rdkit import Chem
-from toponetx.classes import CombinatorialComplex, CellComplex
+from toponetx.classes import CellComplex
 
-from modules.transforms.liftings.graph2combinatorial.base import Graph2CombinatorialLifting
+from modules.transforms.liftings.graph2combinatorial.base import (
+    Graph2CombinatorialLifting,
+)
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
+
 
 class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     r"""Lifts r-cell features to r+1-cells by molecular rings.
     This rings are obtained by chemical knowledge from rdkit.
-    Moreover, the close atoms are defined as the atoms that 
+    Moreover, the close atoms are defined as the atoms that
     are closer than a threshold distance. This atoms will be
     connected through an hyperedge.
 
@@ -30,9 +33,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     #######################################################
     ################### RINGS #############################
     #######################################################
-    def get_rings(
-            self, data: torch_geometric.data.Data | dict
-        ) -> torch.Tensor:
+    def get_rings(self, data: torch_geometric.data.Data | dict) -> torch.Tensor:
         r"""Returns the ring information for each molecule.
 
         Parameters
@@ -52,10 +53,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         return [list(ring) for ring in rings]
 
-        
     def _generate_mol_from_data(
-            self, data: torch_geometric.data.Data | dict
-        ) -> Chem.Mol:
+        self, data: torch_geometric.data.Data | dict
+    ) -> Chem.Mol:
         r"""Converts the data to a molecule through the SMILES
             and removes the hydrogens.
 
@@ -76,7 +76,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     ################ CLOSE ATOMS ##########################
     #######################################################
     def get_distance_matrix(
-        self, data : torch_geometric.data.Data | dict
+        self, data: torch_geometric.data.Data | dict
     ) -> torch.Tensor:
         r"""Computes the pairwise distances between atoms in a molecule.
 
@@ -94,13 +94,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         pos = data.pos
 
         # Compute the pairwise distances between the atoms
-        distances = torch.cdist(pos, pos, p=2)
+        return torch.cdist(pos, pos, p=2)
 
-        return distances
-    
-    def find_close_atoms(
-            self, data : torch_geometric.data.Data | dict
-        ) -> list:
+    def find_close_atoms(self, data: torch_geometric.data.Data | dict) -> list:
         r"""Finds the atoms that are close to each other within a molecule.
 
         Parameters
@@ -118,17 +114,14 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         # Get indices of atom pairs that are closer than the threshold
         close_atoms = []
-        num_atoms = distance_matrix.size(0) # data.num_nodes
+        num_atoms = distance_matrix.size(0)  # data.num_nodes
         for i in range(num_atoms):
             for j in range(i + 1, num_atoms):
                 if distance_matrix[i, j] < float(self.threshold_distance):
                     close_atoms.append((i, j))
-        
-        return close_atoms      #, distance_matrix
-    
-    def find_close_atom_groups(
-        self, data : torch_geometric.data.Data | dict
-    ) -> list:
+        return close_atoms  # , distance_matrix
+
+    def find_close_atom_groups(self, data: torch_geometric.data.Data | dict) -> list:
         r"""Finds the groups of atoms that are close to each other within a molecule.
 
         Parameters
@@ -146,7 +139,6 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         G = nx.Graph()
         G.add_edges_from(close_atoms)
         return [list(component) for component in nx.connected_components(G)]
-
 
     #######################################################
     ################### LIFT ##############################
@@ -177,15 +169,12 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         G = self._generate_graph_from_data(data)
         ccc = CellComplex(G)
-        
+
         # add rings as 2-cells
         rings = self.get_rings(data)
         for ring in rings:
-            ccc.add_cell(
-                ring, 
-                rank=self.complex_dim
-            )
-        
+            ccc.add_cell(ring, rank=self.complex_dim)
+
         # Hypergraph stuff
         # add close atoms as hyperedges (rank = 1)
         close_atoms = self.find_close_atom_groups(data)
@@ -195,7 +184,6 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         for i, group in enumerate(close_atoms):
             for node in group:
                 incidence_1[node, i] = 1
-        
 
         # Create the lifted topology dict for the cell complex
         ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
@@ -203,6 +191,8 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         # add hyperedges to the lifted topology
         ccc_lifted_topology["num_hyperedges"] = num_hyperedges
         ccc_lifted_topology["x_0"] = data.x
-        ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(incidence_1).to_sparse_coo()
+        ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(
+            incidence_1
+        ).to_sparse_coo()
 
         return ccc_lifted_topology

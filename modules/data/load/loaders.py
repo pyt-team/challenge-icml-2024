@@ -19,6 +19,7 @@ from modules.data.utils.utils import (
 
 # silent RDKit warnings
 from rdkit import RDLogger
+
 RDLogger.DisableLog("rdApp.*")
 
 
@@ -125,7 +126,7 @@ class GraphLoader(AbstractLoader):
             valid_dataset = self.filter_qm9_dataset(dataset)
             # dataset = ConcatToGeometricDataset(valid_dataset)
             dataset = CustomDataset(valid_dataset, self.data_dir)
-            
+
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
