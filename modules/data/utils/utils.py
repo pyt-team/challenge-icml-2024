@@ -11,7 +11,6 @@ import torch_geometric
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
-import scipy as sp
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -332,101 +331,6 @@ def load_manual_graph():
         edge_index=edge_list,
         num_nodes=len(vertices),
         y=torch.tensor(y),
-    )
-
-
-def load_manual_rings():
-    """Create a manual graph for testing the ring implementation.
-    Actually is the 471 molecule of QM9 dataset."""
-    # Define the vertices
-    vertices = [i for i in range(12)]
-    y = [
-        2.2569e00,
-        4.5920e01,
-        -6.3076e00,
-        1.9211e00,
-        8.2287e00,
-        4.6414e02,
-        2.6121e00,
-        -8.3351e03,
-        -8.3349e03,
-        -8.3349e03,
-        -8.3359e03,
-        2.0187e01,
-        -4.8740e01,
-        -4.9057e01,
-        -4.9339e01,
-        -4.5375e01,
-        6.5000e00,
-        3.8560e00,
-        3.0122e00,
-    ]
-    # Define the edges
-    edges = [
-        [0, 1],
-        [0, 6],
-        [1, 0],
-        [1, 2],
-        [1, 3],
-        [1, 5],
-        [2, 1],
-        [2, 3],
-        [2, 7],
-        [2, 8],
-        [3, 1],
-        [3, 2],
-        [3, 4],
-        [3, 9],
-        [4, 3],
-        [4, 5],
-        [5, 1],
-        [5, 4],
-        [5, 10],
-        [5, 11],
-        [6, 0],
-        [7, 2],
-        [8, 2],
-        [9, 3],
-        [10, 5],
-        [11, 5],
-    ]
-
-    # Add smile
-    smiles = "[H]O[C@@]12C([H])([H])O[C@]1([H])C2([H])[H]"
-
-    # Create a graph
-    G = nx.Graph()
-
-    # Add vertices
-    G.add_nodes_from(vertices)
-
-    # Add edges
-    G.add_edges_from(edges)
-
-    G.to_undirected()
-    edge_list = torch.Tensor(list(G.edges())).T.long()
-
-    x = [
-        [0.0, 0.0, 0.0, 1.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-        [0.0, 0.0, 0.0, 1.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    ]
-
-    return torch_geometric.data.Data(
-        x=x,
-        edge_index=edge_list,
-        num_nodes=len(vertices),
-        y=torch.tensor(y),
-        smiles=smiles,
     )
 
 
