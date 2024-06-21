@@ -102,6 +102,80 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
         return cliques
 
     #######################################################
+    ################### ATTRIBUTES ########################
+    #######################################################
+    def get_atom_attributes(
+            self, mol: Chem.Mol
+        ) -> dict:
+        r"""Returns the atom attributes for each molecule.
+
+        Parameters
+        ----------
+        mol : Chem.Mol
+            The molecule.
+
+        Returns
+        -------
+        dict
+            The atom attributes.
+        """
+        attr = {}
+        for atom in mol.GetAtoms():
+            attr[atom.GetIdx()] = {
+                    "atomic_num": atom.GetAtomicNum(),
+                    "symbol": atom.GetSymbol(),
+                    "degree": atom.GetDegree(),
+                    "formal_charge": atom.GetFormalCharge(),
+                    "hybridization": str(atom.GetHybridization()),
+                    "is_aromatic": atom.GetIsAromatic(),
+                    "mass": atom.GetMass(),
+                    "chirality": atom.GetChiralTag()
+                }
+        return attr
+
+    def get_bond_attributes(
+            self, mol: Chem.Mol
+        ) -> torch.Tensor:
+        r"""Returns the bond attributes for each molecule.
+
+        Parameters
+        ----------
+        mol : Chem.Mol
+            The molecule.
+
+        Returns
+        -------
+        dict
+            The bond attributes.
+        """
+        attr = {}
+        for bond in mol.GetBonds():
+            attr[(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())] = {
+                        "bond_type": str(bond.GetBondType()),
+                        "is_conjugated": bond.GetIsConjugated(),
+                        "is_stereo": bond.GetIsStereo()
+                    }
+        return attr
+
+    def get_ring_attributes(
+            self, mol: Chem.Mol
+        ) -> dict:
+        r"""Returns the ring attributes for each molecule.
+
+        Parameters
+        ----------
+        mol : Chem.Mol
+            The molecule.
+
+        Returns
+        -------
+        dict
+            The ring attributes.
+        """
+        # not implemented yet
+        return {}
+
+    #######################################################
     ################### LIFT ##############################
     #######################################################
     def lift_topology(
@@ -132,10 +206,21 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
         ccc = CellComplex(G)
         mol = self._generate_mol_from_data(data)
 
+        # Set atom attributes
+        atom_attr = self.get_atom_attributes(mol)
+        ccc.set_cell_attributes(atom_attr)
+
+        # Set bond attributes
+        bond_attr = self.get_bond_attributes(mol)
+        ccc.set_cell_attributes(bond_attr)
+
         # add rings as 2-cells
         rings = self.get_rings(mol)
         for ring in rings:
             ccc.add_cell(ring, rank=self.complex_dim)
+
+        ring_attr = self.get_ring_attributes(mol)
+        ccc.set_cell_attributes(ring_attr)
 
         # Hypergraph stuff
         # add functional groups as hyperedges (rank = 1)
