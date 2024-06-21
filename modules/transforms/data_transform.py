@@ -31,7 +31,7 @@ TRANSFORMS = {
     "OneHotDegreeFeatures": OneHotDegreeFeatures,
     "NodeFeaturesToFloat": NodeFeaturesToFloat,
     "KeepOnlyConnectedComponent": KeepOnlyConnectedComponent,
-    "MapperLifting": MapperLifting
+    "MapperLifting": MapperLifting,
 }
 
 

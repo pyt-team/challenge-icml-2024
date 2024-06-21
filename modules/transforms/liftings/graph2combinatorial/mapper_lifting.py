@@ -1,7 +1,7 @@
 import numpy as np
 
-class MapperLifting(base):
 
+class MapperLifting(base):
     _hyperparameters = {}
 
     def __init__():
