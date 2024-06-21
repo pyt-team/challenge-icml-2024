@@ -9,8 +9,8 @@ from modules.transforms.data_manipulations.manipulations import (
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
-from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
-    CombinatorialRingCloseAtomsLifting,
+from modules.transforms.liftings.graph2combinatorial.functional_lifting import (
+    CombinatorialFunctionalLifting,
 )
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
@@ -27,7 +27,7 @@ TRANSFORMS = {
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Graph -> Combinatorial Complex
-    "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
+    "CombinatorialFunctionalLifting": CombinatorialFunctionalLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
