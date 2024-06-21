@@ -181,9 +181,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         num_hyperedges = len(close_atoms)
         # create incidence matrix for hyperedges
         incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
-        for i, group in enumerate(close_atoms):
-            for node in group:
-                incidence_1[node, i] = 1
+        for i, hyperedge in enumerate(close_atoms):
+            for atom in hyperedge:
+                incidence_1[atom, i] = 1
 
         # Create the lifted topology dict for the cell complex
         ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
