@@ -73,12 +73,7 @@ class VietorisRipsLifting(PointCloud2SimplicialLifting):
 
         # Add 1-simplices (edges) where the pairwise distance between
         # points are less than epsilon
-        edges = [
-            [i, j]
-            for i in range(n)
-            for j in range(i + 1, n)
-            if distance_matrix[i, j] <= self.epsilon
-        ]
+        edges = [[i, j] for i in range(n) for j in range(i + 1, n) if distance_matrix[i, j] <= self.epsilon]
         simplices.extend([Simplex(edge) for edge in edges])
 
         # Step 3: Construct higher-dimensional simplices
@@ -106,19 +101,3 @@ class VietorisRipsLifting(PointCloud2SimplicialLifting):
         SC = SimplicialComplex(simplices)
 
         return self._get_lifted_topology(SC)
-
-
-if __name__ == "__main__":
-    from modules.data.load.loaders import PointCloudLoader
-
-    transform = VietorisRipsLifting(epsilon=0.5)
-
-    dataloader = PointCloudLoader(
-        {
-            "num_classes": 3,
-            "data_dir": "/Users/elphicm/PycharmProjects/challenge-icml-2024/modules/transforms/liftings/pointcloud2simplicial/",
-        }
-    )
-    data = dataloader.load()[0]
-
-    transform(data)
