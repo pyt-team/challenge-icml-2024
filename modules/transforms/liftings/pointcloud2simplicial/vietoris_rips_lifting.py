@@ -67,11 +67,9 @@ class VietorisRipsLifting(PointCloud2SimplicialLifting):
         distance_matrix = torch.cdist(points, points)
 
         n = len(points)
-        simplices = []
 
         # Add 0-simplices (vertices) with their associated features.
-        for i in range(n):
-            simplices.append(Simplex([i], features=data.x[i]))
+        simplices = [Simplex([i], features=data.x[i]) for i in range(n)]
 
         # Add 1-simplices (edges) where the pairwise distance between
         # points are less than epsilon
