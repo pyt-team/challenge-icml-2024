@@ -74,7 +74,7 @@ class VietorisRipsLifting(PointCloud2SimplicialLifting):
         # Add 1-simplices (edges) where the pairwise distance between
         # points are less than epsilon
         edges = [[i, j] for i in range(n) for j in range(i + 1, n) if distance_matrix[i, j] <= self.epsilon]
-        simplices.extend([Simplex(edge) for edge in edges])
+        simplices.extend(Simplex(edge) for edge in edges)
 
         # Step 3: Construct higher-dimensional simplices
         # Iteratively finds all k-dimensional simplices (starting from k = 2) that can be formed in the graph.
