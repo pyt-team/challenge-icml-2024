@@ -80,17 +80,15 @@ class VietorisRipsLifting(PointCloud2SimplicialLifting):
         # Iteratively finds all k-dimensional simplices (starting from k = 2) that can be formed in the graph.
         k = 2
         while True:
-            higher_dim_simplices = []
-            for simplex in combinations(range(n), k + 1):
+            higher_dim_simplices = [
+                Simplex(list(simplex))
+                for simplex in combinations(range(n), k + 1)
                 if all(
-                    (
-                        [simplex[i], simplex[j]] in edges
-                        or [simplex[j], simplex[i]] in edges
-                    )
+                    ([simplex[i], simplex[j]] in edges or [simplex[j], simplex[i]] in edges)
                     for i in range(k)
                     for j in range(i + 1, k + 1)
-                ):
-                    higher_dim_simplices.append(Simplex(list(simplex)))
+                )
+            ]
 
             if not higher_dim_simplices:
                 break
