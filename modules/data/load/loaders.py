@@ -207,67 +207,6 @@ class HypergraphLoader(AbstractLoader):
         return load_hypergraph_pickle_dataset(self.parameters)
 
 
-# class PointCloudLoader(AbstractLoader):
-#     r"""Loader for point-cloud dataset.
-#     Parameters
-#     ----------
-#     parameters: DictConfig
-#         Configuration parameters
-#     """
-#
-#     def __init__(self, parameters: DictConfig):
-#         super().__init__(parameters)
-#         self.parameters = parameters
-#
-#     def load(self) -> torch_geometric.data.Dataset:
-#         r"""Load point-cloud dataset.
-#         Parameters
-#         ----------
-#         None
-#         Returns
-#         -------
-#         torch_geometric.data.Dataset
-#             torch_geometric.data.Dataset object containing the loaded data.
-#         """
-#         root_folder = rootutils.find_root()
-#         root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
-#
-#         self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
-#
-#         if self.parameters.data_name in ["ShapeNet", "PCPNetDataset"]:
-#             datasets = []
-#             for split in ["train", "val", "test"]:
-#                 if self.parameters.data_name == "ShapeNet":
-#                     datasets.append(
-#                         torch_geometric.datasets.ShapeNet(
-#                             root=root_data_dir,
-#                             split=split
-#                         )
-#                     )
-#                 elif self.parameters.data_name == "PCPNetDataset":
-#                     datasets.append(
-#                         torch_geometric.datasets.PCPNetDataset(
-#                             root=root_data_dir,
-#                             split=split,
-#                             category='NoNoise'
-#                         )
-#                     )
-#             # The splits are predefined
-#             # Extract and prepare split_idx
-#             split_idx = {"train": np.arange(len(datasets[0]))}
-#             split_idx["valid"] = np.arange(
-#                 len(datasets[0]), len(datasets[0]) + len(datasets[1])
-#             )
-#             split_idx["test"] = np.arange(
-#                 len(datasets[0]) + len(datasets[1]),
-#                 len(datasets[0]) + len(datasets[1]) + len(datasets[2]),
-#             )
-#             # Join dataset to process it
-#             dataset = datasets[0] + datasets[1] + datasets[2]
-#
-#         return dataset
-
-
 class PointCloudLoader(AbstractLoader):
     r"""Loader for point-cloud dataset.
 
