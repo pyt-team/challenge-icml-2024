@@ -1,0 +1,5 @@
+transform_type: 'lifting'
+transform_name: "VietorisRipsLifting"
+complex_dim: 2
+feature_lifting: ProjectionSum
+epsilon: 0.5
