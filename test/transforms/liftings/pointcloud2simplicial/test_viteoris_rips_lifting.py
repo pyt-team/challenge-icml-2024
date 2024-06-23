@@ -6,7 +6,6 @@ from torch_geometric.data import Data
 from modules.transforms.liftings.pointcloud2simplicial.vietoris_rips_lifting import (
     VietorisRipsLifting,
 )
-from modules.utils.utils import describe_data
 
 
 class TestVietorisRipsLifting(unittest.TestCase):
