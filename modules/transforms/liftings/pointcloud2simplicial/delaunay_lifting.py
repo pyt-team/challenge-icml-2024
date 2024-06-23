@@ -25,9 +25,7 @@ class DelaunayLifting(PointCloud2SimplicialLifting):
         dict
             The lifted topology.
         """
-        print(simplicial_complex)
         lifted_topology = get_complex_connectivity(simplicial_complex, self.complex_dim)
-        print(lifted_topology)
         lifted_topology["x_0"] = torch.stack(
             list(simplicial_complex.get_simplex_attributes("features", 0).values())
         )
