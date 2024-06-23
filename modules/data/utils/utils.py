@@ -35,7 +35,6 @@ def get_complex_connectivity(complex, max_rank, signed=False):
     )
     connectivity = {}
     for rank_idx in range(max_rank + 1):
-        print(1, rank_idx)
         for connectivity_info in [
             "incidence",
             "down_laplacian",
@@ -43,7 +42,6 @@ def get_complex_connectivity(complex, max_rank, signed=False):
             "adjacency",
             "hodge_laplacian",
         ]:
-            print(2, connectivity_info)
             try:
                 connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
                     getattr(complex, f"{connectivity_info}_matrix")(
@@ -63,7 +61,6 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                     ] = generate_zero_sparse_connectivity(
                         m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
-            print(3, connectivity[f"{connectivity_info}_{rank_idx}"])
     connectivity["shape"] = practical_shape
     return connectivity
 
