@@ -2,8 +2,9 @@ import torch_geometric
 
 
 class CustomDataset(torch_geometric.data.InMemoryDataset):
-    def __init__(self, data_list, data_dir, transform=None):
+    def __init__(self, data_list, data_dir, data_name="Custom", transform=None):
         self.data_list = data_list
+        self.data_name = data_name
         super().__init__(data_dir, transform)
         self.load(self.processed_paths[0])
 
@@ -13,3 +14,6 @@ class CustomDataset(torch_geometric.data.InMemoryDataset):
 
     def process(self):
         self.save(self.data_list, self.processed_paths[0])
+
+    def __repr__(self):
+        return f"{self.data_name}({len(self)})"

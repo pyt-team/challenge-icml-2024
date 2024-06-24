@@ -15,6 +15,7 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.pointcloud2graph.knn_lifting import GraphKNNLifting
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -31,6 +32,8 @@ TRANSFORMS = {
     "OneHotDegreeFeatures": OneHotDegreeFeatures,
     "NodeFeaturesToFloat": NodeFeaturesToFloat,
     "KeepOnlyConnectedComponent": KeepOnlyConnectedComponent,
+    # Point Cloud -> Graph
+    "GraphKNNLifting": GraphKNNLifting,
 }
 
 
