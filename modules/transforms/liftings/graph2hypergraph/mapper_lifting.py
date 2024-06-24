@@ -4,11 +4,24 @@ import torch_geometric
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
 
 class MapperCover():
-    def __init__():
+    def __init__(self, resolution = 10, gain = 0.3):
+        """ Resolution: Number of intervals to cover codomain in. (Default 10) 
+        Gain: Proportion of interval which overlaps with next interval on each end. 
+        """
+
+        assert gain > 0 and gain < 0.5, "Gain must be a proportion greater than 0 and less than 0.5."
+        
         self.resolution = resolution
         self.gain = gain
 
-    def fit_transform(self, data):
+    def fit_transform(self, data_attribute):
+        """Inputs data: (n x 1) Tensor of values for filter ? 
+           Outputs mask: (n x resolution) boolean Tensor
+            """
+        data_range = torch.max(data)-torch.min(data_attribute) 
+
+        
+        
         return mask
         
 class MapperLifting(Graph2HypergraphLifting):
@@ -32,7 +45,7 @@ class MapperLifting(Graph2HypergraphLifting):
         return filtered_data
         
     def _filter_pos(self, data):
-        if self.projection_attr = None
+        if self.projection_attr == None:
         # PCA onto 1st principle component
             _, _, V = torch.pca_lowrank(data.pos)
             filtered_data = torch.matmul(data.pos, V[:,:1])
@@ -58,14 +71,14 @@ class MapperLifting(Graph2HypergraphLifting):
         dict
             The lifted topology.
         """
-    filtered_data = self._filter(data)
-    cover = MapperCover(self.resolution, self.gain)
-    cover_mask = cover.fit_transform(filtered_data)
-    
-    return {"incidence_hyperedges": a,
-            "num_hyperedges": b,
-            "x_0": c
-    }
+        filtered_data = self._filter(data)
+        cover = MapperCover(self.resolution, self.gain)
+        cover_mask = cover.fit_transform(filtered_data)
+        
+        return {"incidence_hyperedges": a,
+                "num_hyperedges": b,
+                "x_0": c
+        }
 
     @staticmethod
     def verify_parameters():
