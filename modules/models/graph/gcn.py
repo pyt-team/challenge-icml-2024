@@ -1,14 +1,10 @@
-from typing import Optional
-
 import torch
 from torch import Tensor
-from torch_geometric.nn.models import GCN, GraphSAGE
+from torch_geometric.nn.models import GCN
 from torch_geometric.utils import scatter
 
 
-def global_mean_pool(
-    x: Tensor, batch: Optional[Tensor] = None, size: Optional[int] = None
-) -> Tensor:
+def global_mean_pool(x, batch=None, size=None) -> Tensor:
     r"""Returns batch-wise graph-level-outputs by averaging node features
     across the node dimension.
 
@@ -20,14 +16,15 @@ def global_mean_pool(
     Functional method of the
     :class:`~torch_geometric.nn.aggr.MeanAggregation` module.
 
-    Args:
-        x (torch.Tensor): Node feature matrix
-            :math:`\mathbf{X} \in \mathbb{R}^{(N_1 + \ldots + N_B) \times F}`.
-        batch (torch.Tensor, optional): The batch vector
-            :math:`\mathbf{b} \in {\{ 0, \ldots, B-1\}}^N`, which assigns
-            each node to a specific example.
-        size (int, optional): The number of examples :math:`B`.
-            Automatically calculated if not given. (default: :obj:`None`)
+    Parameters
+    ----------
+    x : torch.Tensor
+        Node feature matrix :math:`\mathbf{X}`.
+    batch : torch.Tensor, optional
+        The batch vector :math:`\mathbf{b} \in {\{ 0, \ldots, B-1\}}^N`,
+            which assigns each node to a specific example.
+    size : int, optional
+        The number of examples :math:`B`. Automatically calculated if not given.
     """
     dim = -1 if isinstance(x, Tensor) and x.dim() == 1 else -2
 

@@ -29,7 +29,7 @@ class ProjectionSum(torch_geometric.transforms.BaseTransform):
         torch_geometric.data.Data | dict
             The lifted data."""
         keys = sorted(
-            [key.split("_")[1] for key in data.keys() if "incidence" in key]
+            [key.split("_")[1] for key in data if "incidence" in key]
         )  # noqa : SIM118
         for elem in keys:
             if f"x_{elem}" not in data:
