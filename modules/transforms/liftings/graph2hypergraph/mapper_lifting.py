@@ -5,8 +5,10 @@ from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLi
 
 class MapperCover():
     def __init__(self, resolution = 10, gain = 0.3):
-        """ Resolution: Number of intervals to cover codomain in. (Default 10) 
+        """ 
+        Resolution: Number of intervals to cover codomain in. (Default 10) 
         Gain: Proportion of interval which overlaps with next interval on each end. 
+              Gain Must be greater than 0 and less than 0.5.
         """
 
         assert gain > 0 and gain < 0.5, "Gain must be a proportion greater than 0 and less than 0.5."
@@ -14,13 +16,31 @@ class MapperCover():
         self.resolution = resolution
         self.gain = gain
 
-    def fit_transform(self, data_attribute):
+    def fit_transform(self, filtered_data):
         """Inputs data: (n x 1) Tensor of values for filter ? 
            Outputs mask: (n x resolution) boolean Tensor
             """
-        data_range = torch.max(data)-torch.min(data_attribute) 
+
+        data_min = torch.min(filtered_data) 
+        
+        data_max = torch.max(filtered_data)
+        
+        data_range = torch.max(filtered_data)-torch.min(filtered_data) 
+
+        cover_width = data_range/(self.resolution - (self.resolution-1)*self.gain)
+
+        lower_endpoints = torch.linspace(data_min, data_max-cover_width, self.resolution+1) 
 
         
+        upper_endpoints = lower_endpoints+cover_width
+        
+        print(torch.stack([lower_endpoints, upper_endpoints]))
+        
+        lower_values = torch.ge(filtered_data, lower_endpoints) # want a n x resolution Boolean tensor
+
+        upper_values = torch.le(filtered_data, upper_endpoints) # want a n x resolution Boolean tensor 
+
+        mask = torch.logical_and(lower_values,upper_values)
         
         return mask
         
