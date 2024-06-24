@@ -1,9 +1,12 @@
 import torch
 import torch_geometric
 
+from torch_geometric.transforms import AddLaplacianEigenvectorPE
+
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
 
 class MapperCover():
+
     def __init__(self, resolution = 10, gain = 0.3):
         """ 
         Resolution: Number of intervals to cover codomain in. (Default 10) 
@@ -46,11 +49,11 @@ class MapperCover():
         
 class MapperLifting(Graph2HypergraphLifting):
 
-    def __init__(self, projection_domain = 'pos', projection_attr = None, resolution = 10, gain = 0.3, **kwargs):
-        super.__init__(**kwargs)
+    def __init__(self, projection_attr = "laplacian", resolution = 10, gain = 0.3, **kwargs):
+        super().__init__(**kwargs)
         self.projection_domain = projection_domain
         self.projection_attr = projection_attr
-        self.resolution = resoluion
+        self.resolution = resolution
         self.gain = gain
     """
     Need to construct the filter functions. Slightly confused about 
@@ -58,24 +61,43 @@ class MapperLifting(Graph2HypergraphLifting):
     for nodes, but it can also have string based feature attributes?
     Maybe we should just do some sort of eccentricity filter for these
     feature matrices (both for edges and nodes). Maybe also for position?
+
+    
+    projection_attr: laplacian, sum, pca, (lambda?)
+
+    all of these add a node feature and then 
+
+    just say: add an attribute to your data that you wnat to filter on. 
+    then provide the key to that attribute
+    exmaples; pca, laplacian, etc
+
     """
     def _filter_graph(self, data):
         verify_graph_attrs(data, self.projection_domain, self.projection_attr)
+        
         filtered_data = data.x
+        
+        
         return filtered_data
         
-    def _filter_pos(self, data):
-        if self.projection_attr == None:
-        # PCA onto 1st principle component
-            _, _, V = torch.pca_lowrank(data.pos)
-            filtered_data = torch.matmul(data.pos, V[:,:1])
-        return filtered_data
+    def _filter_laplacian(self, data):            
+        # Laplacian eigenmap
+
+            transform = AddLaplacianEigenvectorPE(k=1)
+
+            data = transform(data) 
+
+            filtered_data = data["laplacian_eigenvector_pe"]
+
+            return filtered_data
         
     def _filter(self, data):
-        if projection_domain == 'pos':
-            filtered_data = self._filter_pos(data)
-        if projection_domain == 'node':
+        if projection_attr == "laplacian": 
+            filtered_data = self._filter_laplacian(data)
+
+        if projection_domain == 'graph_attributes':
             filtered_data = self._filter_graph(data)
+            
         return filtered_data
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
