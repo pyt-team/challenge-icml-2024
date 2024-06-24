@@ -50,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -421,3 +421,38 @@ def make_hash(o):
     hash_as_hex = sha1.hexdigest()
     # Convert the hex back to int and restrict it to the relevant int range
     return int(hash_as_hex, 16) % 4294967295
+
+
+def mnist_to_pointcloud(cfg, threshold=0.0):
+    r"""Convert MNIST dataset into point cloud.
+
+    Parameters
+    ----------
+    dataset : torchvision.datasets.MNIST
+        MNIST dataset.
+    threshold : float
+        Threshold value to filter out pixel values.
+
+    Returns
+    -------
+    list
+        List containing the point cloud.
+    """
+    from torchvision.datasets import MNIST
+
+    dataset = MNIST(root=cfg["data_dir"], download=True)
+    Xs = dataset.data
+    ys = dataset.targets
+
+    point_clouds = []
+    for i, sample in enumerate(Xs):
+        sample = sample.where(sample > threshold, 0)
+        values = sample[sample > threshold].float()
+        values = values.unsqueeze(1)
+        x, y = (sample > 0).nonzero(as_tuple=True)
+        pos = torch.stack((x, y), dim=1).float()
+
+        data = Data(x=values, pos=pos, y=ys[i])
+        point_clouds.append(data)
+
+    return point_clouds

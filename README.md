@@ -52,7 +52,7 @@ Then:
 4. Install torch, torch-scatter, torch-sparse with or without CUDA depending on your needs.
 
       ```bash
-      pip install torch==2.0.1 --extra-index-url https://download.pytorch.org/whl/${CUDA}
+      pip install torch==2.0.1 torchvision --extra-index-url https://download.pytorch.org/whl/${CUDA}
       pip install torch-scatter torch-sparse -f https://data.pyg.org/whl/torch-2.0.1+${CUDA}.html
       pip install torch-cluster -f https://data.pyg.org/whl/torch-2.0.0+${CUDA}.html
       ```

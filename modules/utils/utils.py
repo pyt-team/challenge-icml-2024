@@ -401,6 +401,51 @@ def plot_manual_graph(data, title=None):
     plt.show()
 
 
+def plot_point_cloud(data: torch_geometric.data.Data, title=None):
+    r"""Plot a point cloud.
+
+    Parameters
+    ----------
+    data : torch_geometric.data.Data
+        Data object containing the point cloud.
+    title: str
+        Title for the plot.
+    """
+    fig = plt.figure(figsize=(5, 5))
+    ax = fig.add_subplot(111)
+    # if data has edge info, plot graph
+    if data.edge_index is None:
+        # ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(data.pos[:, 1], -data.pos[:, 0], s=data.x / 10)
+        ax.set_xlim(0, 28)
+        ax.set_ylim(-28, 0)
+        # ax.view_init(elev=30, azim=30)
+    else:
+        from torch_geometric.utils import to_networkx
+
+        G = to_networkx(data, to_undirected=True)
+        G.remove_edges_from(nx.selfloop_edges(G))
+        _pos = {i: data.pos[i].numpy() for i in range(data.num_nodes)}
+        _rotated_pos = {i: (pos[1], -pos[0]) for i, pos in _pos.items()}
+        _node_size = data.x.numpy() / 10
+        nx.draw(
+            G,
+            pos=_rotated_pos,
+            node_size=_node_size,
+            width=1,
+            edge_color="gray",
+            node_color="blue",
+            ax=ax,
+        )
+
+    if title is not None:
+        plt.title(title)
+    else:
+        plt.title(f"MNIST point cloud sample of label {data.y.item()}")
+    plt.axis("off")
+    plt.show()
+
+
 def describe_simplicial_complex(data: torch_geometric.data.Data):
     r"""Describe a simplicial complex.
 

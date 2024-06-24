@@ -3,23 +3,22 @@ name: "Testing Codebase"
 on:
   workflow_dispatch:
   push:
-    branches: [main,github-actions-test]
+    branches: [main, github-actions-test]
     paths-ignore:
-    - 'docs/**'
-    - 'README.md'
-    - 'LICENSE.txt'
-    - '.gitignore'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE.txt"
+      - ".gitignore"
 
   pull_request:
     branches: [main]
     paths-ignore:
-    - 'docs/**'
-    - 'README.md'
-    - 'LICENSE.txt'
-    - '.gitignore'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE.txt"
+      - ".gitignore"
 
 jobs:
-
   pytest:
     runs-on: ${{ matrix.os }}
 
@@ -39,12 +38,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: '**/pyproject.toml'
+          cache-dependency-path: "**/pyproject.toml"
 
       - name: Install PyTorch ${{ matrix.torch-version }}+cpu
         run: |
           pip install --upgrade pip setuptools wheel
-          pip install torch==${{ matrix.torch-version}} --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install torch==${{ matrix.torch-version}} torchvision --extra-index-url https://download.pytorch.org/whl/cpu
           pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+cpu.html
           pip install torch-sparse -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+cpu.html
           pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+cpu.html
