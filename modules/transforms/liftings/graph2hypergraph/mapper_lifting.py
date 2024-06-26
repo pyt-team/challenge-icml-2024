@@ -21,7 +21,7 @@ class MapperCover():
         Gain: Proportion of interval which overlaps with next interval on each end. 
               Gain Must be greater than 0 and less than 0.5.
         """
-        _verify_cover_parameters(resolution, cover)
+        # self._verify_cover_parameters(resolution, cover)
         self.resolution = resolution
         self.gain = gain
 
@@ -45,12 +45,10 @@ class MapperCover():
         mask = torch.logical_and(lower_values,upper_values)
         return mask
 
-    @staticmethod
-    def _verify_cover_parameters(resolution, gain):
-        assert gain > 0 and gain <= 0.5,/
-        f"Gain must be a proportion greater than 0 and at most 0.5. Currently, gain is {gain}."
-        assert resolution > 0, f"Resolution should be greater than 0. Currently,
-        resolution is {resolution}."
+    def _verify_cover_parameters(self, resolution, gain):
+        assert gain > 0 and gain <= 0.5, \
+            f"Gain must be a proportion greater than 0 and at most 0.5. Currently, gain is {gain}."
+        assert resolution > 0, f"Resolution should be greater than 0. Currently, resolution is {resolution}."
         assert float(resolution).is_integer(), f"Resolution must be an integer value. Currenly, resolution is {resolution}."
         
 class MapperLifting(Graph2HypergraphLifting):
@@ -88,6 +86,8 @@ class MapperLifting(Graph2HypergraphLifting):
         "position_sum" : lambda data : torch.sum(data.pos, 1),
     }
 
+    
+
     def __init__(self, 
                  filter_attr = "laplacian", 
                  resolution = 10, 
@@ -95,12 +95,13 @@ class MapperLifting(Graph2HypergraphLifting):
                  filter_func = None,
                  **kwargs
                 ):
-        _verify_filter_parameters(filter_attr, filter_func)
+        
+        #self._verify_filter_parameters(filter_attr, filter_func)
         super().__init__(**kwargs)
         self.filter_attr = filter_attr
         self.resolution = resolution
         self.gain = gain
-        self.filter_func = filter_func
+        self.filter_func = filter_func 
     """
 
     filter_attr: laplacian, sum, svd (pca?), (lambda?)
@@ -112,10 +113,12 @@ class MapperLifting(Graph2HypergraphLifting):
     exmaples; pca, laplacian, etc
 
     """
-        
+
+
+    
     def _filter(self, data):
-        if self.filter_attr in filter_dict.keys():
-            transform = filter_dict[self.filter_attr]
+        if self.filter_attr in self.filter_dict.keys():
+            transform = self.filter_dict[self.filter_attr]
             transformed_data = transform(data)
             if self.filter_attr == "laplacian":
                 filtered_data = transformed_data["laplacian_eigenvector_pe"]
@@ -125,12 +128,15 @@ class MapperLifting(Graph2HypergraphLifting):
                 filtered_data = torch.matmul(data.pos,
                                              transformed_data[2][:, :1]
                                             )
-            else:
+            if self.filter_attr not in ["laplacian","svd","pca"]:
                 filtered_data = transformed_data
+                
         else:
             transform = self.filter_func
             filtered_data = transform(data)
-        assert filtered_data.size[1] == 1, f'filtered data should have size [n_samples, 1]. Currently filtered data has size {filtered_data.size}.'
+        
+        assert filtered_data.size() == torch.Size([len(data.x),1]),\
+                f'filtered data should have size [n_samples, 1]. Currently filtered data has size {filtered_data.size()}.'
         self.filtered_data = {self.filter_attr : filtered_data}
         return filtered_data
 
@@ -143,19 +149,36 @@ class MapperLifting(Graph2HypergraphLifting):
          # Each cover set is of the form [1, n_samples]
         for i, cover_set in enumerate(cover_mask.T):
             # Find indices of nodes which are in each cover set
-            cover_data = data.subgraph(cover_set.T)
-            cover_graph = self._generate_graph_from_data(cover_data)
-            if cover_data.is_directed():
-                'QUESTION:: should we use weakly or strongly connected'
-                'componenets for directed graphs??'
-                clusters = nx.weakly_connected_components(cover_graph)
-            if cover_data.is_undirected():
-                clusters = nx.connected_components(cover_data)
+            
+            #cover_data = data.subgraph(cover_set.T, relabel_nodes=False) does not work 
+
+            # if len(cover_set)==0:
+            #     continue
+            
+            cover_data, _ = torch_geometric.utils.subgraph(cover_set.T, data["edge_index"])  #DATA.SUBGRAPH sets relabel_nodes to True
+            
+            cover_graph = nx.Graph() 
+
+            edges = [
+                (i.item(), j.item())
+                for i, j in zip(cover_data[0], cover_data[1], strict=False)
+                    ]
+            
+            #cover_graph = torch_geometric.utils.convert.to_networkx(cover_data, to_undirected = True)
+            
+            # if cover_data.is_directed():
+            #     clusters = nx.weakly_connected_components(cover_graph)
+
+            cover_graph.add_edges_from(edges)
+            
+            
+            clusters = nx.connected_components(cover_graph)
+
             for cluster_index in clusters:
                 index = torch.Tensor(list(cluster_index))
                 mapper_clusters[num_clusters] = (i,index)
                 num_clusters += 1
-
+                
         return mapper_clusters
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -175,21 +198,38 @@ class MapperLifting(Graph2HypergraphLifting):
         cover = MapperCover(self.resolution, self.gain)
         cover_mask = cover.fit_transform(filtered_data)
         mapper_clusters = self._cluster(data, cover_mask)
-        num_clusters = len(mapper_clusters)
-         # number of nodes in hypergraph = number of nodes in data
-        num_hyperedges = num_nodes + num_clusters ' i think '
-        # incidence_1 edges should be edges in the data
-        incidence_1 = torch.zeros(num_nodes, num_hyperedges)
+        
+        num_nodes = data["x"].shape[0]
+        num_edges = data["edge_attr"].size()[0]
+        num_clusters = len(mapper_clusters)        
+        num_hyperedges = num_edges + num_clusters
+        
+        incidence_1_edges = torch.zeros(num_nodes, num_edges)
+
+        for i,edge in enumerate(data["edge_index"].T): 
+            incidence_1_edges[edge[0],i] = 1
+            incidence_1_edges[edge[1],i] = 1
+
+        incidence_1_hyperedges = torch.zeros(num_nodes, num_clusters)
+
+        for i, hyperedge in enumerate(mapper_clusters): 
+            for j in mapper_clusters[hyperedge][1]: 
+                incidence_1_hyperedges[j.int(),i] = 1 
+                
+        incidence_1 = torch.hstack([incidence_1_edges, incidence_1_hyperedges])
+
+        incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
+
         
         return {"incidence_hyperedges": incidence_1,
                 "num_hyperedges": num_hyperedges,
                 "x_0": data.x,
                }
                 
-    @staticmethod
-    def _verify_filter_parameters(filter_attr, filter_func):
+    def _verify_filter_parameters(self, filter_attr, filter_func):
         filter_attr_type = type(filter_attr)
         assert (filter_attr_type is str or filter_attr is None), f"filter_attr must be a string or None."
         if filter_func is None:
-            assert filter_attr in filter_dict.keys(),/
-            f"Please add function to filter_func or choose filter_attr from {list(filter_dict)}. Currently filter_func is {filter_func} and filter_attr is {filter_attr}."
+            assert filter_attr in self.filter_dict.keys(), \
+            f"Please add function to filter_func or choose filter_attr from {list(filter_dict)}. \
+            Currently filter_func is {filter_func} and filter_attr is {filter_attr}."
