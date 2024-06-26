@@ -21,7 +21,7 @@ class DelaunayLifting(PointCloud2SimplicialLifting):
         simplicial_complex : SimplicialComplex
             The simplicial complex.
         Returns
-        -------
+        ---------
         dict
             The lifted topology.
         """
