@@ -1,7 +1,9 @@
 import torch
 import torch_geometric
+import networkx as nx
 
 from torch_geometric.transforms import AddLaplacianEigenvectorPE, SVDFeatureReduction
+from torch_geometric.utils import subgraph, to_networkx
 
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
 
@@ -29,28 +31,18 @@ class MapperCover():
             """
 
         data_min = torch.min(filtered_data) 
-        
         data_max = torch.max(filtered_data)
-        
         data_range = torch.max(filtered_data)-torch.min(filtered_data) 
-
         cover_width = data_range/(self.resolution - (self.resolution-1)*self.gain)
-
-        lower_endpoints = torch.linspace(data_min, data_max-cover_width, self.resolution+1) 
-
-        
+        lower_endpoints = torch.linspace(data_min, 
+                                         data_max-cover_width,
+                                         self.resolution+1) 
         upper_endpoints = lower_endpoints+cover_width
         self.left_endpoints = lower_endpoints
         self.right_endpoints = upper_endpoints
-        
-        # print(torch.stack([lower_endpoints, upper_endpoints]))
-        
         lower_values = torch.ge(filtered_data, lower_endpoints) # want a n x resolution Boolean tensor
-
         upper_values = torch.le(filtered_data, upper_endpoints) # want a n x resolution Boolean tensor 
-
         mask = torch.logical_and(lower_values,upper_values)
-        
         return mask
 
     @staticmethod
@@ -142,8 +134,29 @@ class MapperLifting(Graph2HypergraphLifting):
         self.filtered_data = {self.filter_attr : filtered_data}
         return filtered_data
 
-    def _cluster(self, cover_mask):
-        return None
+    def _cluster(self, data, cover_mask):
+        """Finds clusters in each cover set and computes the hypergraph.
+        """
+        num_nodes = data.x.shape[0]
+        mapper_clusters = {}
+        num_clusters = 0
+         # Each cover set is of the form [1, n_samples]
+        for i, cover_set in enumerate(cover_mask.T):
+            # Find indices of nodes which are in each cover set
+            cover_data = data.subgraph(cover_set.T)
+            cover_graph = self._generate_graph_from_data(cover_data)
+            if cover_data.is_directed():
+                'QUESTION:: should we use weakly or strongly connected'
+                'componenets for directed graphs??'
+                clusters = nx.weakly_connected_components(cover_graph)
+            if cover_data.is_undirected():
+                clusters = nx.connected_components(cover_data)
+            for cluster_index in clusters:
+                index = torch.Tensor(list(cluster_index))
+                mapper_clusters[num_clusters] = (i,index)
+                num_clusters += 1
+
+        return mapper_clusters
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to hypergraph domain by considering k-nearest neighbors.
@@ -161,10 +174,17 @@ class MapperLifting(Graph2HypergraphLifting):
         filtered_data = self._filter(data)
         cover = MapperCover(self.resolution, self.gain)
         cover_mask = cover.fit_transform(filtered_data)
+        mapper_clusters = self._cluster(data, cover_mask)
+        num_clusters = len(mapper_clusters)
+         # number of nodes in hypergraph = number of nodes in data
+        num_hyperedges = num_nodes + num_clusters ' i think '
+        # incidence_1 edges should be edges in the data
+        incidence_1 = torch.zeros(num_nodes, num_hyperedges)
         
-        return {"incidence_hyperedges": a,
-                "num_hyperedges": b,
-                "x_0": c
+        return {"incidence_hyperedges": incidence_1,
+                "num_hyperedges": num_hyperedges,
+                "x_0": data.x,
+               }
                 
     @staticmethod
     def _verify_filter_parameters(filter_attr, filter_func):
@@ -172,4 +192,4 @@ class MapperLifting(Graph2HypergraphLifting):
         assert (filter_attr_type is str or filter_attr is None), f"filter_attr must be a string or None."
         if filter_func is None:
             assert filter_attr in filter_dict.keys(),/
-            f"Please add function to filter_func or choose filter_attr from {list(filter_dict.keys())}. Currently filter_func is {filter_func} and filter_attr is {filter_attr}."
+            f"Please add function to filter_func or choose filter_attr from {list(filter_dict)}. Currently filter_func is {filter_func} and filter_attr is {filter_attr}."
