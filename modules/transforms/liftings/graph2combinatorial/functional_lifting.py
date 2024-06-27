@@ -173,7 +173,7 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
             attr[(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx())] = {
                         "bond_type": str(bond.GetBondType()),
                         "is_conjugated": bond.GetIsConjugated(),
-                        "is_stereo": bond.GetIsStereo()
+                        "is_stereo": bond.GetStereo()
                     }
         return attr
 
@@ -205,6 +205,7 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
 
         rings : list
             The rings of the molecule.
+            Example: [[0, 1, 2], [1, 2, 3], ...]
 
         Returns
         -------
@@ -212,23 +213,27 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
             The ring attributes.
             Example:
             {
-                (0, 1, 2): {"ring_size": 3, "aromaticity": False, "has_heteroatom": False, "saturation": True},
-                (1, 2, 3): {"ring_size": 3, "aromaticity": False, "has_heteroatom": False, "saturation": True},
+                (0, 1, 2): {"ring_size": 3, "aromaticity": False, "has_heteroatom": False,
+                            "saturation": True, "hydrophobicity": 0.0, "electrophilicity": 0,
+                            "nucleophilicity": 0, "polarity": 0.0},
+                (1, 2, 3): {"ring_size": 3, "aromaticity": False, "has_heteroatom": False,
+                            "saturation": True, "hydrophobicity": 0.0, "electrophilicity": 0,
+                            "nucleophilicity": 0, "polarity": 0.0},
                 ...
             }
         """
         attr = {}
         for ring in rings:
             ring_size = len(ring)
-            aromaticity = all([atom.GetIsAromatic() for atom in ring])
-            has_heteroatom = any([atom.GetAtomicNum() != 6 for atom in ring])
-            saturation = all([bond.GetBondType() == Chem.rdchem.BondType.SINGLE for bond in ring])
+            mol_ring = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]))
+            aromaticity = all([atom.GetIsAromatic() for atom in mol_ring.GetAtoms()])
+            has_heteroatom = any([atom.GetAtomicNum() != 6 for atom in mol_ring.GetAtoms()])
+            saturation = all([bond.GetBondType() == Chem.rdchem.BondType.SINGLE for bond in mol_ring.GetBonds()])
 
-            fg_mol = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]))
-            hydrophobicity = Descriptors.MolLogP(fg_mol)
-            electrophilicity = Descriptors.NumHAcceptors(fg_mol)
-            nucleophilicity = Descriptors.NumHDonors(fg_mol)
-            polarity = Descriptors.TPSA(fg_mol)
+            hydrophobicity = Descriptors.MolLogP(mol_ring)
+            electrophilicity = Descriptors.NumHAcceptors(mol_ring)
+            nucleophilicity = Descriptors.NumHDonors(mol_ring)
+            polarity = Descriptors.TPSA(mol_ring)
 
             attr[tuple(ring)] = {
                 "ring_size": ring_size,
@@ -242,6 +247,7 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
             }
 
         return attr
+
 
     def get_functional_groups_attributes(
             self, mol: Chem.Mol, cliques: dict
@@ -268,6 +274,12 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
 
         cliques : dict
             The functional groups of the molecule.
+            Example:
+            {
+                "C(=O)O": [[0, 1, 2], [2, 3, 9]],
+                "C(=O)N": [[3, 4, 5], [5, 6, 7]],
+                ...
+            }
 
         Returns
         -------
@@ -275,33 +287,35 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
             The functional groups attributes.
             Example:
             {
-                (0, 1, 2): {"functional_group": "C(=O)O", "num_atoms": 3, "conjugation": False, "acidity": "high",
-                    "hydrophobicity": "moderate", "electrophilicity": "low", "nucleophilicity": "low", "polarity": "low"},
-                (2, 3, 9): {"functional_group": "C(=O)O", "num_atoms": 3, "conjugation": False, "acidity": "neutral",
-                    "hydrophobicity": "moderate", "electrophilicity": "low", "nucleophilicity": "low", "polarity": "low"},
+                (0, 1, 2): {"functional_group": "C(=O)O", "num_atoms": 3, "conjugation": False,
+                            "hydrophobicity": 0.0, "electrophilicity": 0, "nucleophilicity": 0, "polarity": 0.0},
+                (1, 2, 3): {"functional_group": "C(=O)O", "num_atoms": 3, "conjugation": False,
+                            "hydrophobicity": 0.0, "electrophilicity": 0, "nucleophilicity": 0, "polarity": 0.0},
                 ...
             }
         """
 
         attr = {}
-        for fg, atoms in cliques.items():
+        for fg, groups in cliques.items():
             fg_mol = Chem.MolFromSmarts(fg)
-            conjugation = any([atom.GetIsConjugated() for atom in fg_mol.GetAtoms()])
+            Chem.SanitizeMol(fg_mol)  # Ensure all properties are calculated
+            conjugation = all([bond.GetIsConjugated() for bond in fg_mol.GetBonds()])
             hydrophobicity = Descriptors.MolLogP(fg_mol)
             electrophilicity = Descriptors.NumHAcceptors(fg_mol)
             nucleophilicity = Descriptors.NumHDonors(fg_mol)
             polarity = Descriptors.TPSA(fg_mol)
 
-            attr[tuple(atoms)] = {
-                "functional_group": fg,
-                "num_atoms": len(atoms),
-                "conjugation": conjugation,
-                "hydrophobicity": hydrophobicity,
-                "electrophilicity": electrophilicity,
-                "nucleophilicity": nucleophilicity,
-                "polarity": polarity
-            }
-        return {}
+            for group in groups:
+                attr[tuple(group)] = {
+                    "functional_group": fg,
+                    "num_atoms": len(group),
+                    "conjugation": conjugation,
+                    "hydrophobicity": hydrophobicity,
+                    "electrophilicity": electrophilicity,
+                    "nucleophilicity": nucleophilicity,
+                    "polarity": polarity
+                }
+        return attr
 
     #######################################################
     ################### LIFT ##############################
@@ -337,11 +351,11 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
 
         # Set atom attributes
         atom_attr = self.get_atom_attributes(mol)
-        ccc.set_cell_attributes(atom_attr)
+        ccc.set_cell_attributes(atom_attr, rank=0)
 
         # Set bond attributes
         bond_attr = self.get_bond_attributes(mol)
-        ccc.set_cell_attributes(bond_attr)
+        ccc.set_cell_attributes(bond_attr, rank=1)
 
         # add rings as 2-cells
         rings = self.get_rings(mol)
@@ -349,7 +363,7 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
             ccc.add_cell(ring, rank=self.complex_dim)
 
         ring_attr = self.get_ring_attributes(mol, rings)
-        ccc.set_cell_attributes(ring_attr)
+        ccc.set_cell_attributes(ring_attr, rank=self.complex_dim)
 
         # Hypergraph stuff
         # add functional groups and edges as hyperedges (rank = 1)
@@ -362,13 +376,15 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
         num_hyperedges = len(hyperedges)
         incidence_hyperedges = torch.zeros(data.num_nodes, num_hyperedges)
         # create incidence matrix for hyperedges
-        for i, edge in enumerate(edges):
+        for i, edge in enumerate(hyperedges):
             for atom in edge:
                 incidence_hyperedges[atom, i] = 1
 
         # set functional groups attributes
-        fg_attr = self.get_functional_groups_attributes(mol, cliques)
-        ccc.set_cell_attributes(fg_attr)
+        if cliques:
+            fg_attr = self.get_functional_groups_attributes(mol, cliques)
+            # rank = 2, if not an error will be raised as there are more than 2 elements in the clique
+            ccc.set_cell_attributes(fg_attr, rank=2)
 
         # Create the lifted topology dict for the cell complex
         ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
