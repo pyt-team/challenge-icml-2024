@@ -88,8 +88,7 @@ filter_dict = {
     "position_sum": lambda data: torch.sum(data.pos, dim=1).unsqueeze(1),
     "feature_pca": lambda data: torch.pca_lowrank(data.x, q=1),
     "position_pca": lambda data: torch.pca_lowrank(data.pos, q=1),
-    ),
-}
+    }
 
 
 class MapperLifting(Graph2HypergraphLifting):
