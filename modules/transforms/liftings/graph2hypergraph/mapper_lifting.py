@@ -84,9 +84,11 @@ class MapperCover:
 filter_dict = {
     "laplacian": Compose([ToUndirected(), AddLaplacianEigenvectorPE(k=1, is_undirected=True)]),
     "svd": SVDFeatureReduction(out_channels=1),
-    "pca": lambda data: torch.pca_lowrank(data.pos, q=1),
     "feature_sum": lambda data: torch.sum(data.x, dim=1).unsqueeze(1),
     "position_sum": lambda data: torch.sum(data.pos, dim=1).unsqueeze(1),
+    "feature_pca": lambda data: torch.pca_lowrank(data.x, q=1),
+    "position_pca": lambda data: torch.pca_lowrank(data.pos, q=1),
+    ),
 }
 
 
@@ -130,18 +132,21 @@ class MapperLifting(Graph2HypergraphLifting):
     2. "svd" : Applies the torch_geometric.transforms.SVDFeatureReduction(out_channels=1)
     transform to project to 1-dimensional subspace.
 
-    3. "pca" : Applies torch.pca_lowrank(q=1) transform and then projects to the 1st
-    principle component.
+    3. "feature_pca" : Applies torch.pca_lowrank(q=1) transform to node feature matrix
+    (ie. torch_geometric.Data.data.x) and then projects to the 1st principle component.
 
-    4. "feature_sum" : Applies torch.sum(dim=1) to the feature space of nodes in the graph
+    4. "position_pca" : Applies torch.pca_lowrank(q=1) transform to node feature matrix
+    (ie. torch_geometric.Data.data.pos) and then projects to the 1st principle component.
+
+    5. "feature_sum" : Applies torch.sum(dim=1) to the node feature matrix in the graph
     (ie. torch_geometric.Data.data.x).
 
-    5. "position_sum" : Applies torch.sum(dim=1) to the position of nodes in the graph
+    6. "position_sum" : Applies torch.sum(dim=1) to the node position matrix in the graph
     (ie. torch_geometric.Data.data.pos).
 
     You may also construct your own filter_attr and filter_func:
 
-    6. "my_filter_attr" : my_filter_func = lambda data : my_filter_func(data)
+    7. "my_filter_attr" : my_filter_func = lambda data : my_filter_func(data)
     where my_filter_func(data) outputs a (n_sample, 1) Tensor.
 
     References
@@ -178,15 +183,21 @@ class MapperLifting(Graph2HypergraphLifting):
                 filtered_data = transformed_data["laplacian_eigenvector_pe"]
             if self.filter_attr == "svd":
                 filtered_data = transformed_data.x
-            if self.filter_attr == "pca":
+            if self.filter_attr == "feature_pca":
+                filtered_data = torch.matmul(data.x, transformed_data[2][:, :1])
+            if self.filter_attr == "position_pca":
                 filtered_data = torch.matmul(data.pos, transformed_data[2][:, :1])
-            if self.filter_attr not in ["laplacian", "svd", "pca"]:
+            if self.filter_attr not in [
+                "laplacian",
+                "svd",
+                "feature_pca",
+                "position_pca",
+            ]:
                 filtered_data = transformed_data
 
         else:
             transform = self.filter_func
             filtered_data = transform(data)
-            
 
         assert filtered_data.size() == torch.Size(
             [len(data.x), 1]
@@ -214,7 +225,9 @@ class MapperLifting(Graph2HypergraphLifting):
             # as it relabels node indices
                   
             cover_data, _ = torch_geometric.utils.subgraph(
-               torch.t(cover_set), data["edge_index"]
+
+                torch.t(cover_set), data["edge_index"]
+
             )
             
             edges = [
