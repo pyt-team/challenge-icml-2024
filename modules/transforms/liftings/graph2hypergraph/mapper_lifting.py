@@ -1,7 +1,7 @@
 import networkx as nx
 import torch
 import torch_geometric
-from torch_geometric.transforms import AddLaplacianEigenvectorPE, SVDFeatureReduction
+from torch_geometric.transforms import AddLaplacianEigenvectorPE, SVDFeatureReduction, ToUndirected, Compose
 from torch_geometric.utils import subgraph
 
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
@@ -82,11 +82,11 @@ class MapperCover:
 
 # Global filter dictionary for the MapperLifting class.
 filter_dict = {
-    "laplacian": AddLaplacianEigenvectorPE(k=1),
+    "laplacian": Compose([ToUndirected(), AddLaplacianEigenvectorPE(k=1, is_undirected=True)]),
     "svd": SVDFeatureReduction(out_channels=1),
     "pca": lambda data: torch.pca_lowrank(data.pos, q=1),
-    "feature_sum": lambda data: torch.sum(data.x, dim=1),
-    "position_sum": lambda data: torch.sum(data.pos, dim=1),
+    "feature_sum": lambda data: torch.sum(data.x, dim=1).unsqueeze(1),
+    "position_sum": lambda data: torch.sum(data.pos, dim=1).unsqueeze(1),
 }
 
 
@@ -186,13 +186,16 @@ class MapperLifting(Graph2HypergraphLifting):
         else:
             transform = self.filter_func
             filtered_data = transform(data)
+            
 
         assert filtered_data.size() == torch.Size(
             [len(data.x), 1]
         ), f"filtered data should have size [n_samples, 1]. Currently filtered data has size {filtered_data.size()}."
         self.filtered_data = {self.filter_attr: filtered_data}
+
         return filtered_data
 
+    
     def _cluster(self, data, cover_mask):
         """Finds clusters in each cover set within cover_mask.
         For each cover set, a cluster is a
@@ -202,28 +205,42 @@ class MapperLifting(Graph2HypergraphLifting):
         mapper_clusters = {}
         num_clusters = 0
         # Each cover set is of the form [1, n_samples]
+
+
+        
         for i, cover_set in enumerate(cover_mask.T):
             # Find indices of nodes which are in each cover set
             # cover_data = data.subgraph(cover_set.T) does not work
             # as it relabels node indices
+                  
             cover_data, _ = torch_geometric.utils.subgraph(
-                torch.transpose(cover_set, 0, 1), data["edge_index"]
+               torch.t(cover_set), data["edge_index"]
             )
+            
             edges = [
                 (i.item(), j.item())
                 for i, j in zip(cover_data[0], cover_data[1], strict=False)
             ]
+
+            
+            nodes = [i.item() for i in torch.where(cover_set.T)[0]]
+            
             if data.is_undirected():
                 cover_graph = nx.Graph()
+                cover_graph.add_nodes_from(nodes)
                 cover_graph.add_edges_from(edges)
                 # find clusters
                 clusters = nx.connected_components(cover_graph)
+                
             if data.is_directed():
                 cover_graph = nx.DiGraph()
                 cover_graph.add_edges_from(edges)
+                cover_graph.add_nodes_from(nodes)
                 # find clusters
                 clusters = nx.weakly_connected_components(cover_graph)
+                
 
+            
             for cluster in clusters:
                 # index is the subset of nodes in data
                 # contained in cluster
@@ -235,6 +252,7 @@ class MapperLifting(Graph2HypergraphLifting):
                 num_clusters += 1
 
         self.clusters = mapper_clusters
+                
         return mapper_clusters
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -276,7 +294,8 @@ class MapperLifting(Graph2HypergraphLifting):
         mapper_clusters = self._cluster(data, cover_mask)
         # Construct the hypergraph dictionary
         num_nodes = data["x"].shape[0]
-        num_edges = data["edge_attr"].size()[0]
+        num_edges = data["edge_index"].size()[1]
+
         num_clusters = len(mapper_clusters)
         num_hyperedges = num_edges + num_clusters
 
@@ -288,13 +307,20 @@ class MapperLifting(Graph2HypergraphLifting):
 
         incidence_1_hyperedges = torch.zeros(num_nodes, num_clusters)
 
+        
         for i, hyperedge in enumerate(mapper_clusters):
             for j in mapper_clusters[hyperedge][1]:
                 incidence_1_hyperedges[j.int(), i] = 1
+                
         # Incidence matrix is (num_nodes, num_edges + num_clusters) size matrix
+
+        
         incidence_1 = torch.hstack([incidence_1_edges, incidence_1_hyperedges])
+            
         incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
 
+        print(incidence_1) 
+        
         return {
             "incidence_hyperedges": incidence_1,
             "num_hyperedges": num_hyperedges,
