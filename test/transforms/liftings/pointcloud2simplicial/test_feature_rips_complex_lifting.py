@@ -1,22 +1,22 @@
-"""Test the alpha complex lifting."""
+"""Test the feature-based Rips complex lifting."""
 
 import torch
 
 from modules.data.utils.utils import load_manual_points
-from modules.transforms.liftings.pointcloud2simplicial.alpha_complex_lifting import (
-    AlphaComplexLifting,
+from modules.transforms.liftings.pointcloud2simplicial.feature_rips_complex_lifting import (
+    FeatureRipsComplexLifting,
 )
 
 
-class TestSimplicialCliqueLifting:
-    """Test the SimplicialCliqueLifting class."""
+class TestFeatureRipsComplexLifting:
+    """Test the FeatureRipsComplexLifting class."""
 
     def setup_method(self):
         # Load the graph
         self.data = load_manual_points()
 
         # Initialise the SimplicialCliqueLifting class
-        self.lifting = AlphaComplexLifting(complex_dim=3, alpha=25.0)
+        self.lifting = FeatureRipsComplexLifting(complex_dim=3, alpha=25.0)
 
     def test_lift_topology(self):
         """Test the lift_topology method."""

@@ -1,7 +1,8 @@
 transform_type: 'lifting'
-transform_name: "AlphaComplexLifting"
+transform_name: "FeatureRipsComplexLifting"
 complex_dim: 3
-alpha: 25.0
+feature_percent: 0.2
+max_edge_length: 10.0
+sparse: null
 preserve_edge_attr: False
-signed: True
 feature_lifting: ProjectionSum
