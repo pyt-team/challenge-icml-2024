@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import rootutils
@@ -227,8 +227,8 @@ class PointCloudLoader(AbstractLoader):
     def __init__(
         self,
         parameters: DictConfig,
-        feature_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-        target_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+        feature_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
+        target_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
     ):
         self.feature_generator = feature_generator
         self.target_generator = target_generator

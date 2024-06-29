@@ -27,8 +27,7 @@ class PointCloud2SimplicialLifting(PointCloudLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_complex_connectivity(simplicial_complex, self.complex_dim)
-        return lifted_topology
+        return get_complex_connectivity(simplicial_complex, self.complex_dim)
 
     def __init__(self, complex_dim=2, **kwargs):
         super().__init__(**kwargs)

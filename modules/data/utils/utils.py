@@ -1,7 +1,7 @@
 import hashlib
 import os.path as osp
 import pickle
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import networkx as nx
 import numpy as np
@@ -431,8 +431,8 @@ def make_hash(o):
 
 def load_gudhi_dataset(
     cfg: omegaconf.DictConfig,
-    feature_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-    target_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+    feature_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
+    target_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
 ) -> torch_geometric.data.Data:
     """Load a dataset from the gudhi.datasets module."""
     if not cfg.data_name.startswith("gudhi_"):
@@ -489,13 +489,12 @@ def load_gudhi_dataset(
             )
     elif gudhi_dataset_name == "daily_activities":
         # Target is the activity type
-        # 14. for ‘cross_training’, 18. for ‘jumping’, 13. for ‘stepper’, or 9. for ‘walking’
+        # 14. for 'cross_training', 18. for 'jumping', 13. for 'stepper', or 9. for 'walking'
         y = torch.tensor(data[:, 3:], dtype=torch.float)
     else:
         y = None
 
-    data = torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)
-    return data
+    return torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)
 
 
 def load_random_points(
@@ -510,8 +509,7 @@ def load_random_points(
     )
     features = torch.tensor(rng.integers(2, size=(num_samples, 1)), dtype=torch.float)
 
-    data = torch_geometric.data.Data(x=features, y=classes, pos=points, complex_dim=0)
-    return data
+    return torch_geometric.data.Data(x=features, y=classes, pos=points, complex_dim=0)
 
 
 def load_manual_points():
