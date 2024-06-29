@@ -136,7 +136,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         if hasattr(data, "num_edges") and data.num_edges:
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index") and data.edge_index:
+        elif hasattr(data, "edge_index") and (data.edge_index is not None):
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -175,7 +175,11 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             )
             print(f" - Features dimensions: {features_dim}")
             # Check if there are isolated nodes
-            if hasattr(data, "edge_index") and hasattr(data, "x") and data.edge_index:
+            if (
+                hasattr(data, "edge_index")
+                and hasattr(data, "x")
+                and (data.edge_index is not None)
+            ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
