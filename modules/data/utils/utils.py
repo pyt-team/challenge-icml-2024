@@ -512,3 +512,21 @@ def load_random_points(
 
     data = torch_geometric.data.Data(x=features, y=classes, pos=points, complex_dim=0)
     return data
+
+
+def load_manual_points():
+    pos = torch.tensor(
+        [
+            [1.0, 1.0],
+            [7.0, 0.0],
+            [4.0, 6.0],
+            [9.0, 6.0],
+            [0.0, 14.0],
+            [2.0, 19.0],
+            [9.0, 17.0],
+        ],
+        dtype=torch.float,
+    )
+    x = torch.ones_like(pos, dtype=torch.float)
+    y = torch.randint(0, 2, (pos.shape[0],), dtype=torch.float)
+    return torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)

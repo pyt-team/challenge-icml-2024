@@ -146,7 +146,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         hyperedges_features_dim = data.x_hyperedges.shape[1]
 
     # Plot the graph if it is not too large
-    if complex_dim[0] < 50:
+    if complex_dim[0] < 50 and len(complex_dim) != 1:
         plot_manual_graph(data)
 
     # Plot point cloud if it is not too large
@@ -209,7 +209,7 @@ def plot_point_cloud(data, title=None):
         )
 
     if data.pos.shape[1] == 3:
-        dim = 2
+        dim = 3
         x = data.pos[:, 0]
         y = data.pos[:, 1]
         z = data.pos[:, 2]
@@ -218,7 +218,7 @@ def plot_point_cloud(data, title=None):
         ax.scatter(x, y, z)
         plt.show()
     elif data.pos.shape[1] == 2:
-        dim = 3
+        dim = 2
         x = data.pos[:, 0]
         y = data.pos[:, 1]
         fig = plt.figure(figsize=(8, 8))

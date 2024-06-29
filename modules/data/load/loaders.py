@@ -15,6 +15,7 @@ from modules.data.utils.utils import (
     load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
+    load_manual_points,
     load_random_points,
     load_simplicial_dataset,
 )
@@ -263,6 +264,8 @@ class PointCloudLoader(AbstractLoader):
                 num_classes=self.parameters["num_classes"],
                 num_samples=self.parameters["num_samples"],
             )
+        elif self.parameters.data_name == "manual_points":
+            data = load_manual_points()
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
