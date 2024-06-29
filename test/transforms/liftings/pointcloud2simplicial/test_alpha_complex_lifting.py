@@ -8,14 +8,14 @@ from modules.transforms.liftings.pointcloud2simplicial.alpha_complex_lifting imp
 )
 
 
-class TestSimplicialCliqueLifting:
-    """Test the SimplicialCliqueLifting class."""
+class TestAlphaComplexLifting:
+    """Test the AlphaComplexLifting class."""
 
     def setup_method(self):
         # Load the graph
         self.data = load_manual_points()
 
-        # Initialise the SimplicialCliqueLifting class
+        # Initialise the AlphaComplexLifting class
         self.lifting = AlphaComplexLifting(complex_dim=3, alpha=25.0)
 
     def test_lift_topology(self):
