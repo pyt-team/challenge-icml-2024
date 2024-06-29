@@ -1,3 +1,6 @@
+from toponetx.classes import SimplicialComplex
+
+from modules.data.utils.utils import get_complex_connectivity
 from modules.transforms.liftings.lifting import PointCloudLifting
 
 
@@ -11,6 +14,21 @@ class PointCloud2SimplicialLifting(PointCloudLifting):
     **kwargs : optional
         Additional arguments for the class.
     """
+
+    def _get_lifted_topology(self, simplicial_complex: SimplicialComplex) -> dict:
+        r"""Returns the lifted topology.
+
+        Parameters
+        ----------
+        simplicial_complex : SimplicialComplex
+            The simplicial complex.
+        Returns
+        ---------
+        dict
+            The lifted topology.
+        """
+        lifted_topology = get_complex_connectivity(simplicial_complex, self.complex_dim)
+        return lifted_topology
 
     def __init__(self, complex_dim=2, **kwargs):
         super().__init__(**kwargs)
