@@ -1,16 +1,22 @@
 import hashlib
 import os.path as osp
 import pickle
+from typing import Callable, Optional
 
 import networkx as nx
 import numpy as np
 import omegaconf
+import rootutils
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+from gudhi.datasets.generators import points
+from gudhi.datasets.remote import fetch_bunny, fetch_daily_activities, fetch_spiral_2d
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
+
+rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -50,16 +56,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -421,3 +427,88 @@ def make_hash(o):
     hash_as_hex = sha1.hexdigest()
     # Convert the hex back to int and restrict it to the relevant int range
     return int(hash_as_hex, 16) % 4294967295
+
+
+def load_gudhi_dataset(
+    cfg: omegaconf.DictConfig,
+    feature_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+    target_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+) -> torch_geometric.data.Data:
+    """Load a dataset from the gudhi.datasets module."""
+    if not cfg.data_name.startswith("gudhi_"):
+        raise ValueError("This function should only be used with gudhi datasets")
+
+    gudhi_dataset_name = cfg.data_name.removeprefix("gudhi_")
+
+    if gudhi_dataset_name == "sphere":
+        points_data = points.sphere(
+            n_samples=cfg["n_samples"],
+            ambient_dim=cfg["ambient_dim"],
+            sample=cfg["sample"],
+        )
+    elif gudhi_dataset_name == "torus":
+        points_data = points.torus(
+            n_samples=cfg["n_samples"], dim=cfg["dim"], sample=cfg["sample"]
+        )
+    elif gudhi_dataset_name == "bunny":
+        file_path = osp.join(
+            rootutils.find_root(), cfg["data_dir"], "bunny", "bunny.npy"
+        )
+        points_data = fetch_bunny(
+            file_path=file_path, accept_license=cfg.get("accept_license", False)
+        )
+    elif gudhi_dataset_name == "spiral_2d":
+        file_path = osp.join(
+            rootutils.find_root(), cfg["data_dir"], "spiral_2d", "spiral_2d.npy"
+        )
+        points_data = fetch_spiral_2d(file_path=file_path)
+    elif gudhi_dataset_name == "daily_activities":
+        file_path = osp.join(
+            rootutils.find_root(), cfg["data_dir"], "activities", "activities.npy"
+        )
+        data = fetch_daily_activities(file_path=file_path)
+        points_data = data[:, :3]
+    else:
+        raise ValueError(f"Gudhi dataset {gudhi_dataset_name} not recognized.")
+
+    pos = torch.tensor(points_data, dtype=torch.float)
+    if feature_generator:
+        x = feature_generator(points)
+        if x.shape[0] != points.shape[0]:
+            raise ValueError(
+                "feature_generator must not change first dimension of points data."
+            )
+    else:
+        x = None
+
+    if target_generator:
+        y = target_generator(points)
+        if y.shape[0] != points.shape[0]:
+            raise ValueError(
+                "target_generator must not change first dimension of points data."
+            )
+    elif gudhi_dataset_name == "daily_activities":
+        # Target is the activity type
+        # 14. for ‘cross_training’, 18. for ‘jumping’, 13. for ‘stepper’, or 9. for ‘walking’
+        y = torch.tensor(data[:, 3:], dtype=torch.float)
+    else:
+        y = None
+
+    data = torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)
+    return data
+
+
+def load_random_points(
+    dim: int, num_classes: int, num_samples: int, seed: int = 42
+) -> torch_geometric.data.Data:
+    """Create a random point cloud dataset."""
+    rng = np.random.default_rng(seed)
+
+    points = torch.tensor(rng.random((num_samples, dim)), dtype=torch.float)
+    classes = torch.tensor(
+        rng.integers(num_classes, size=num_samples), dtype=torch.long
+    )
+    features = torch.tensor(rng.integers(2, size=(num_samples, 1)), dtype=torch.float)
+
+    data = torch_geometric.data.Data(x=features, y=classes, pos=points, complex_dim=0)
+    return data
