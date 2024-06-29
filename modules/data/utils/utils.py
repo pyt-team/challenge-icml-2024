@@ -473,8 +473,8 @@ def load_gudhi_dataset(
 
     pos = torch.tensor(points_data, dtype=torch.float)
     if feature_generator:
-        x = feature_generator(points)
-        if x.shape[0] != points.shape[0]:
+        x = feature_generator(pos)
+        if x.shape[0] != pos.shape[0]:
             raise ValueError(
                 "feature_generator must not change first dimension of points data."
             )
@@ -482,8 +482,8 @@ def load_gudhi_dataset(
         x = None
 
     if target_generator:
-        y = target_generator(points)
-        if y.shape[0] != points.shape[0]:
+        y = target_generator(pos)
+        if y.shape[0] != pos.shape[0]:
             raise ValueError(
                 "target_generator must not change first dimension of points data."
             )
