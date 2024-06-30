@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "CellEncodingLifting"
+min_dim: 2
+feature_lifting: ProjectionSum
