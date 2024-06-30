@@ -1,5 +1,5 @@
 from itertools import chain, combinations
-from typing import Iterable
+from typing import Callable, Iterable
 
 
 def powerset(iterable: Iterable):
@@ -56,6 +56,18 @@ class Matroid:
         self._circuits = frozenset(circuits)
         return self._circuits
 
+    def _rank(self, input_set: Iterable) -> int:
+        input_set = frozenset(input_set)
+        max_rank = 0
+        for subset in powerset(input_set):
+            if frozenset(subset) in self.independent_sets:
+                max_rank = max(len(subset), max_rank)
+        return max_rank
+
+    @property
+    def rank(self) -> Callable[[Iterable], int]:
+        return self._rank
+
 
 if __name__ == "__main__":
     matroid = Matroid(
@@ -63,3 +75,4 @@ if __name__ == "__main__":
     )
     print(matroid.independent_sets)
     print(matroid.circuits)
+    print(matroid._rank(["a", "b", "c"]))
