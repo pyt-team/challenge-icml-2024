@@ -50,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -331,6 +331,19 @@ def load_manual_graph():
         edge_index=edge_list,
         num_nodes=len(vertices),
         y=torch.tensor(y),
+    )
+
+
+def load_manual_cell_complex():
+    """Create a manual cell complex for testing purposes."""
+    return torch_geometric.data.Data(
+        x=torch.tensor([0, 1, 2, 3]),
+        x_0=torch.zeros(4, 1, dtype=torch.float32),
+        x_1=torch.zeros(4, 1, dtype=torch.float32),
+        x_2=torch.zeros(1, 1, dtype=torch.float32),
+        num_nodes=4,
+        edge_index=torch.tensor([[0, 0, 1, 2], [1, 2, 2, 3]]),
+        incidence_2=torch.tensor([[1], [-1], [1], [0]], dtype=torch.float32),
     )
 
 

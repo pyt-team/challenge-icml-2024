@@ -11,6 +11,7 @@ from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
+    load_manual_cell_complex,
     load_manual_graph,
     load_simplicial_dataset,
 )
@@ -143,7 +144,18 @@ class CellComplexLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        return load_cell_complex_dataset(self.parameters)
+        # Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
+        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+
+        if self.parameters.data_name in ["manual_cell_complex"]:
+            data = load_manual_cell_complex()
+            dataset = CustomDataset([data], self.data_dir)
+        else:
+            dataset = load_cell_complex_dataset(self.parameters)
+        return dataset
 
 
 class SimplicialLoader(AbstractLoader):
