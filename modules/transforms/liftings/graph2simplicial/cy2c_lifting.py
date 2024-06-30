@@ -54,7 +54,7 @@ class Cy2CLifting(Graph2SimplicialLifting):
         v1, v2 = data.edge_index
         list_adj = torch.zeros((max_node, max_node))
         list_adj[v1, v2] = 1
-        list_feature = data.x
+        # list_feature = data.x
 
         node_each_cycle, cycle_adj = self._make_cycle_adj_speed_nosl(list_adj, data)
 
