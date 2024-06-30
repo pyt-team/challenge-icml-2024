@@ -1,0 +1,3 @@
+in_channels: null # This will be set by the dataset
+hidden_channels: 32
+out_channels: null # This will be set by the dataset
