@@ -55,7 +55,7 @@ class CellEncodingLifting(Cell2GraphLifting):
         ]
 
         # Encode cell dimension
-        max_dim = max(self.min_dim, cell_complex.dimension())
+        max_dim = max(self.min_dim + 1, cell_complex.dimension())
         for cell in cell_complex.nodes():
             dim = cell_complex.dim(cell)
             one_hot = torch.zeros(max_dim + 1)
