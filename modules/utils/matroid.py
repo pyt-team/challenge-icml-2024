@@ -73,7 +73,9 @@ class Matroid:
     def span(self, S: Iterable):
         S = frozenset(S) if not isinstance(S, frozenset) else S
         rankS = self._rank(S)
-        return frozenset({g for g in self._ground if self._rank({g} | S) == rankS})
+        return S | frozenset(
+            {g for g in (self._ground - S) if self._rank({g} | S) == rankS}
+        )
 
 
 if __name__ == "__main__":
