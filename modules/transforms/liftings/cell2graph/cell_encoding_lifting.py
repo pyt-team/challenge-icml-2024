@@ -1,6 +1,4 @@
-from collections import defaultdict
-
-import networkx as nx
+import torch
 import torch_geometric
 from toponetx.classes import CellComplex
 
@@ -40,25 +38,25 @@ class CellEncodingLifting(Cell2GraphLifting):
         # Create a mapping from cells to indices
         cell_to_index = {cell: i for i, cell in enumerate(cell_complex.cells())}
 
-        for tau in cell_complex.cells():
-            for delta in cell_complex.cells():
-                # Add edge if tau is on the boundary of delta or vice versa
-                if cell_complex.is_boundary(tau, delta) or cell_complex.is_boundary(
-                    delta, tau
-                ):
-                    edge_index.append([cell_to_index[tau], cell_to_index[delta]])
-                    continue
-
-                # Add edge if tau and delta share a common coboundary
-                for sigma in cell_complex.cells():
-                    if cell_complex.is_boundary(
-                        tau, sigma
-                    ) and cell_complex.is_boundary(delta, sigma):
-                        edge_index.append([cell_to_index[tau], cell_to_index[delta]])
+        # Add edges according to defintion
+        edge_index = [
+            [cell_to_index[tau], cell_to_index[delta]]
+            for tau in cell_complex.cells()
+            for delta in cell_complex.cells()
+            if (
+                cell_complex.is_boundary(tau, delta)
+                or cell_complex.is_boundary(delta, tau)
+            )
+            or any(
+                cell_complex.is_boundary(tau, sigma)
+                and cell_complex.is_boundary(delta, sigma)
+                for sigma in cell_complex.cells()
+            )
+        ]
 
         # Encode cell dimension
         max_dim = max(self.min_dim, cell_complex.dimension())
-        for cell in G.nodes():
+        for cell in cell_complex.nodes():
             dim = cell_complex.dim(cell)
             one_hot = torch.zeros(max_dim + 1)
             one_hot[dim] = 1
