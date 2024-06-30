@@ -1,0 +1,219 @@
+"""Test the message passing module."""
+
+import sys
+
+import torch
+
+sys.path.append("/home/ubuntu/challenge-icml-2024")
+
+from modules.data.utils.utils import load_manual_graph
+from modules.transforms.liftings.graph2simplicial.cy2c_lifting import Cy2CLifting
+
+
+class TestSimplicialCliqueLifting:
+    """Test the SimplicialCliqueLifting class."""
+
+    def setup_method(self):
+        # Load the graph
+        self.data = load_manual_graph()
+
+        # Initialise the SimplicialCliqueLifting class
+        self.lifting_signed = Cy2CLifting(complex_dim=3, signed=True)
+        self.lifting_unsigned = Cy2CLifting(complex_dim=3, signed=False)
+
+    def test_lift_topology(self):
+        """Test the lift_topology method."""
+
+        # Test the lift_topology method
+        lifted_data_signed = self.lifting_signed.forward(self.data.clone())
+        lifted_data_unsigned = self.lifting_unsigned.forward(self.data.clone())
+
+        expected_incidence_1 = torch.tensor(
+            [
+                [
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -1.0,
+                    -1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    -1.0,
+                    -1.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    -1.0,
+                    -1.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                ],
+            ]
+        )
+
+        assert (
+            abs(expected_incidence_1) == lifted_data_unsigned.incidence_1.to_dense()
+        ).all(), "Something is wrong with unsigned incidence_1 (nodes to edges)."
+        assert (
+            expected_incidence_1 == lifted_data_signed.incidence_1.to_dense()
+        ).all(), "Something is wrong with signed incidence_1 (nodes to edges)."
+
+        expected_incidence_2 = torch.tensor(
+            [
+                [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [-1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, -1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+            ]
+        )
+
+        assert (
+            abs(expected_incidence_2) == lifted_data_unsigned.incidence_2.to_dense()
+        ).all(), "Something is wrong with unsigned incidence_2 (edges to triangles)."
+        assert (
+            expected_incidence_2 == lifted_data_signed.incidence_2.to_dense()
+        ).all(), "Something is wrong with signed incidence_2 (edges to triangles)."
+
+        expected_incidence_3 = torch.tensor(
+            [[0.0], [0.0], [0.0], [0.0], [-1.0], [1.0], [-1.0], [0.0], [1.0]]
+        )
+
+        assert (
+            abs(expected_incidence_3) == lifted_data_unsigned.incidence_3.to_dense()
+        ).all(), (
+            "Something is wrong with unsigned incidence_3 (triangles to tetrahedrons)."
+        )
+        assert (
+            expected_incidence_3 == lifted_data_signed.incidence_3.to_dense()
+        ).all(), (
+            "Something is wrong with signed incidence_3 (triangles to tetrahedrons)."
+        )
