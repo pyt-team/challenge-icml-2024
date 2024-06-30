@@ -57,7 +57,9 @@ class Matroid:
         return self._circuits
 
     def _rank(self, input_set: Iterable) -> int:
-        input_set = frozenset(input_set)
+        input_set = (
+            frozenset(input_set) if not isinstance(input_set, frozenset) else input_set
+        )
         max_rank = 0
         for subset in powerset(input_set):
             if frozenset(subset) in self.independent_sets:
@@ -68,6 +70,11 @@ class Matroid:
     def rank(self) -> Callable[[Iterable], int]:
         return self._rank
 
+    def span(self, S: Iterable):
+        S = frozenset(S) if not isinstance(S, frozenset) else S
+        rankS = self._rank(S)
+        return frozenset({g for g in self._ground if self._rank({g} | S) == rankS})
+
 
 if __name__ == "__main__":
     matroid = Matroid(
@@ -76,3 +83,4 @@ if __name__ == "__main__":
     print(matroid.independent_sets)
     print(matroid.circuits)
     print(matroid._rank(["a", "b", "c"]))
+    print(matroid.span(["a"]))
