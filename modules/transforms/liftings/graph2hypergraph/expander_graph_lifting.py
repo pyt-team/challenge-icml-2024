@@ -135,12 +135,12 @@ else:
         References
         ----------
         .. [1] Joel Friedman,
-           A Proof of Alon’s Second Eigenvalue Conjecture and Related Problems, 2004
+           A Proof of Alon's Second Eigenvalue Conjecture and Related Problems, 2004
            https://arxiv.org/abs/cs/0405020
 
         """
 
-        import numpy as np
+        # import numpy as np
 
         if n < 1:
             raise nx.NetworkXError("n must be a positive integer")
