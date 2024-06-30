@@ -171,6 +171,26 @@ class CellComplexLifting(AbstractLifting):
     def __init__(self, feature_lifting="ProjectionSum", **kwargs):
         super().__init__(feature_lifting=feature_lifting, **kwargs)
 
+    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        r"""Applies the full lifting (topology + features) to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The lifted data.
+        """
+        initial_data = data.to_dict()
+        lifted_topology = self.lift_topology(data)
+        lifted_topology = self.feature_lifting(lifted_topology)
+
+        # use only lifted topology, since we want to drop cells and their features from initial_data
+        return torch_geometric.data.Data(**lifted_topology)
+
 
 class SimplicialLifting(AbstractLifting):
     r"""Abstract class for lifting simplicial complexes to other (topological) domains.
