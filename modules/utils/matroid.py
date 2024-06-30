@@ -1,6 +1,8 @@
 from itertools import chain, combinations
 from typing import Callable, Iterable
 
+import networkx as nx
+
 
 def powerset(iterable: Iterable):
     """From https://docs.python.org/3/library/itertools.html#itertools-recipes"""
@@ -78,11 +80,49 @@ class Matroid:
         )
 
 
+class GraphicMatroid(Matroid):
+    """A graphic matroid uses an underlying graph (edges) as the ground set of a matroid. Its bases are the spanning trees of the graph, which means the forests of a graph are the independent sets."""
+
+    def __init__(self, graph: nx.Graph):
+        edges = []
+        for edge in graph.edges:
+            edges.append(tuple(edge))
+        spanning_trees = []
+        for tree in nx.SpanningTreeIterator(graph):
+            edges = tree.edges()
+            cvt_tree = []
+            for edge in edges:
+                cvt_tree.append(tuple(edge))
+            spanning_trees.append(frozenset(cvt_tree))
+
+        super().__init__(frozenset(edges), frozenset(spanning_trees))
+
+
 if __name__ == "__main__":
     matroid = Matroid(
         {"a", "b", "c", "d"}, {frozenset({"a", "b"}), frozenset({"c", "d"})}
     )
-    print(matroid.independent_sets)
-    print(matroid.circuits)
-    print(matroid._rank(["a", "b", "c"]))
-    print(matroid.span(["a"]))
+    # print(matroid.independent_sets)
+    # print(matroid.circuits)
+    # print(matroid._rank(["a", "b", "c"]))
+    # print(matroid.span(["a"]))
+    G = nx.Graph()
+    vertices = ["A", "B", "C", "D", "E", "F"]
+    G.add_nodes_from(vertices)
+    edges = [
+        ("A", "B"),
+        ("B", "C"),
+        ("C", "D"),
+        ("D", "E"),
+        ("E", "F"),
+        ("F", "A"),
+        ("A", "C"),
+        ("B", "D"),
+        ("C", "E"),
+        ("D", "F"),
+        ("E", "A"),
+        ("F", "B"),
+    ]
+    G.add_edges_from(edges)
+    M = GraphicMatroid(graph=G)
+    print(M.independent_sets)
