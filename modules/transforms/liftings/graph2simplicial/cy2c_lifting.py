@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
-from torch_geometric.utils import add_self_loops, degree, remove_self_loops
+from torch_geometric.utils import add_self_loops, remove_self_loops
 from torch_geometric.utils.convert import to_networkx
 
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
