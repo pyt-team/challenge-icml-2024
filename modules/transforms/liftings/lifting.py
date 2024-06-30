@@ -184,7 +184,6 @@ class CellComplexLifting(AbstractLifting):
         torch_geometric.data.Data
             The lifted data.
         """
-        initial_data = data.to_dict()
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)
 

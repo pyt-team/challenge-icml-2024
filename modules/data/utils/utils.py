@@ -9,7 +9,6 @@ import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
 from topomodelx.utils.sparse import from_sparse
-from toponetx import CellComplex
 from torch_geometric.data import Data
 from torch_sparse import coalesce
 
@@ -337,7 +336,7 @@ def load_manual_graph():
 
 def load_manual_cell_complex():
     """Create a manual cell complex for testing purposes."""
-    data = torch_geometric.data.Data(
+    return torch_geometric.data.Data(
         x=torch.tensor([0, 1, 2, 3]),
         x_0=torch.zeros(4, 1, dtype=torch.float32),
         x_1=torch.zeros(4, 1, dtype=torch.float32),
@@ -346,8 +345,6 @@ def load_manual_cell_complex():
         edge_index=torch.tensor([[0, 0, 1, 2], [1, 2, 2, 3]]),
         incidence_2=torch.tensor([[1], [-1], [1], [0]], dtype=torch.float32),
     )
-
-    return data
 
 
 def get_Planetoid_pyg(cfg):

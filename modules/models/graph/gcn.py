@@ -20,6 +20,4 @@ class GCNModel(torch.nn.Module):
 
         x = self.conv(x, edge_index)
         x = torch.relu(x)
-        x = self.linear(x)
-
-        return x
+        return self.linear(x)
