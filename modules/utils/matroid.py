@@ -1,5 +1,6 @@
+import copy
 from itertools import chain, combinations
-from typing import Callable, Iterable
+from typing import Callable, Dict, Iterable
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -21,7 +22,7 @@ class Matroid:
 
     def __init__(self, ground: Iterable, bases=Iterable[Iterable]):
         self._ground = fs(ground)
-        self._bases = fs({fs(base) for base in bases})
+        self._bases = fs([fs(base) for base in bases])
 
         self._independent_sets = None
         self._circuits = None
@@ -107,11 +108,16 @@ class Matroid:
         )
         return Matroid(ground=new_ground, bases=new_bases)
 
+    def contraction(self, T: frozenset):
+        return self.dual().deletion(T).dual()
+
 
 class GraphicMatroid(Matroid):
     """A graphic matroid uses an underlying graph (edges) as the ground set of a matroid. Its bases are the spanning trees of the graph, which means the forests of a graph are the independent sets."""
 
-    def __init__(self, graph: nx.Graph):
+    def __init__(self, edgelist: Iterable, contract_map: Dict = None):
+        graph = nx.Graph()
+        graph.add_edges_from(edgelist)
         ground_edges = []
         for edge in graph.edges:
             ground_edges.append(tuple(edge))
@@ -124,11 +130,20 @@ class GraphicMatroid(Matroid):
             spanning_trees.append(frozenset(cvt_tree))
 
         edges = frozenset(ground_edges)
-        super(GraphicMatroid, self).__init__(
-            ground=edges, bases=frozenset(spanning_trees)
-        )
-        self.vertices = frozenset({vertex for edge in edges for vertex in edge})
-        self.edges = edges
+        super(GraphicMatroid, self).__init__(ground=edges, bases=spanning_trees)
+        self.vertices = []
+        self.edges = []
+        self.contract_map = contract_map if contract_map else {}
+        for v_1, v_2 in edges:
+            n1 = ",".join(self.contract_map.get(v_1, [v_1]))
+            n2 = ",".join(self.contract_map.get(v_2, [v_2]))
+            if n1 == n2:  # avoid self loops
+                continue
+            self.vertices.append(n1)
+            self.vertices.append(n2)
+
+            self.edges.append((n1, n2, f"{v_1},{v_2}"))
+        self.vertices = frozenset(self.vertices)
 
     def graph(self) -> nx.Graph:
         G = nx.Graph()
@@ -137,45 +152,25 @@ class GraphicMatroid(Matroid):
         return G
 
     def deletion(self, T: frozenset):
-        new_edges = self.edges - T
-        print(new_edges)
-        G = nx.Graph()
-        G.add_nodes_from(vertices)
-        G.add_edges_from(new_edges)
-        return GraphicMatroid(graph=G)
+        new_edges = super().deletion(T)._ground
+        return GraphicMatroid(edgelist=new_edges)
 
 
 if __name__ == "__main__":
-    ground = [c for c in "abcd"]
-    bases = ["ab", "ac", "ad", "bc", "bd", "cd"]
-    bases = [[c for c in base] for base in bases]
-    matroid = Matroid(ground, bases)
-
-    print(matroid.bases)
-    print("new bases")
-    print(matroid.deletion(frozenset(["a"])).bases)
-    G = nx.Graph()
-    vertices = ["A", "B", "C", "D", "E", "F"]
-    G.add_nodes_from(vertices)
-    edges = [
-        ("A", "B"),
-        ("B", "C"),
-        ("C", "D"),
-        ("D", "E"),
-        ("E", "F"),
-        ("F", "A"),
-        ("A", "C"),
-        ("B", "D"),
-        ("C", "E"),
-        ("D", "F"),
-        ("E", "A"),
-        ("F", "B"),
-    ]
-    G.add_edges_from(edges)
-    M = GraphicMatroid(graph=G)
-    nx.draw_planar(M.graph(), with_labels=True)
+    # ground = [c for c in "abcd"]
+    # bases = ["ab", "ac", "ad", "bc", "bd", "cd"]
+    # bases = [[c for c in base] for base in bases]
+    # matroid = Matroid(ground, bases)
+    # print(matroid.bases)
+    # print("new bases")
+    # print(matroid.deletion(frozenset(["a"])).bases)
+    edges = [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("E", "A"), ("B", "D")]
+    M = GraphicMatroid(edgelist=edges)
+    print(M.bases)
+    # nx.draw(M.graph())
     # plt.show()
 
-    M = M.deletion(frozenset({("B", "D")}))
-    nx.draw_planar(M.graph(), with_labels=True)
+    # M = M.contraction(frozenset({("B", "D")}))
+    # nx.draw(M.graph())
+    # print(M.bases)
     # plt.show()
