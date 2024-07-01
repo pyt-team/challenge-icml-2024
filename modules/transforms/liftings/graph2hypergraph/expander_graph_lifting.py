@@ -21,7 +21,7 @@ class ExpanderGraphLifting(Graph2HypergraphLifting):
     def __init__(self, node_degree: int, **kwargs):
         super().__init__(**kwargs)
 
-        assert node_degree % 2 == 0, "Only even node degree are supported."
+        assert node_degree % 2 == 0, "Only even node degree is supported."
 
         self.node_degree = node_degree
 
@@ -55,7 +55,7 @@ class ExpanderGraphLifting(Graph2HypergraphLifting):
         )
         coo_values = torch.from_numpy(
             incidence_matrix.data.astype("f4")
-        )  # 4 byte floating point (single precision)
+        )  # 4 bytes floating point number (single precision)
 
         incidence_matrix = torch.sparse_coo_tensor(coo_indices, coo_values)
 
