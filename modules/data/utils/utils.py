@@ -320,8 +320,8 @@ def load_manual_graph():
 
     # Add edges
     G.add_edges_from(edges)
-    G.to_undirected()
     edge_list = torch.Tensor(list(G.edges())).T.long()
+    edge_list = torch_geometric.utils.to_undirected(edge_list)
 
     # Generate feature from 0 to 9
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()

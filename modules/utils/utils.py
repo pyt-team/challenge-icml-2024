@@ -133,10 +133,10 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             features_dim.append(data.x.shape[1])
         else:
             raise ValueError("Data object does not contain any vertices/points.")
-        if hasattr(data, "num_edges"):
+        if hasattr(data, "num_edges") and data.edge_index is not None:
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -226,14 +226,13 @@ def plot_manual_graph(data, title=None):
 
     # Collect vertices
     vertices = [i for i in range(data.x.shape[0])]
-
     # Hyperedges
     if max_order == 0:
         n_vertices = len(vertices)
         n_hyperedges = incidence.shape[1]
         vertices += [i + n_vertices for i in range(n_hyperedges)]
         indices = incidence.indices()
-        edges = np.array([indices[1].numpy(), indices[0].numpy() + n_vertices]).T
+        edges = np.array([indices[0].numpy(), indices[1].numpy() + n_vertices]).T
         pos_n = [[i, 0] for i in range(n_vertices)]
         pos_he = [[i, 1] for i in range(n_hyperedges)]
         pos = pos_n + pos_he
