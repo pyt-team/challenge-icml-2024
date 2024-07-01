@@ -51,6 +51,7 @@ class CombinatorialFunctionalLifting(Graph2CombinatorialLifting):
     #######################################################
     ################### RINGS #############################
     #######################################################
+    
     def get_rings(
             self, mol: Chem.Mol
         ) -> torch.Tensor:
