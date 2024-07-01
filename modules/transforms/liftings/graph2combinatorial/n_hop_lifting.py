@@ -1,15 +1,15 @@
 import networkx as nx
 import torch
-
 from networkx import Graph
-
-from modules.transforms.liftings.graph2combinatorial.base import Graph2CombinatorialLifting
-
+from topomodelx.utils.sparse import from_sparse
+from toponetx.classes.combinatorial_complex import CombinatorialComplex
 from torch_geometric.data import Data
 from torch_geometric.utils.convert import to_networkx
 
-from toponetx.classes.combinatorial_complex import CombinatorialComplex
-from topomodelx.utils.sparse import from_sparse
+from modules.transforms.liftings.graph2combinatorial.base import (
+    Graph2CombinatorialLifting,
+)
+
 
 class NHopLifting(Graph2CombinatorialLifting):
     def __init__(self, hop_num: int = 1, **kwargs):
