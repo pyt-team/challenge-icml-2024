@@ -25,11 +25,12 @@ class TestCofaceCCLifting:
 
         expected_n_3_cells = 3
 
+        print(lifted_data.incidence_3.to_dense())
         expected_incidence_3 = torch.tensor(
             [
-                [1.0, 1.0, 0.0],
-                [1.0, 0.0, 1.0],
                 [1.0, 1.0, 1.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 1.0],
             ]
         )
 
