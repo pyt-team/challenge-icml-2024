@@ -15,9 +15,8 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-
 from modules.transforms.liftings.simplicial2combinatorial.coface_cc_lifting import (
-    CofaceCCLifting
+    CofaceCCLifting,
 )
 
 TRANSFORMS = {

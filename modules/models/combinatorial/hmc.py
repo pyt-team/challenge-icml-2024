@@ -26,14 +26,14 @@ class HMCModel(torch.nn.Module):
         super().__init__()
         channels_per_layer = []
 
-        for l in range(n_layers):
+        for layer in range(n_layers):
             in_channels_l = []
             int_channels_l = []
             out_channels_l = []
 
-            for i in range(3):
+            for _ in range(3):
                 # First layer behavior
-                if l == 0:
+                if layer == 0:
                     in_channels_l.append(in_channels)
                 else:
                     in_channels_l.append(hidden_channels)
@@ -63,14 +63,14 @@ class HMCModel(torch.nn.Module):
         torch.Tensor
             Output tensor.
         """
-        x_0 = data.x_0 
+        x_0 = data.x_0
         x_1 = data.x_1
         x_2 = data.x_2
-        neighborhood_0_to_0 = data['adjacency_0']
-        neighborhood_1_to_1 = data['adjacency_1']
-        neighborhood_2_to_2 = data['adjacency_2']
-        neighborhood_0_to_1 = data['incidence_1']
-        neighborhood_1_to_2 = data['incidence_2']
+        neighborhood_0_to_0 = data["adjacency_0"]
+        neighborhood_1_to_1 = data["adjacency_1"]
+        neighborhood_2_to_2 = data["adjacency_2"]
+        neighborhood_0_to_1 = data["incidence_1"]
+        neighborhood_1_to_2 = data["incidence_2"]
 
         x_0, x_1, x_2 = self.base_model(
             x_0,

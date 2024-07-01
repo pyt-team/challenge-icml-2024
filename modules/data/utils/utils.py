@@ -319,7 +319,7 @@ def load_manual_simplicial_complex():
         [0, 0, 1]
 
     ]
-    
+
 
     y = [1]
 

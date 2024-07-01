@@ -1,14 +1,11 @@
-import torch
-import pdb
-from torch_geometric.data import Data
-from torch_geometric.utils.convert import to_networkx
-
-import networkx as nx   
-from networkx import Graph
-
-from modules.transforms.liftings.simplicial2combinatorial.base import Simplicial2CombinatorialLifting
 from topomodelx.utils.sparse import from_sparse
-from toponetx.classes.combinatorial_complex import CombinatorialComplex, HyperEdge
+from toponetx.classes.combinatorial_complex import CombinatorialComplex
+from torch_geometric.data import Data
+
+from modules.transforms.liftings.simplicial2combinatorial.base import (
+    Simplicial2CombinatorialLifting,
+)
+
 
 class CofaceCCLifting(Simplicial2CombinatorialLifting):
     def __init__(self, keep_features=False, **kwargs):
@@ -23,24 +20,24 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         # Initialize the CC given a torch_geometric.Data
         # graph
         ## Add 0-cells
-        for cell in range(data['x_0'].size(0)):
-            cells.append((cell))
+        for cell in range(data["x_0"].size(0)):
+            cells.append(cell)
             ranks.append(0)
 
         ## Add 1-cells
-        for inc_c_1 in data['incidence_1'].to_dense().T:
+        for inc_c_1 in data["incidence_1"].to_dense().T:
             # Get the 0-cells that are incident to the 1-cell
             cell_0_bound = inc_c_1.nonzero().flatten().tolist()
             assert(len(cell_0_bound) == 2)
             cells.append((cell_0_bound[0], cell_0_bound[1]))
             ranks.append(1)
 
-        ## Add 2-cells 
-        for inc_c_2 in data['incidence_2'].to_dense().T:
+        ## Add 2-cells
+        for inc_c_2 in data["incidence_2"].to_dense().T:
             # Get the 1-cells that are incident to the 2-cell
             cell_1_bound = inc_c_2.nonzero().flatten()
             # Get the 0-cells that are incident to the 1-cells
-            cell_0_bound = data['incidence_1'].to_dense().T[cell_1_bound].nonzero()
+            cell_0_bound = data["incidence_1"].to_dense().T[cell_1_bound].nonzero()
             # Get the actual 0-cells since nonzero()
             # indexes in 2D
             cell_0_bound = cell_0_bound[:, 1]
@@ -67,7 +64,7 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
 
             # Adding a rank 3 cell with less than 4 vertices
             # will take this cell from the skeleton of 2-cells if it exists
-            # so in the interest of keeping features the user 
+            # so in the interest of keeping features the user
             # can choose to recompute all feature embeddings
             if len(cell_3) < 4 and self.keep_features:
                 continue
@@ -77,21 +74,21 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         # If the user wants to keep the features
         # from the r-cells aside from the first x_0
         if self.keep_features:
-            new_graph = {'x_0': data['x_0'], 'x_1': data['x_1'], 'x_2': data['x_2']}
+            new_graph = {"x_0": data["x_0"], "x_1": data["x_1"], "x_2": data["x_2"]}
         else:
-            new_graph = {'x_0': data['x_0']}
+            new_graph = {"x_0": data["x_0"]}
 
         # Create the dirac operator matrix
         #new_graph['dirac'] = cc.dirac_operator_matrix()
 
-        # Create the incidence, adjacency and laplacian matrices 
-        for r in range(0, cc.dim+1):
+        # Create the incidence, adjacency and laplacian matrices
+        for r in range(cc.dim+1):
             if r > 0:
-                new_graph[f'laplacian_{r}'] = cc.laplacian_matrix(r)
+                new_graph[f"laplacian_{r}"] = cc.laplacian_matrix(r)
             if r < cc.dim:
-                new_graph[f'incidence_{r+1}'] = from_sparse(cc.incidence_matrix(r , r+1, incidence_type='up'))
-            new_graph[f'adjacency_{r}'] = from_sparse(cc.adjacency_matrix(r, r+1))
-            
+                new_graph[f"incidence_{r+1}"] = from_sparse(cc.incidence_matrix(r , r+1, incidence_type="up"))
+            new_graph[f"adjacency_{r}"] = from_sparse(cc.adjacency_matrix(r, r+1))
+
         return new_graph
 
     def forward(self, data: Data) -> Data:
@@ -101,10 +98,10 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
         # Make sure to remove passing of duplicated data
         # so that the constructor of Data does not raise an error
         for i in range(4):
-            if f'x_{i}' in initial_data:
-                del initial_data[f'x_{i}']
-            if f'incidence_{i}' in initial_data:
-                del initial_data[f'incidence_{i}']
-            if f'adjacency_{i}' in initial_data:
-                del initial_data[f'adjacency_{i}']
+            if f"x_{i}" in initial_data:
+                del initial_data[f"x_{i}"]
+            if f"incidence_{i}" in initial_data:
+                del initial_data[f"incidence_{i}"]
+            if f"adjacency_{i}" in initial_data:
+                del initial_data[f"adjacency_{i}"]
         return Data(**initial_data, **lifted_topology)

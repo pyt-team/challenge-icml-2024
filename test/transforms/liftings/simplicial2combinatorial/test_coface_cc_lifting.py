@@ -1,11 +1,11 @@
 """Test the message passing module."""
 
+
 import torch
-import pdb
 
 from modules.data.utils.utils import load_manual_simplicial_complex
 from modules.transforms.liftings.simplicial2combinatorial.coface_cc_lifting import (
-    CofaceCCLifting
+    CofaceCCLifting,
 )
 
 
