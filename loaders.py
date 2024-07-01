@@ -4,7 +4,9 @@ import numpy as np
 import rootutils
 import torch_geometric
 from omegaconf import DictConfig
-from rdkit import Chem
+
+# silent RDKit warnings
+from rdkit import Chem, RDLogger
 
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
@@ -15,6 +17,8 @@ from modules.data.utils.utils import (
     load_manual_graph,
     load_simplicial_dataset,
 )
+
+RDLogger.DisableLog("rdApp.*")
 
 
 class GraphLoader(AbstractLoader):
@@ -117,8 +121,9 @@ class GraphLoader(AbstractLoader):
         elif self.parameters.data_name == "QM9":
             dataset = torch_geometric.datasets.QM9(root=root_data_dir)
             # Filter the QM9 dataset to remove invalid SMILES strings
-            valid_data_list = self.filter_qm9_dataset(dataset)
-            dataset = CustomDataset(valid_data_list, self.data_dir)
+            valid_dataset = self.filter_qm9_dataset(dataset)
+            # dataset = ConcatToGeometricDataset(valid_dataset)
+            dataset = CustomDataset(valid_dataset, self.data_dir)
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
