@@ -5,7 +5,7 @@ Using [QM9 dataset](https://paperswithcode.com/dataset/qm9), we implement a lift
 - The ring information of the molecule. Rings will be represented as 2-cells in the combinatorial complex.
 - The distance between atoms in the molecule. Distances between atoms will be computed. If the atoms are under a predefined threshold, they will be considered as close and groupped together. This clusters will be introduced as hyperedges in the combinatorial complex.
 
-So far, from our knowledge it is the first representation of a cell as a combinatorial complex, combining both hypergraphs and cell complexes.
+So far, to the best of our knowledge, it is the first implementation of a molecule as a combinatorial complex, combining both hypergraphs and cell complexes.
 
 Here, the elements are the following:
 - **Nodes**: Atoms in the molecule.
