@@ -7,8 +7,8 @@ import torch
 from torch_geometric.data import Data
 from torch_geometric.utils.convert import to_networkx
 
-from topomodelx.utils.sparse import from_sparse
 from toponetx.classes.combinatorial_complex import CombinatorialComplex
+from topomodelx.utils.sparse import from_sparse
 
 
 
