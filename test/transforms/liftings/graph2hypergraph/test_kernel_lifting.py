@@ -1,19 +1,24 @@
-"""Test the message passing module."""
+"""Test Kernel Lifting."""
 
 import pytest
 import torch
 import torch.nn.functional as F
+import torch_geometric
 
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.kernel_lifting import (
-    graph_heat_kernel, graph_matern_kernel, get_graph_kernel, get_feat_kernel,
-    get_combination, HypergraphKernelLifting
+     HypergraphKernelLifting,
+     get_combination,
+     get_feat_kernel,
+     get_graph_kernel,
+     graph_heat_kernel,
+     graph_matern_kernel,
 )
 
 
 def cos_sim(A, B, dim=1):
      return torch.mm(
-         F.normalize(A, p=2, dim=dim), 
+         F.normalize(A, p=2, dim=dim),
          F.normalize(B, p=2, dim=dim).transpose(0, 1)
     )
 
@@ -29,6 +34,7 @@ class TestHypergraphKernelLifting:
     def setup_method(self):
         # Load the graph
         self.data = load_manual_graph()
+        self.data.edge_index = torch_geometric.utils.to_undirected(self.data.edge_index)
 
         # Initialise the HypergraphKernelLifting class
         self.lifting = HypergraphKernelLifting()
@@ -38,7 +44,7 @@ class TestHypergraphKernelLifting:
         self.small_features = F.normalize(torch.tensor([[1, 1, 1, 1], [100, 1000, 100, 1000], [1.1, 1.1, 1.1, 1.1]], dtype=torch.float32), p=2, dim=1)
 
     def test_graph_heat_kernel(self):
-        assert torch.allclose(graph_heat_kernel(self.small_laplacian, 0), torch.eye((self.small_laplacian.shape[0])))
+        assert torch.allclose(graph_heat_kernel(self.small_laplacian, 0), torch.eye(self.small_laplacian.shape[0]))
         assert torch.allclose(graph_heat_kernel(self.small_laplacian, 100), torch.tensor([[0.5, 0.5, 0], [0.5, 0.5, 0], [0, 0, 1]]))
         assert torch.allclose(graph_heat_kernel(self.small_laplacian, 1), torch.tensor([[0.5677, 0.4323, 0.0], [0.4323, 0.5677, 0.0], [0.0, 0.0, 1.0]]), atol=1e-4)
 
@@ -46,7 +52,22 @@ class TestHypergraphKernelLifting:
         assert torch.allclose(graph_matern_kernel(self.small_laplacian, nu=0, kappa=0.1), torch.tensor([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
         assert torch.allclose(graph_matern_kernel(self.small_laplacian, nu=100, kappa=2), torch.zeros(self.small_laplacian.shape[0], self.small_laplacian.shape[1]), atol=1e-7)
         assert torch.allclose(graph_matern_kernel(self.small_laplacian, nu=2, kappa=2), torch.tensor([[0.5556, 0.4444, 0.0], [0.4444, 0.5556, 0.0], [0.0, 0.0, 1.0]]), atol=1e-4)
-    
+
+    def test_validations(self):
+        with pytest.raises(ValueError):
+            get_graph_kernel(self.small_laplacian, "does not exist")
+
+        with pytest.raises(ValueError):
+            get_feat_kernel(self.small_features, "does not exist")
+
+        edges = (torch.tensor([0]), torch.tensor([1]))
+        graph = torch_geometric.data.Data(
+            edge_index=edges,
+            num_nodes=2,
+        )
+        with pytest.raises(ValueError):
+            self.lifting.forward(graph)
+
     def test_get_graph_kernel(self):
         assert torch.all(get_graph_kernel(self.small_laplacian, "heat", t=1) == graph_heat_kernel(self.small_laplacian, 1))
         assert torch.all(get_graph_kernel(self.small_laplacian, "matern", nu=2, kappa=2) == graph_matern_kernel(self.small_laplacian, nu=2, kappa=2))
@@ -71,6 +92,9 @@ class TestHypergraphKernelLifting:
     def test_get_combination(self):
         assert (get_combination("prod")(self.small_laplacian, self.small_laplacian) == self.small_laplacian * self.small_laplacian).all(), "Graph prod combination failed"
         assert (get_combination("prod")(self.small_features, self.small_features) == self.small_features * self.small_features).all(), "Feature prod combination failed"
+
+        with pytest.raises(ValueError):
+            get_combination("does not exist")
 
     def reset_lifting(self, **kwargs):
         self.lifting = HypergraphKernelLifting(**kwargs)
@@ -146,7 +170,7 @@ class TestHypergraphKernelLifting:
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
         ).all(), "Incorrect hyperedges incidence, Matern kernel, nu=1, kappa=2."
         assert (
-            lifted_data.num_hyperedges == 7 
+            lifted_data.num_hyperedges == 7
         ), "Incorrect number of hyperedges, Matern kernel, nu=1, kappa=2"
 
     def test_features_lifting(self):
@@ -202,22 +226,21 @@ class TestHypergraphKernelLifting:
         self.reset_lifting(
             graph_kernel="heat", t=2,
             feat_kernel=lambda X: rbf_kernel(X, X),
-            C="prod", fraction=0.2)
-
+            C="prod", fraction=0.3)
         lifted_data = self.lifting.forward(self.data.clone())
         expected_incidence_1 = torch.tensor([
             [1.],
             [1.],
             [1.],
-            [0.],
-            [0.],
-            [0.],
-            [0.],
-            [0.]
+            [1.],
+            [1.],
+            [1.],
+            [1.],
+            [1.]
         ])
         assert (
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
         ).all(), "Wrong incidence_hyperedges: feature and graph lifting combined."
         assert (
-            1 == lifted_data.num_hyperedges
+            lifted_data.num_hyperedges == 1
         ), "Wrong number of hyperedges: feature and graph lifting combined."
