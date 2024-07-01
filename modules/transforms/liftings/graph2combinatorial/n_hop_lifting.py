@@ -1,14 +1,14 @@
+import networkx as nx
+from networkx import Graph
+
+from modules.transforms.liftings.graph2combinatorial.base import Graph2CombinatorialLifting
+
 import torch
 from torch_geometric.data import Data
 from torch_geometric.utils.convert import to_networkx
 
-import networkx as nx
-from networkx import Graph
-
 from topomodelx.utils.sparse import from_sparse
 from toponetx.classes.combinatorial_complex import CombinatorialComplex
-
-from modules.transforms.liftings.graph2combinatorial.base import Graph2CombinatorialLifting
 
 
 
@@ -66,7 +66,7 @@ class NHopLifting(Graph2CombinatorialLifting):
         new_graph["incidence_hyperedges"] = new_graph["incidence_hyperedges"].T.to_sparse_coo()
 
         # Create the incidence and adjacency matrices for the regular graph
-        for r in range(0, cc.dim+1):
+        for r in range(cc.dim+1):
             if r < cc.dim:
                 new_graph[f"incidence_{r+1}"] = from_sparse(cc.incidence_matrix(r, r+1, incidence_type="up"))
             new_graph[f"adjacency_{r}"] = from_sparse(cc.adjacency_matrix(r, r+1))
