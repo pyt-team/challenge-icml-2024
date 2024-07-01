@@ -26,6 +26,10 @@ class Matroid:
         self._independent_sets = None
         self._circuits = None
 
+    @classmethod
+    def create(cls, ground: Iterable, bases=Iterable[Iterable]):
+        return cls(ground, bases)
+
     @property
     def bases(self) -> frozenset:
         return self._bases
@@ -91,6 +95,18 @@ class Matroid:
             ground=self._ground, bases=[self._ground - base for base in self.bases]
         )
 
+    def deletion(self, T: frozenset):
+        new_ground = self._ground - T
+        # compute bases
+        new_ind = [ind - T for ind in self.independent_sets]
+        new_ind.sort(key=lambda s: -len(s))
+
+        new_rank = len(new_ind[0])
+        new_bases = frozenset(
+            [frozenset(ind) for ind in new_ind if len(ind) == new_rank]
+        )
+        return Matroid(ground=new_ground, bases=new_bases)
+
 
 class GraphicMatroid(Matroid):
     """A graphic matroid uses an underlying graph (edges) as the ground set of a matroid. Its bases are the spanning trees of the graph, which means the forests of a graph are the independent sets."""
@@ -108,7 +124,9 @@ class GraphicMatroid(Matroid):
             spanning_trees.append(frozenset(cvt_tree))
 
         edges = frozenset(ground_edges)
-        super().__init__(edges, frozenset(spanning_trees))
+        super(GraphicMatroid, self).__init__(
+            ground=edges, bases=frozenset(spanning_trees)
+        )
         self.vertices = frozenset({vertex for edge in edges for vertex in edge})
         self.edges = edges
 
@@ -118,15 +136,24 @@ class GraphicMatroid(Matroid):
         G.add_edges_from(self.edges)
         return G
 
+    def deletion(self, T: frozenset):
+        new_edges = self.edges - T
+        print(new_edges)
+        G = nx.Graph()
+        G.add_nodes_from(vertices)
+        G.add_edges_from(new_edges)
+        return GraphicMatroid(graph=G)
+
 
 if __name__ == "__main__":
-    matroid = Matroid(
-        {"a", "b", "c", "d"}, {frozenset({"a", "b"}), frozenset({"c", "d"})}
-    )
-    # print(matroid.independent_sets)
-    # print(matroid.circuits)
-    # print(matroid._rank(["a", "b", "c"]))
-    # print(matroid.span(["a"]))
+    ground = [c for c in "abcd"]
+    bases = ["ab", "ac", "ad", "bc", "bd", "cd"]
+    bases = [[c for c in base] for base in bases]
+    matroid = Matroid(ground, bases)
+
+    print(matroid.bases)
+    print("new bases")
+    print(matroid.deletion(frozenset(["a"])).bases)
     G = nx.Graph()
     vertices = ["A", "B", "C", "D", "E", "F"]
     G.add_nodes_from(vertices)
@@ -146,8 +173,9 @@ if __name__ == "__main__":
     ]
     G.add_edges_from(edges)
     M = GraphicMatroid(graph=G)
-    A = M.graph()
-    nx.draw_planar(A, with_labels=True)
-    plt.show()
-    # print(M.independent_sets)
-    print(list(M.dual().circuits)[0])
+    nx.draw_planar(M.graph(), with_labels=True)
+    # plt.show()
+
+    M = M.deletion(frozenset({("B", "D")}))
+    nx.draw_planar(M.graph(), with_labels=True)
+    # plt.show()
