@@ -7,4 +7,10 @@ Here, the elements are the following:
 - **Edges**: Bonds between atoms.
 - **2-cells**: Rings in the molecule.
 
+Additionally, attributes inspired by those used in [(Battiloro et al., 2024)](https://arxiv.org/abs/2405.15429) are incorporated into the elements, enhancing the representation of the molecule.
+The attributes are:
+- **Node**: Atom type, atomic number, and chirality.
+- **Edge**: Bond type, conjugation and stereochemistry.
+- **Rings**: Ring size, aromaticity, heteroatoms, saturation, hydrophobicity, electrophilicity, nucleophilicity, and polarity.
+
 This pull request is done under the team formed by: Bertran Miquel Oliver, Manel Gil Sorribes, Alexis Molina

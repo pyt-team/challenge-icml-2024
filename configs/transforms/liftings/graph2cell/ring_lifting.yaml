@@ -1,5 +1,5 @@
 transform_type: 'lifting'
 transform_name: "CellRingLifting"
 max_cell_length: null
-preserve_edge_attr: False
+preserve_edge_attr: True
 feature_lifting: ProjectionSum

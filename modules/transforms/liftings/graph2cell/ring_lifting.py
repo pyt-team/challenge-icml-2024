@@ -1,6 +1,7 @@
 import torch
 import torch_geometric
 from rdkit import Chem
+from rdkit.Chem import Descriptors
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
@@ -230,6 +231,17 @@ class CellRingLifting(Graph2CellLifting):
         cell_complex.add_cells_from(rings, rank=self.complex_dim)
 
         # add attributes
-        
+        mol = self._generate_mol_from_data(data)
+        # Set atom attributes
+        atom_attr = self.get_atom_attributes(mol)
+        cell_complex.set_cell_attributes(atom_attr, rank=0)
+
+        # Set bond attributes
+        bond_attr = self.get_bond_attributes(mol)
+        cell_complex.set_cell_attributes(bond_attr, rank=1)
+
+        # Set ring attributes
+        ring_attr = self.get_ring_attributes(mol, rings)
+        cell_complex.set_cell_attributes(ring_attr, rank=self.complex_dim)
 
         return self._get_lifted_topology(cell_complex, G)
