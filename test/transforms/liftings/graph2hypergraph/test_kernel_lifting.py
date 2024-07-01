@@ -63,7 +63,7 @@ class TestHypergraphKernelLifting:
         edges = (torch.tensor([0]), torch.tensor([1]))
         graph = torch_geometric.data.Data(
             edge_index=edges,
-            num_nodes=2,
+            num_nodes=10,
         )
         with pytest.raises(ValueError):
             self.lifting.forward(graph)
