@@ -1,6 +1,7 @@
 from itertools import chain, combinations
 from typing import Callable, Iterable
 
+import matplotlib.pyplot as plt
 import networkx as nx
 
 
@@ -11,15 +12,23 @@ def powerset(iterable: Iterable):
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
+def fs(iterable: Iterable):
+    return iterable if isinstance(iterable, frozenset) else frozenset(iterable)
+
+
 class Matroid:
     """Matroids is a set system that implements the following"""
 
     def __init__(self, ground: Iterable, bases=Iterable[Iterable]):
-        self._ground = frozenset(ground)
-        self._bases = {frozenset(base) for base in bases}
+        self._ground = fs(ground)
+        self._bases = fs({fs(base) for base in bases})
 
         self._independent_sets = None
         self._circuits = None
+
+    @property
+    def bases(self) -> frozenset:
+        return self._bases
 
     @property
     def independent_sets(self) -> frozenset:
@@ -59,9 +68,7 @@ class Matroid:
         return self._circuits
 
     def _rank(self, input_set: Iterable) -> int:
-        input_set = (
-            frozenset(input_set) if not isinstance(input_set, frozenset) else input_set
-        )
+        input_set = fs(input_set)
         max_rank = 0
         for subset in powerset(input_set):
             if frozenset(subset) in self.independent_sets:
@@ -73,10 +80,15 @@ class Matroid:
         return self._rank
 
     def span(self, S: Iterable):
-        S = frozenset(S) if not isinstance(S, frozenset) else S
+        S = fs(S)
         rankS = self._rank(S)
         return S | frozenset(
             {g for g in (self._ground - S) if self._rank({g} | S) == rankS}
+        )
+
+    def dual(self):
+        return Matroid(
+            ground=self._ground, bases=[self._ground - base for base in self.bases]
         )
 
 
@@ -84,9 +96,9 @@ class GraphicMatroid(Matroid):
     """A graphic matroid uses an underlying graph (edges) as the ground set of a matroid. Its bases are the spanning trees of the graph, which means the forests of a graph are the independent sets."""
 
     def __init__(self, graph: nx.Graph):
-        edges = []
+        ground_edges = []
         for edge in graph.edges:
-            edges.append(tuple(edge))
+            ground_edges.append(tuple(edge))
         spanning_trees = []
         for tree in nx.SpanningTreeIterator(graph):
             edges = tree.edges()
@@ -95,7 +107,16 @@ class GraphicMatroid(Matroid):
                 cvt_tree.append(tuple(edge))
             spanning_trees.append(frozenset(cvt_tree))
 
-        super().__init__(frozenset(edges), frozenset(spanning_trees))
+        edges = frozenset(ground_edges)
+        super().__init__(edges, frozenset(spanning_trees))
+        self.vertices = frozenset({vertex for edge in edges for vertex in edge})
+        self.edges = edges
+
+    def graph(self) -> nx.Graph:
+        G = nx.Graph()
+        G.add_nodes_from(self.vertices)
+        G.add_edges_from(self.edges)
+        return G
 
 
 if __name__ == "__main__":
@@ -125,4 +146,8 @@ if __name__ == "__main__":
     ]
     G.add_edges_from(edges)
     M = GraphicMatroid(graph=G)
-    print(M.independent_sets)
+    A = M.graph()
+    nx.draw_planar(A, with_labels=True)
+    plt.show()
+    # print(M.independent_sets)
+    print(list(M.dual().circuits)[0])
