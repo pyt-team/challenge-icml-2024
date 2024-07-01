@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "GeodesicLifting"
+feature_lifting: ProjectionSum
+distance: 0.01

@@ -166,7 +166,11 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             )
             print(f" - Features dimensions: {features_dim}")
             # Check if there are isolated nodes
-            if hasattr(data, "edge_index") and hasattr(data, "x"):
+            if (
+                hasattr(data, "edge_index")
+                and data.edge_index is not None
+                and hasattr(data, "x")
+            ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):

@@ -15,6 +15,9 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.pointcloud2graph.geodesic_lifting import (
+    GeodesicLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -23,6 +26,8 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Pointcloud -> Graph
+    "GeodesicLifting": GeodesicLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
