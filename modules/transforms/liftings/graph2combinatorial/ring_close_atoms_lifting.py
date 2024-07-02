@@ -3,6 +3,7 @@ import torch
 import torch_geometric
 from rdkit import Chem
 from rdkit.Chem import Descriptors
+from rdkit.Chem import AllChem
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
@@ -34,6 +35,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     #######################################################
     ################### RINGS #############################
     #######################################################
+
     def get_rings(self, data: torch_geometric.data.Data | dict) -> torch.Tensor:
         r"""Returns the ring information for each molecule.
 
@@ -78,8 +80,79 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
     ################ CLOSE ATOMS ##########################
     #######################################################
 
+    def find_close_atom_groups(
+            self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
+        ) -> list:
+        r"""Finds the groups of atoms that are close to each other within a molecule.
+
+        Parameters
+        ----------
+        mol : Chem.Mol
+
+        Returns
+        -------
+        dict of list
+            The list of close atom groups.
+
+            Example:
+            {
+                "C(=O)O": [[0, 1, 2], [2, 3, 9]],
+                "C(=O)N": [[3, 4, 5], [5, 6, 7]],
+                ...
+            }
+
+        """
+        # Get the indices of close atoms
+        close_atoms = self.find_close_atoms(mol, data)
+
+        # Get the connected components of the graph
+        G = nx.Graph()
+        G.add_edges_from(close_atoms)
+        close_atom_groups = list(nx.connected_components(G))
+
+        # Convert atom indices to SMILES
+        substructures = {}
+        for group in close_atom_groups:
+            group_atoms = list(group)
+            smiles = self.get_smiles_for_atoms(mol, group_atoms)
+            substructures[smiles] = [list(group_atoms)]
+
+        return substructures
+
+    def find_close_atoms(
+        self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
+        # data: torch_geometric.data.Data | dict
+    ) -> list:
+        r"""Finds the atoms that are close to each other within a molecule.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data | dict
+            The input data containing the positions of the atoms.
+
+        Returns
+        -------
+        list
+            The list of close atoms.
+            Example:
+            [(0, 1), (1, 2), ...]
+        """
+        # Get the distances between atoms excluding hydrogen atoms
+        # data = self._remove_hydrogens(data)
+        distance_matrix = self.get_distance_matrix(mol, data)
+
+        # Get indices of atom pairs that are closer than the threshold
+        num_atoms = distance_matrix.size(0)
+        return [
+            (i, j)
+            for i in range(num_atoms)
+            for j in range(i + 1, num_atoms)
+            if distance_matrix[i, j] < float(self.threshold_distance)
+        ]
+
     def get_distance_matrix(
-        self, data: torch_geometric.data.Data | dict
+        self, mol : Chem.Mol, data: torch_geometric.data.Data | dict
+        # data: torch_geometric.data.Data | dict
     ) -> torch.Tensor:
         r"""Computes the pairwise distances between atoms in a molecule.
 
@@ -93,63 +166,24 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         torch.Tensor
             The pairwise distance matrix.
         """
-        # Get the positions of the atoms different from hydrogen
-        pos = data.pos
-        # keep only the non-hydrogen atoms
-        mask = data.x[:, 5] != 1
-        pos = pos[mask]
+        # Get the positions of the atoms from molecule
+        # pos = data.pos #mol
+        # AllChem.EmbedMolecule(mol)
+        # AllChem.UFFOptimizeMolecule(mol)
+        # conformer = mol.GetConformer()
+        # pos = torch.tensor([conformer.GetAtomPosition(i) for i in range(mol.GetNumAtoms())])
+
+        remaining_atom_indices = [atom.GetIdx() for atom in mol.GetAtoms()]
+        pos = data.pos[remaining_atom_indices]
 
         # Compute the pairwise distances between the atoms
         return torch.cdist(pos, pos, p=2)
 
-    def find_close_atoms(
-        self, data: torch_geometric.data.Data | dict
-    ) -> list:
-        r"""Finds the atoms that are close to each other within a molecule.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data | dict
-            The input data containing the positions of the atoms.
-
-        Returns
-        -------
-        list
-            The list of close atoms.
-        """
-        # Get the distances between atoms excluding hydrogen atoms
-        # data = self._remove_hydrogens(data)
-        distance_matrix = self.get_distance_matrix(data)
-
-        # Get indices of atom pairs that are closer than the threshold
-        num_atoms = distance_matrix.size(0)
-        return [
-            (i, j)
-            for i in range(num_atoms)
-            for j in range(i + 1, num_atoms)
-            if distance_matrix[i, j] < float(self.threshold_distance)
-        ]
-
-    def find_close_atom_groups(
-            self, data: torch_geometric.data.Data | dict
-        ) -> list:
-        r"""Finds the groups of atoms that are close to each other within a molecule.
-
-        Parameters
-        ----------
-        data : torch_geometric.data.Data | dict
-
-        Returns
-        -------
-        list
-            The list of groups of close atoms.
-        """
-        # Get the indices of close atoms
-        close_atoms = self.find_close_atoms(data)
-
-        G = nx.Graph()
-        G.add_edges_from(close_atoms)
-        return [list(component) for component in nx.connected_components(G)]
+    def get_smiles_for_atoms(self, mol, atom_indices):
+        """Generates SMILES for a group of atoms specified by their indices."""
+        atom_map = {i: atom.GetIdx() for i, atom in enumerate(mol.GetAtoms())}
+        atoms_to_use = [atom_map[idx] for idx in atom_indices]
+        return Chem.MolFragmentToSmiles(mol, atoms_to_use)
 
     #######################################################
     ################### ATTRIBUTES ########################
@@ -272,10 +306,10 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         for ring in rings:
             ring_size = len(ring)
             mol_ring = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]))
+
             aromaticity = all([atom.GetIsAromatic() for atom in mol_ring.GetAtoms()])
             has_heteroatom = any([atom.GetAtomicNum() != 6 for atom in mol_ring.GetAtoms()])
             saturation = all([bond.GetBondType() == Chem.rdchem.BondType.SINGLE for bond in mol_ring.GetBonds()])
-
             hydrophobicity = Descriptors.MolLogP(mol_ring)
             electrophilicity = Descriptors.NumHAcceptors(mol_ring)
             nucleophilicity = Descriptors.NumHDonors(mol_ring)
@@ -294,9 +328,8 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         return attr
 
-
     def get_close_atoms_attributes(
-            self, mol: Chem.Mol, close_atoms: list
+            self, mol: Chem.Mol, close_atoms: dict
         ) -> dict:
         r"""Returns the functional groups attributes for each molecule.
 
@@ -321,7 +354,11 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         close_atoms : list
             The close atoms groups of the molecule.
             Example:
-            [[0, 1], [1, 2, 4], ...]
+            {
+                "C(=O)O": [[0, 1, 2], [2, 3, 9]],
+                "C(=O)N": [[3, 4, 5], [5, 6, 7]],
+                ...
+            }
 
         Returns
         -------
@@ -336,33 +373,43 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
                 ...
             }
         """
-
         attr = {}
-        for group in close_atoms:
-            fg_mol = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in group]))
-            Chem.SanitizeMol(fg_mol)
+        for fg, groups in close_atoms.items():
+            fg_mol = Chem.MolFromSmarts(fg)
+            if fg_mol is None:
+                # Skip processing this SMILES string if it cannot be converted
+                continue
+
+            try:
+                # Attempt to sanitize the molecule
+                Chem.SanitizeMol(fg_mol)
+            except Exception:
+                # Handle specific exception (if needed) or log the error
+                # print(f"Failed to sanitize molecule for SMILES '{fg}'")
+                continue
 
             conjugation = all([bond.GetIsConjugated() for bond in fg_mol.GetBonds()])
             hydrophobicity = Descriptors.MolLogP(fg_mol)
             electrophilicity = Descriptors.NumHAcceptors(fg_mol)
             nucleophilicity = Descriptors.NumHDonors(fg_mol)
             polarity = Descriptors.TPSA(fg_mol)
-
-            attr[tuple(group)] = {
-                "functional_group": fg_mol,
-                "num_atoms": len(group),
-                "conjugation": conjugation,
-                "hydrophobicity": hydrophobicity,
-                "electrophilicity": electrophilicity,
-                "nucleophilicity": nucleophilicity,
-                "polarity": polarity
-            }
+            for group in groups:
+                attr[tuple(group)] = {
+                    "functional_group": fg_mol,
+                    "num_atoms": len(group),
+                    "conjugation": conjugation,
+                    "hydrophobicity": hydrophobicity,
+                    "electrophilicity": electrophilicity,
+                    "nucleophilicity": nucleophilicity,
+                    "polarity": polarity
+                }
 
         return attr
 
     #######################################################
     ################### LIFT ##############################
     #######################################################
+
     def lift_topology(
         self, data: torch_geometric.data.Data | dict
     ) -> torch_geometric.data.Data | dict:
@@ -386,7 +433,6 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
 
         # Combinaotrial complex is a combination of a cell complex and a hypergraph
         # First create a cell complex and then add hyperedges
-
         G = self._generate_graph_from_data(data)
         ccc = CellComplex(G)
 
@@ -409,22 +455,27 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         ring_attributes = self.get_ring_attributes(mol, rings)
         ccc.set_cell_attributes(ring_attributes, rank=2)
 
+        # Create the lifted topology dict for the cell complex
+        ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
+
         # Hypergraph stuff
         # add close atoms as hyperedges (rank = 1)
-        close_atoms = self.find_close_atom_groups(data)
-        num_hyperedges = len(close_atoms)
+        close_atoms = self.find_close_atom_groups(mol, data)
+        list_close_atoms = [item for sublist in close_atoms.values() for item in sublist]
+        edges = [[edge[0], edge[1]] for edge in G.edges]
+        hyperedges = edges + list_close_atoms
+        num_hyperedges = len(hyperedges)
+
         # create incidence matrix for hyperedges
         incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
-        for i, hyperedge in enumerate(close_atoms):
-            for atom in hyperedge:
+        for i, edge in enumerate(hyperedges):
+            for atom in edge:
                 incidence_1[atom, i] = 1
 
         # add hyperedge attributes
-        close_atoms_attributes = self.get_close_atoms_attributes(mol, close_atoms)
-        ccc.set_cell_attributes(close_atoms_attributes, rank=2) # if rank = 1, error in the code when close atoms are of more than 2 atoms
-
-        # Create the lifted topology dict for the cell complex
-        ccc_lifted_topology = Graph2CellLifting._get_lifted_topology(self, ccc, G)
+        if close_atoms:
+            close_atoms_attributes = self.get_close_atoms_attributes(mol, close_atoms)
+            ccc.set_cell_attributes(close_atoms_attributes, rank=2) # if rank = 1, error in the code when close atoms are of more than 2 atoms
 
         # add hyperedges to the lifted topology
         ccc_lifted_topology["num_hyperedges"] = num_hyperedges

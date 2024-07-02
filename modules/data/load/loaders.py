@@ -122,7 +122,6 @@ class GraphLoader(AbstractLoader):
             dataset = torch_geometric.datasets.QM9(root=root_data_dir)
             # Filter the QM9 dataset to remove invalid SMILES strings
             valid_dataset = self.filter_qm9_dataset(dataset)
-            # dataset = ConcatToGeometricDataset(valid_dataset)
             dataset = CustomDataset(valid_dataset, self.data_dir)
 
         elif self.parameters.data_name in ["manual"]:
