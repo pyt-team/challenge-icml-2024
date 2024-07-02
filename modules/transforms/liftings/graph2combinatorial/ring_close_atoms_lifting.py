@@ -306,6 +306,15 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
             ring_size = len(ring)
             mol_ring = Chem.MolFromSmiles("".join([mol.GetAtomWithIdx(atom).GetSymbol() for atom in ring]))
 
+            try:
+                # Attempt to sanitize the molecule
+                Chem.SanitizeMol(mol_ring)
+            except Exception:
+                # Handle specific exception (if needed) or log the error
+                # print(f"Failed to sanitize molecule for SMILES '{fg}'")
+                continue
+
+
             aromaticity = all([atom.GetIsAromatic() for atom in mol_ring.GetAtoms()])
             has_heteroatom = any([atom.GetAtomicNum() != 6 for atom in mol_ring.GetAtoms()])
             saturation = all([bond.GetBondType() == Chem.rdchem.BondType.SINGLE for bond in mol_ring.GetBonds()])
