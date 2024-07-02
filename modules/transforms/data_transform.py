@@ -15,8 +15,13 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.pointcloud2hypergraph.mogmst_lifting import (
+    MoGMSTLifting,
+)
 
 TRANSFORMS = {
+    # PointCloud -> Hypergraph
+    "MoGMSTLifting": MoGMSTLifting,
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex

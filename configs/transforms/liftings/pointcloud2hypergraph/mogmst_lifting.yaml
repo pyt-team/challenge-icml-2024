@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "MoGMSTLifting"
+min_components: 2
+max_components: 10
