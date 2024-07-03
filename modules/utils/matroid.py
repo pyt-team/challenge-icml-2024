@@ -4,6 +4,7 @@ from typing import Callable, Dict, Iterable
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import torch_geometric
 
 
 def powerset(iterable: Iterable):
@@ -15,6 +16,11 @@ def powerset(iterable: Iterable):
 
 def fs(iterable: Iterable):
     return iterable if isinstance(iterable, frozenset) else frozenset(iterable)
+
+
+def graph2matroid_lifting(data: torch_geometric.data.Data):
+    edges = data.edge_index.t().tolist()
+    return GraphicMatroid(edgelist=edges)
 
 
 class Matroid:
@@ -131,24 +137,14 @@ class GraphicMatroid(Matroid):
 
         edges = frozenset(ground_edges)
         super(GraphicMatroid, self).__init__(ground=edges, bases=spanning_trees)
-        self.vertices = []
-        self.edges = []
-        self.contract_map = contract_map if contract_map else {}
-        for v_1, v_2 in edges:
-            n1 = ",".join(self.contract_map.get(v_1, [v_1]))
-            n2 = ",".join(self.contract_map.get(v_2, [v_2]))
-            if n1 == n2:  # avoid self loops
-                continue
-            self.vertices.append(n1)
-            self.vertices.append(n2)
-
-            self.edges.append((n1, n2, f"{v_1},{v_2}"))
-        self.vertices = frozenset(self.vertices)
 
     def graph(self) -> nx.Graph:
         G = nx.Graph()
-        G.add_nodes_from(self.vertices)
-        G.add_edges_from(self.edges)
+
+        vertices = [vertex for edge in self._ground for vertex in edge]
+        edges = self._ground
+        G.add_nodes_from(vertices)
+        G.add_edges_from(edges)
         return G
 
     def deletion(self, T: frozenset):
@@ -166,11 +162,9 @@ if __name__ == "__main__":
     # print(matroid.deletion(frozenset(["a"])).bases)
     edges = [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("E", "A"), ("B", "D")]
     M = GraphicMatroid(edgelist=edges)
-    print(M.bases)
+    print(list(M.bases)[0])
     # nx.draw(M.graph())
     # plt.show()
 
-    # M = M.contraction(frozenset({("B", "D")}))
-    # nx.draw(M.graph())
-    # print(M.bases)
-    # plt.show()
+    M = M.contraction(frozenset({("B", "D")}))
+    print(list(M.bases)[0])
