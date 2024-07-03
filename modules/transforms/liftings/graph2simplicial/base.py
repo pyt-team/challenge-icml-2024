@@ -40,6 +40,7 @@ class Graph2SimplicialLifting(GraphLifting):
         dict
             The lifted topology.
         """
+
         lifted_topology = get_complex_connectivity(
             simplicial_complex, self.complex_dim, signed=self.signed
         )
