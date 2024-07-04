@@ -18,9 +18,18 @@ def fs(iterable: Iterable):
     return iterable if isinstance(iterable, frozenset) else frozenset(iterable)
 
 
-def graph2matroid_lifting(data: torch_geometric.data.Data):
-    edges = data.edge_index.t().tolist()
-    return GraphicMatroid(edgelist=edges)
+def circuits_to_bases(circuits: Iterable):
+    circuits = fs([fs(circuit) for circuit in circuits])
+    I = []
+    for circuit in circuits:
+        for ind in powerset(circuit):
+            ind = fs(ind)
+            if ind == circuit:
+                continue
+            I.append(ind)
+    I = sorted(I, key=lambda ind: -len(ind))
+    max_rank = len(I[0])
+    return [base for base in I if len(base) == max_rank]
 
 
 class Matroid:
@@ -136,7 +145,7 @@ class GraphicMatroid(Matroid):
             spanning_trees.append(frozenset(cvt_tree))
 
         edges = frozenset(ground_edges)
-        super(GraphicMatroid, self).__init__(ground=edges, bases=spanning_trees)
+        super().__init__(ground=edges, bases=spanning_trees)
 
     def graph(self) -> nx.Graph:
         G = nx.Graph()
