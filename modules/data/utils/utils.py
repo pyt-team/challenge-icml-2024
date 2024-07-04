@@ -8,8 +8,10 @@ import omegaconf
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+import torch_geometric.transforms as T
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
+from torch_geometric.datasets import GeometricShapes
 from torch_sparse import coalesce
 
 
@@ -50,16 +52,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -81,6 +83,17 @@ def generate_zero_sparse_connectivity(m, n):
         Zero sparse connectivity matrix.
     """
     return torch.sparse_coo_tensor((m, n)).coalesce()
+
+
+def load_random_shape_point_cloud(seed=None, num_points=64, num_classes=2):
+    """Create a toy point cloud dataset"""
+    rng = np.random.default_rng(seed)
+    dataset = GeometricShapes(root="data/GeometricShapes")
+    dataset.transform = T.SamplePoints(num=num_points)
+    data = dataset[rng.integers(40)]
+    data.y = rng.integers(num_classes, size=num_points)
+    data.x = torch.tensor(rng.integers(2, size=(num_points, 1)), dtype=torch.float)
+    return data
 
 
 def load_cell_complex_dataset(cfg):

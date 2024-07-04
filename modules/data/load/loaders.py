@@ -12,6 +12,7 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
+    load_random_shape_point_cloud,
     load_simplicial_dataset,
 )
 
@@ -204,3 +205,47 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         return load_hypergraph_pickle_dataset(self.parameters)
+
+
+class PointCloudLoader(AbstractLoader):
+    r"""Loader for point-cloud dataset.
+
+    Parameters
+    ----------
+    parameters: DictConfig
+        Configuration parameters
+    """
+
+    def __init__(self, parameters: DictConfig):
+        super().__init__(parameters)
+
+        if "data_name" not in self.cfg:
+            self.cfg["data_name"] = "shapes"
+            if "num_points" not in self.cfg:
+                self.cfg["num_points"] = 24
+            if "num_classes" not in self.cfg:
+                self.cfg["num_classes"] = 2
+
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.cfg["data_dir"])
+        self.data_dir = os.path.join(root_data_dir, self.cfg["data_name"])
+
+    def load(self) -> torch_geometric.data.Dataset:
+        r"""Load point-cloud dataset.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        torch_geometric.data.Dataset
+            torch_geometric.data.Dataset object containing the loaded data.
+        """
+        if self.cfg["data_name"] == "shapes":
+            data = load_random_shape_point_cloud(
+                num_points=self.cfg["num_points"], num_classes=self.cfg["num_classes"]
+            )
+            return data
+        else:
+            raise NotImplementedError

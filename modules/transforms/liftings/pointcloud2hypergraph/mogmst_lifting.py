@@ -28,17 +28,24 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         original_graph = from_numpy_array(distance_matrix)
         mst = minimum_spanning_tree(original_graph)
 
-        # create hipergraph
-        number_of_points = data.x.shape[0]
+        # Create hipergraph incidence
+        number_of_points = data.pos.shape[0]
         incidence = torch.zeros((number_of_points, 2 * num_components))
-        incidence[torch.range(0, number_of_points), torch.tensor(labels)] = torch.ones(
-            number_of_points
-        )
+
+        # Add to which Gaussian the points belong to
+        nodes = torch.arange(0, number_of_points, dtype=torch.int32)
+        lbls = torch.tensor(labels, dtype=torch.int32)
+        values = torch.ones(number_of_points)
+        incidence[nodes, lbls] = values
+
+        # Add neighbours in MST
         for i, j in mst.edges():
             mask_i = labels == i
             mask_j = labels == j
-            incidence[mask_i, torch.ones(mask_i.shape[0]) + num_components + j] = 1
+            incidence[mask_i, num_components + j] = 1
+            incidence[mask_j, num_components + i] = 1
 
+        incidence = incidence.clone().detach().to_sparse_coo()
         return {
             "incidence_hyperedges": incidence,
             "num_hyperedges": 2 * num_components,
