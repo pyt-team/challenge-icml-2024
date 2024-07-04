@@ -4,7 +4,7 @@ import torch_geometric
 from topomodelx.utils.sparse import from_sparse
 from toponetx.classes import CombinatorialComplex
 
-from modules.data.utils.utils import get_complex_connectivity
+from modules.data.utils.utils import get_ccc_connectivity
 from modules.transforms.liftings.lifting import AbstractLifting, GraphLifting
 from modules.utils.matroid import *
 
@@ -89,20 +89,44 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         super().__init__(**kwargs)
         self.type = "matroid2combinatorial"
 
-    def lift_topology(data: torch_geometric.data.Data) -> dict:
+    def matroid2cc(self, matroid: Matroid) -> CombinatorialComplex:
+        rnk = matroid.rank
+        cc_rank = lambda s: rnk(s) - 1
+        cc = CombinatorialComplex()
+        for ind in matroid.independent_sets:
+            if len(ind) == 0:  # empty set isn't part of a CC
+                continue
+
+            cc.add_cell([i for i in ind], cc_rank(ind))
+        return cc
+
+    def _get_cell_attributes(
+        self, cc: CombinatorialComplex, name: str, rank=None
+    ) -> dict:
+        attributes = cc.get_cell_attributes(name)
+        if rank == None:
+            return attributes
+
+        return {ranked: attributes[ranked] for ranked in cc.skeleton(rank)}
+
+    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         ground = data["ground"]
         bases = data["bases"]
         M = Matroid(ground=ground, bases=bases)
-        rnk = M.rank
-        matroid_rank = rnk(ground)
-        cc = CombinatorialComplex()
-        for ind in M.independent_sets:
-            if len(ind) == 0:  # apparently empty set isn't part of a CC
-                continue
-            cc.add_cell(ind, rnk(ind))  # rnk - 1 ?
+        matroid_rank = M.rank(ground) - 1
+        cc = self.matroid2cc(M)
 
-        connectivity = get_complex_connectivity(cc, matroid_rank)
+        features = data["x"]
+        rank_0_features = {
+            node: features[list(node)].squeeze(0) for node in cc.skeleton(0)
+        }
+        cc.set_cell_attributes(rank_0_features, "features")
 
+        connectivity = get_ccc_connectivity(cc, matroid_rank)
+        # cc.get_cell_attributes("features", 0).values() doesn't seem to work? The alternative:
+        connectivity["x_0"] = torch.stack(
+            list(self._get_cell_attributes(cc, "features", 0).values())
+        )
         return connectivity
 
 
