@@ -1,13 +1,11 @@
-import networkx as nx
 import torch_geometric
-from toponetx.classes import CombinatorialComplex
 
 from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
     Graph2MatroidLifting,
     Matroid2CombinatorialLifting,
 )
-from modules.utils.matroid import *
+from modules.utils.matroid import Matroid, circuits_to_bases, fs, powerset
 
 
 class GraphCurveMatroidLifting(Graph2MatroidLifting):
@@ -28,10 +26,13 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         graphic_matroid = self._generate_matroid_from_data(data)
         num_nodes = data.x.shape[0]
         r_d = graphic_matroid.dual().rank
-        d = lambda v: [
-            tuple(edge)
-            for edge in self.get_edges_incident(vertex=v, data=data).t().tolist()
-        ]
+
+        def d(v):
+            return [
+                tuple(edge)
+                for edge in self.get_edges_incident(vertex=v, data=data).t().tolist()
+            ]
+
         L = set()
         for C in powerset(range(num_nodes)):
             if len(C) == 0 or r_d(d(C)) > len(C):

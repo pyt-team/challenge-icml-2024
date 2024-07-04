@@ -1,10 +1,7 @@
-import copy
+from collections.abc import Callable, Iterable
 from itertools import chain, combinations
-from typing import Callable, Dict, Iterable
 
-import matplotlib.pyplot as plt
 import networkx as nx
-import torch_geometric
 
 
 def powerset(iterable: Iterable):
@@ -20,16 +17,16 @@ def fs(iterable: Iterable):
 
 def circuits_to_bases(circuits: Iterable):
     circuits = fs([fs(circuit) for circuit in circuits])
-    I = []
+    independent_sets = []
     for circuit in circuits:
         for ind in powerset(circuit):
             ind = fs(ind)
             if ind == circuit:
                 continue
-            I.append(ind)
-    I = sorted(I, key=lambda ind: -len(ind))
-    max_rank = len(I[0])
-    return [base for base in I if len(base) == max_rank]
+            independent_sets.append(ind)
+    independent_sets = sorted(independent_sets, key=lambda ind: -len(ind))
+    max_rank = len(independent_sets[0])
+    return [base for base in independent_sets if len(base) == max_rank]
 
 
 class Matroid:
@@ -130,18 +127,14 @@ class Matroid:
 class GraphicMatroid(Matroid):
     """A graphic matroid uses an underlying graph (edges) as the ground set of a matroid. Its bases are the spanning trees of the graph, which means the forests of a graph are the independent sets."""
 
-    def __init__(self, edgelist: Iterable, contract_map: Dict = None):
+    def __init__(self, edgelist: Iterable, contract_map: dict | None = None):
         graph = nx.Graph()
         graph.add_edges_from(edgelist)
-        ground_edges = []
-        for edge in graph.edges:
-            ground_edges.append(tuple(edge))
+        ground_edges = [tuple(edge) for edge in graph.edges]
         spanning_trees = []
         for tree in nx.SpanningTreeIterator(graph):
             edges = tree.edges()
-            cvt_tree = []
-            for edge in edges:
-                cvt_tree.append(tuple(edge))
+            cvt_tree = [tuple(edge) for edge in edges]
             spanning_trees.append(frozenset(cvt_tree))
 
         edges = frozenset(ground_edges)
@@ -171,9 +164,9 @@ if __name__ == "__main__":
     # print(matroid.deletion(frozenset(["a"])).bases)
     edges = [("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("E", "A"), ("B", "D")]
     M = GraphicMatroid(edgelist=edges)
-    print(list(M.bases)[0])
+    print(next(iter(M.bases)))
     # nx.draw(M.graph())
     # plt.show()
 
     M = M.contraction(frozenset({("B", "D")}))
-    print(list(M.bases)[0])
+    print(next(iter(M.bases)))

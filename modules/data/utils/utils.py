@@ -40,7 +40,7 @@ def get_ccc_connectivity(complex, max_rank):
         connectivity[f"incidence_{rank_idx}"] = from_sparse(matrix)
 
     # compute adjacent matrices
-    for rank_idx in range(0, max_rank + 1):
+    for rank_idx in range(max_rank + 1):
         matrix = complex.adjacency_matrix(rank_idx, rank_idx + 1)
         connectivity[f"adjacency_{rank_idx}"] = from_sparse(matrix)
 

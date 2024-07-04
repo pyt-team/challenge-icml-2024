@@ -1,12 +1,12 @@
-import networkx as nx
+from collections.abc import Iterable
+
 import torch
 import torch_geometric
-from topomodelx.utils.sparse import from_sparse
 from toponetx.classes import CombinatorialComplex
 
 from modules.data.utils.utils import get_ccc_connectivity
 from modules.transforms.liftings.lifting import AbstractLifting, GraphLifting
-from modules.utils.matroid import *
+from modules.utils.matroid import GraphicMatroid, Matroid
 
 
 class Graph2MatroidLifting(GraphLifting):
@@ -72,8 +72,7 @@ class Graph2MatroidLifting(GraphLifting):
             .bool()
             .logical_or(sum(col == vertex for vertex in vertices))
         )
-        ans = data.edge_index[:, mask]
-        return ans
+        return data.edge_index[:, mask]
 
 
 class Matroid2CombinatorialLifting(AbstractLifting):
@@ -91,7 +90,10 @@ class Matroid2CombinatorialLifting(AbstractLifting):
 
     def matroid2cc(self, matroid: Matroid) -> CombinatorialComplex:
         rnk = matroid.rank
-        cc_rank = lambda s: rnk(s) - 1
+
+        def cc_rank(s):
+            return rnk(s) - 1
+
         cc = CombinatorialComplex()
         for ind in matroid.independent_sets:
             if len(ind) == 0:  # empty set isn't part of a CC
@@ -104,7 +106,7 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         self, cc: CombinatorialComplex, name: str, rank=None
     ) -> dict:
         attributes = cc.get_cell_attributes(name)
-        if rank == None:
+        if rank is None:
             return attributes
 
         return {ranked: attributes[ranked] for ranked in cc.skeleton(rank)}
