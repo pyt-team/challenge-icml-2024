@@ -71,34 +71,6 @@ class DirectedFlagComplex:
             for i, item in enumerate(self.complex)
         ]
 
-    def Bi_k(self, i, k):
-        r"""Compute the boundary matrix :math:`B_{i,k}` of the complex. The
-        boundary matrix is the matrix representation of the :math:`i`-th
-        face map of the complex."""
-        return self._multiple_contained_chunked(
-            self.complex[k - 1], self._d_i_batched(i, self.complex[k])
-        )
-
-    def Ci_k(self, i, k):
-        r"""Compute the coboundary matrix :math:`C_{i,k}` of the complex. The
-        coboundary matrix is the matrix representation of the :math:`i`-th
-        coboundary map of the complex."""
-
-        if k + 1 > self.complex_dim:
-            return []
-
-        return self._d_i_batched(i, self.complex[k - 1])
-
-    def Nij_k_down(self, i, j, k):
-        N_k = self.complex[k].size(0)  # Number of k-simplices
-        indices = self._block_qij(
-            self.complex[k], self.complex[k], i, j, torch.tensor([[0], [0]])
-        )
-        return torch.SparseTensor(indices=indices, size=(N_k, N_k))
-
-    def Nij_k_up(self, i, j, k):
-        pass
-
     def _d_i_batched(self, i: int, simplices: torch.tensor) -> torch.tensor:
         r"""Compute the face map :math:`d_i` of the simplices in the batched
         simplices tensor. The map :math:`d_i` removes a vertex at position
@@ -305,14 +277,13 @@ class DirectedFlagComplex:
 
         return A
 
-    def _block_qij(
+    def qij_adj(
         self,
         sigmas: torch.tensor,
         taus: torch.tensor,
         q: int,
         i: int,
         j: int,
-        offset: torch.tensor,
         chunk_size: int = 1024,
     ):
         r"""Compute the adjacency matrix associated with the :math:`(q,
@@ -352,6 +323,7 @@ class DirectedFlagComplex:
         dj_taus = self._d_i_batched(j, taus)
 
         contained = self._multiple_contained_chunked(sigmas, taus, chunk_size)
+
         alpha_q_contained = self._alpha_q_contained_sparse(
             di_sigmas, dj_taus, q, chunk_size
         )
@@ -364,90 +336,7 @@ class DirectedFlagComplex:
             .t()
         )
 
-        return indices + offset
-
-    def qij(self, q, i, j, chunk_size: int = 1024, path: str = None):
-        r"""Compute the adjacency matrix associated to the :math:`(q,d_i,
-        d_j)`-connectivity relation of the complex. Let :math:`(d_i,
-        d_j)` be an ordered pair of face maps. Then, a pair of
-        simplices :math:`(\sigma_i,\tau_j)` are :math:`(q,d_i,d_j)`-near if
-        :math:`\sigma_i \subseteq \tau_j` or if there exists :math:`\alpha
-        \in \Sigma_q` such that :math:`\alpha \subseteq \sigma_i` and
-        :math:`\alpha \subseteq \tau_j`.
-
-        Parameters
-        ----------
-        q : int
-            First parameter of the qij-connectivity relation.
-        i : int
-            Second parameter of the qij-connectivity relation. Determines
-            the first face map of the ordered pair of face maps.
-        j : int
-            Third parameter of the qij-connectivity relation. Determines the
-            second face map of the ordered pair of face maps.
-        chunk_size : int, optional
-            The size of the chunks to process. Default is 1024.
-        path : str, optional
-            The path to save the indices of the adjacency matrix. Default is
-            None.
-
-        Returns
-        -------
-        preorder : torch.sparse_coo_tensor, shape=(N, N)
-            The adjacency matrix associated to the :math:`(q, d_i,
-            d_j)`-connectivity relation of the complex.
-        """
-
-        if q > self.complex_dim:
-            raise ValueError("q has to be lower than the complex dimension")
-
-        # TODO: Since the highest dimensional simplices of K are maximal,
-        # they are dim(K)-connected only to themselves
-        # TODO: Every q-simplex is connected to itself along any pair of face
-        # maps.
-        # TODO: If the ordered pair (\sigma,\tau) is qij-near, then, (\tau,
-        # \sigma) is qji-near.
-        # TODO: If (\sigma,\tau) is qii-near and (\tau,\sigma) is qii-near too.
-        # TODO: A simplicial path is a sequence of simplices (simga_0,
-        # sigma_1, ..., sigma_n) such that sigma_i and sigma_{i+1} are
-        # qij-near.
-
-        indices = []
-        cells = self.complex[q:]
-        dims = len(cells)
-        ns = [len(skeleton) for skeleton in cells]
-        N = sum(ns)
-
-        for s in range(dims):
-            for t in range(dims):
-                sliding = torch.tensor([[sum(ns[:s])], [sum(ns[:t])]])
-
-                indices.append(
-                    self._block_qij(cells[s], cells[t], q, i, j, sliding, chunk_size)
-                )
-
-        indices = torch.cat(indices, dim=1).unique(dim=1)
-
-        if path is not None:
-            torch.save(indices, path)
-
         return indices
-
-
-if __name__ == "__main__":
-
-    G = nx.DiGraph()
-    edges = [(i, i + offset) for i in range(100) for offset in (1, 2)]
-    G.add_edges_from(edges)
-    FlG = DirectedFlagComplex(G)
-
-    edges = FlG.complex[1]
-    triangles = FlG.complex[2]
-
-    print(edges)
-    print(FlG.Bi_k(0, 2))
-
-
 
 
 class SPLifting(Graph2CombinatorialLifting):
