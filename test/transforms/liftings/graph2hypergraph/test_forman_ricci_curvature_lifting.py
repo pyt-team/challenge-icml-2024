@@ -1,9 +1,6 @@
 """Test Forman-Ricci Curvature Lifting."""
 
-import pytest
 import torch
-import torch.nn.functional as F
-import torch_geometric
 
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.forman_ricci_curvature_lifting import (
