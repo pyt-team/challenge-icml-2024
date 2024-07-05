@@ -15,6 +15,7 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         self, min_components=2, max_components=10, random_state=None, **kwargs
     ):
         super().__init__(**kwargs)
+        assert min_components <= max_components
         self.min_components = min_components
         self.max_components = max_components
         self.random_state = random_state
@@ -57,7 +58,7 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
         best_labels = None
         best_num_components = 0
         means = None
-        for i in range(self.min_components, self.max_components):
+        for i in range(self.min_components, self.max_components + 1):
             gm = GaussianMixture(n_components=i, random_state=self.random_state)
             labels = gm.fit_predict(data)
             sc = silhouette_score(data, labels)
