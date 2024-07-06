@@ -26,7 +26,7 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
-    # Point-cloud -> Graph
+    # Point-cloud -> Simplicial Complex
     "DelaunayLifting": DelaunayLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
