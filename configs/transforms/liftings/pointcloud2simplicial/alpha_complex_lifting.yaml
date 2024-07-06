@@ -1,8 +1,0 @@
-transform_type: 'lifting'
-transform_name: "FeatureRipsComplexLifting"
-complex_dim: 3
-feature_percent: 0.2
-max_edge_length: 10.0
-sparse: null
-preserve_edge_attr: False
-feature_lifting: ProjectionSum
