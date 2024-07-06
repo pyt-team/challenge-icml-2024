@@ -121,3 +121,33 @@ class TestGraphCurveLifting:
         ).all(), "Something is wrong with incidence_1."
 
     # Test 5
+    def test_lift_topology_rank(self):
+        """Test the actual incidence matrix of the matroid lift wrt to truncation"""
+        n = 6
+        k = 4
+
+        matroid_lifting_k1 = Matroid2CombinatorialLifting(max_rank=k-2)
+        assert k - 2 > 0
+        uniform_ground = [i for i in range(n)]
+        uniform_bases = [s for s in powerset(uniform_ground) if len(s) == k]
+
+        features = torch.ones((n, 1))
+        data = torch_geometric.data.Data(
+            x=features, ground=uniform_ground, bases=uniform_bases
+        )
+
+        lifted_data = matroid_lifting_k1.forward(data)
+        expected_incidence_1 = torch.tensor(
+            [
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0],
+                [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+            ]
+        )
+
+        assert (
+            expected_incidence_1 == lifted_data["incidence_1"].to_dense()
+        ).all(), "Something is wrong with incidence_1. The lift under a truncated matroid is not the same."
