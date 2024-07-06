@@ -1,7 +1,6 @@
 """Test the cell encoding module."""
 
 import networkx as nx
-import torch
 from torch_geometric.utils import to_networkx
 
 from modules.data.utils.utils import load_manual_cell_complex
