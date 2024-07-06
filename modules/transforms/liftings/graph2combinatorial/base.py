@@ -84,7 +84,7 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, max_rank: int | None, **kwargs):
+    def __init__(self, max_rank: int | None = None, **kwargs):
         super().__init__(**kwargs)
         self.type = "matroid2combinatorial"
         self.max_rank = max_rank
