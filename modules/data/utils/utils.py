@@ -5,6 +5,7 @@ import pickle
 import networkx as nx
 import numpy as np
 import omegaconf
+import rootutils
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
@@ -437,12 +438,16 @@ def load_pointcloud_dataset(cfg):
     torch_geometric.data.Data
         Point cloud dataset.
     """
+    # Define the path to the data directory
+    root_folder = rootutils.find_root()
+    data_dir = osp.join(root_folder, cfg["data_dir"])
+
     if cfg["data_name"] == "random_pointcloud":
         num_points, dim = cfg["num_points"], cfg["dim"]
         pos = torch.rand((num_points, dim))
     elif cfg["data_name"] == "stanford_bunny":
         pos = fetch_bunny(
-            file_path=osp.join(cfg["data_dir"], "stanford_bunny.npy"),
+            file_path=osp.join(data_dir, "stanford_bunny.npy"),
             accept_license=False,
         )
         num_points = len(pos)

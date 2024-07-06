@@ -236,8 +236,6 @@ class PointCloudLoader(AbstractLoader):
         """
         # Define the path to the data directory
         root_folder = rootutils.find_root()
-        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
-
-        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+        self.data_dir = os.path.join(root_folder, self.parameters["data_dir"])
 
         return CustomDataset([load_pointcloud_dataset(self.parameters)], self.data_dir)
