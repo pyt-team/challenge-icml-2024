@@ -553,3 +553,39 @@ def describe_hypergraph(data: torch_geometric.data.Data):
         if he_idx >= 10:
             print("...")
             break
+
+
+def calculate_pairwise_differences(x: torch.Tensor):
+    r"""Generate tensor of pairwise differences between each row of x.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        2-dimensional tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor of pairwise differences of rows of x.
+    """
+    x_expanded_1 = x.unsqueeze(1)
+    x_expanded_2 = x.unsqueeze(0)
+    return x_expanded_1 - x_expanded_2
+
+
+def add_epsilon_to_zeros(tensor, epsilon=1e-8):
+    """Add a small epsilon value to off-diagonal elements which are zero. This is useful for using the gudhi library since it treats pairwise distances which are 0 as the same point."""
+
+    # Create a mask for non-diagonal elements
+    non_diagonal_mask = ~torch.eye(
+        tensor.shape[0], dtype=torch.bool, device=tensor.device
+    )
+
+    # Create a tensor with epsilon values where the original tensor is 0
+    epsilon_tensor = torch.zeros_like(tensor)
+    epsilon_tensor[non_diagonal_mask & (tensor == 0)] = epsilon
+
+    # Add the epsilon tensor to the original tensor
+    result = tensor + epsilon_tensor
+
+    return result
