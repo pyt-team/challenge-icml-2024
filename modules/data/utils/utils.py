@@ -50,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -421,3 +421,28 @@ def make_hash(o):
     hash_as_hex = sha1.hexdigest()
     # Convert the hex back to int and restrict it to the relevant int range
     return int(hash_as_hex, 16) % 4294967295
+
+
+def load_pointcloud_dataset(cfg):
+    r"""Loads point cloud datasets.
+
+    Parameters
+    ----------
+    cfg : DictConfig
+        Configuration parameters.
+
+    Returns
+    -------
+    torch_geometric.data.Data
+        Point cloud dataset.
+    """
+    if cfg["data_name"] != "random_pointcloud":
+        return NotImplementedError
+
+    num_points, dim = cfg["num_points"], cfg["dim"]
+    pos = torch.rand((num_points, dim))
+
+    if cfg.pos_to_x:
+        return torch_geometric.data.Data(x=pos, pos=pos, num_nodes=num_points)
+    else:
+        return torch_geometric.data.Data(pos=pos, num_nodes=num_points)

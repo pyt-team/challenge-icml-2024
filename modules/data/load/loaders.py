@@ -12,6 +12,7 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
+    load_pointcloud_dataset,
     load_simplicial_dataset,
 )
 
@@ -204,3 +205,39 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         return load_hypergraph_pickle_dataset(self.parameters)
+
+
+class PointCloudLoader(AbstractLoader):
+    r"""Loader for point cloud datasets.
+
+    Parameters
+    ----------
+    parameters : DictConfig
+        Configuration parameters.
+    """
+
+    def __init__(self, parameters: DictConfig):
+        super().__init__(parameters)
+        self.parameters = parameters
+
+    def load(
+        self,
+    ) -> torch_geometric.data.Dataset:
+        r"""Load point cloud dataset.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        torch_geometric.data.Dataset
+            torch_geometric.data.Dataset object containing the loaded data.
+        """
+        # Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
+        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+
+        return CustomDataset([load_pointcloud_dataset(self.parameters)], self.data_dir)
