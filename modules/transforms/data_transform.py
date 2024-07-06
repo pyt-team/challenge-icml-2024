@@ -8,6 +8,9 @@ from modules.transforms.data_manipulations.manipulations import (
     OneHotDegreeFeatures,
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
+from modules.transforms.liftings.cell2graph.cell_encoding_lifting import (
+    CellEncodingLifting,
+)
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
@@ -23,6 +26,8 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Cell Complex -> Graph
+    "CellEncodingLifting": CellEncodingLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations

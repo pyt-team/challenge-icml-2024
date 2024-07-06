@@ -1,0 +1,3 @@
+transform_type: 'lifting'
+transform_name: "CellEncodingLifting"
+feature_lifting: ProjectionSum
