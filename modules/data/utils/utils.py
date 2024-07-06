@@ -8,6 +8,7 @@ import omegaconf
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+from gudhi.datasets.remote import fetch_bunny
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
@@ -436,13 +437,41 @@ def load_pointcloud_dataset(cfg):
     torch_geometric.data.Data
         Point cloud dataset.
     """
-    if cfg["data_name"] != "random_pointcloud":
-        return NotImplementedError
+    if cfg["data_name"] == "random_pointcloud":
+        num_points, dim = cfg["num_points"], cfg["dim"]
+        pos = torch.rand((num_points, dim))
+    elif cfg["data_name"] == "stanford_bunny":
+        pos = fetch_bunny(
+            file_path=osp.join(cfg["data_dir"], "stanford_bunny.npy"),
+            accept_license=False,
+        )
+        num_points = len(pos)
+        pos = torch.tensor(pos)
 
-    num_points, dim = cfg["num_points"], cfg["dim"]
-    pos = torch.rand((num_points, dim))
+    return torch_geometric.data.Data(pos=pos, num_nodes=num_points)
 
-    if cfg.pos_to_x:
-        return torch_geometric.data.Data(x=pos, pos=pos, num_nodes=num_points)
-    else:
-        return torch_geometric.data.Data(pos=pos, num_nodes=num_points)
+
+def load_manual_pointcloud():
+    """Create a manual pointcloud for testing purposes."""
+    # Define the positions
+    pos = torch.tensor(
+        [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [10, 0, 0],
+            [10, 0, 1],
+            [10, 1, 0],
+            [10, 1, 1],
+            [20, 0, 0],
+            [20, 0, 1],
+            [20, 1, 0],
+            [20, 1, 1],
+            [30, 0, 0],
+        ]
+    ).float()
+
+    return torch_geometric.data.Data(
+        pos=pos,
+        num_nodes=len(pos),
+    )

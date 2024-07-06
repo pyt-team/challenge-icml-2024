@@ -6,7 +6,7 @@ from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLi
 
 
 class VoronoiLifting(PointCloud2GraphLifting):
-    r"""Lifts pointcloud to voronoi graph.
+    r"""Lifts pointcloud to Farthest-point Voronoi graph.
 
     Parameters
     ----------
@@ -21,7 +21,7 @@ class VoronoiLifting(PointCloud2GraphLifting):
         self.support_ratio = support_ratio
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts pointcloud to voronoi graph induced by FPS support set.
+        r"""Lifts pointcloud to voronoi graph induced by Farthest Point Sampling (FPS) support set.
 
         Parameters
         ----------
@@ -35,7 +35,7 @@ class VoronoiLifting(PointCloud2GraphLifting):
         """
         support_indices = fps(data.pos, ratio=self.support_ratio)
         pool_target, pool_source = knn(data.pos[support_indices], data.pos, k=1)
-        edges = torch.stack([pool_target, pool_source])
+        edges = torch.stack([pool_target, support_indices[pool_source]])
 
         return {
             "edge_index": edges,
