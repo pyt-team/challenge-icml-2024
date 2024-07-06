@@ -526,5 +526,7 @@ def load_manual_points():
         dtype=torch.float,
     )
     x = torch.ones_like(pos, dtype=torch.float)
+    x[:4] = 0.0
+    x[3, 1] = 1.0
     y = torch.randint(0, 2, (pos.shape[0],), dtype=torch.float)
     return torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)
