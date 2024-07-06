@@ -90,19 +90,20 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         self.max_rank = max_rank
 
     def matroid2cc(self, matroid: Matroid) -> CombinatorialComplex:
-        rnk = matroid.rank
-
-        def cc_rank(s):
-            return rnk(s) - 1
+        # rnk = matroid.rank
+        # def cc_rank(s):
+        #    return rnk(s) - 1
 
         cc = CombinatorialComplex()
         for ind in matroid.independent_sets:
             if len(ind) == 0:  # empty set isn't part of a CC
                 continue
-            ind_rank = cc_rank(ind)
+            # ind_rank = cc_rank(ind)
+            # the below is the same as the commented above, since ind is independent.
+            ind_rank = len(ind)
             # this condition forms a truncated matroid.
             if not self.max_rank or ind_rank <= self.max_rank + 1:
-                cc.add_cell([i for i in ind], ind_rank)
+                cc.add_cell([i for i in ind], ind_rank - 1)
         return cc
 
     def _get_cell_attributes(
@@ -119,6 +120,8 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         bases = data["bases"]
         M = Matroid(ground=ground, bases=bases)
         matroid_rank = M.rank(ground) - 1
+        if self.max_rank:
+            matroid_rank = min(matroid_rank, self.max_rank)
         cc = self.matroid2cc(M)
 
         features = data["x"]

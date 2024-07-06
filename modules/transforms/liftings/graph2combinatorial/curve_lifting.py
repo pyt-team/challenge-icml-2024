@@ -19,8 +19,9 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, max_rank: int | None = None, **kwargs):
         super().__init__(**kwargs)
+        self.max_rank = max_rank
 
     def _graph_curve_matroid(self, data: torch_geometric.data.Data) -> Matroid:
         graphic_matroid = self._generate_matroid_from_data(data)
@@ -34,10 +35,11 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
             ]
 
         L = set()
+
         for C in powerset(range(num_nodes)):
-            if len(C) == 0 or r_d(d(C)) > len(C):
+            sizeC = len(C)
+            if sizeC == 0 or r_d(d(C)) > sizeC:
                 continue
-            #  r_d(d(C)) <= len(C)
             subset_condition = True
             for A in powerset(C):
                 a_size = len(A)
@@ -54,7 +56,13 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         M_g = self._graph_curve_matroid(data)
         data = data.clone()
         data["ground"] = M_g._ground
-        data["bases"] = M_g.bases
+        if self.max_rank:
+            matroid_rank = self.max_rank + 1
+            data["bases"] = [
+                ind for ind in M_g.independent_sets if len(ind) == matroid_rank
+            ]
+        else:
+            data["bases"] = M_g.bases
         return data
 
 
