@@ -377,6 +377,7 @@ def load_manual_graph():
 def load_k4_graph() -> torch_geometric.data.Data:
     """K_4 is a complete graph with 4 vertices."""
     vertices = [i for i in range(4)]
+    y = [0, 1, 1, 1]
     edges = [
         [0, 1],
         [0, 2],
@@ -391,12 +392,15 @@ def load_k4_graph() -> torch_geometric.data.Data:
     G.to_undirected()
     edge_list = torch.Tensor(list(G.edges())).T.long()
     x = torch.tensor([1, 5, 10, 50]).unsqueeze(1).float()
-    return torch_geometric.data.Data(x=x, edge_index=edge_list, num_nodes=len(vertices))
+    return torch_geometric.data.Data(
+        x=x, edge_index=edge_list, num_nodes=len(vertices), y=torch.tensor(y)
+    )
 
 
 def load_double_house_graph() -> torch_geometric.data.Data:
     """Double house graph is a featured graph in Geiger et al."""
     vertices = [i for i in range(8)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0]
     edges = [
         [1, 2],
         [1, 3],
@@ -418,7 +422,9 @@ def load_double_house_graph() -> torch_geometric.data.Data:
     G.to_undirected()
     edge_list = torch.Tensor(list(G.edges())).T.long()
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
-    return torch_geometric.data.Data(x=x, edge_index=edge_list, num_nodes=len(vertices))
+    return torch_geometric.data.Data(
+        x=x, edge_index=edge_list, num_nodes=len(vertices), y=torch.tensor(y)
+    )
 
 
 def get_Planetoid_pyg(cfg):

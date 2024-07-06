@@ -1,3 +1,4 @@
 transform_type: 'lifting'
 transform_name: "CurveLifting"
 feature_lifting: ProjectionSum
+max_rank: 2

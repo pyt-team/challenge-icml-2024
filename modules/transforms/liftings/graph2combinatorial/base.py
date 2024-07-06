@@ -84,9 +84,10 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, max_rank: int | None, **kwargs):
         super().__init__(**kwargs)
         self.type = "matroid2combinatorial"
+        self.max_rank = max_rank
 
     def matroid2cc(self, matroid: Matroid) -> CombinatorialComplex:
         rnk = matroid.rank
@@ -98,8 +99,10 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         for ind in matroid.independent_sets:
             if len(ind) == 0:  # empty set isn't part of a CC
                 continue
-
-            cc.add_cell([i for i in ind], cc_rank(ind))
+            ind_rank = cc_rank(ind)
+            # this condition forms a truncated matroid.
+            if not self.max_rank or ind_rank <= self.max_rank + 1:
+                cc.add_cell([i for i in ind], ind_rank)
         return cc
 
     def _get_cell_attributes(

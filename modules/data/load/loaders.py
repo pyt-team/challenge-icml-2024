@@ -8,6 +8,8 @@ from omegaconf import DictConfig
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
 from modules.data.utils.custom_dataset import CustomDataset
+from modules.data.utils.utils import load_double_house_graph  # noqa: F401
+from modules.data.utils.utils import load_k4_graph  # noqa: F401
 from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
@@ -105,8 +107,10 @@ class GraphLoader(AbstractLoader):
             dataset = ConcatToGeometricDataset(dataset)
 
         elif self.parameters.data_name in ["manual"]:
-            data = load_manual_graph()
-            dataset = CustomDataset([data], self.data_dir)
+            data1 = load_manual_graph()
+            # data2 = load_k4_graph()
+            # data3 = load_double_house_graph()
+            dataset = CustomDataset([data1], self.data_dir)
 
         else:
             raise NotImplementedError(
