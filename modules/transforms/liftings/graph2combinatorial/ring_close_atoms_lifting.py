@@ -4,6 +4,9 @@ import torch_geometric
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 from toponetx.classes import CellComplex
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
 from modules.transforms.liftings.graph2combinatorial.base import (
@@ -469,6 +472,9 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         # Hyperedges can be edges or list_close_atoms
         # We should join both lists
         hyperedges = edges + list_close_atoms
+        logging.info(f"Number of hyperedges: {len(hyperedges)}")
+        logging.info(f"Number of edges: {len(edges)}")
+        logging.info(f"Number of close atoms: {len(list_close_atoms)}")
         num_hyperedges = len(edges) + len(list_close_atoms)
 
         assert num_hyperedges == len(hyperedges)
