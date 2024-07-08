@@ -338,27 +338,11 @@ def load_manual_rings():
     Actually is the 471 molecule of QM9 dataset."""
     # Define the vertices
     vertices = [i for i in range(12)]
-    y = [
-        2.2569e00,
-        4.5920e01,
-        -6.3076e00,
-        1.9211e00,
-        8.2287e00,
-        4.6414e02,
-        2.6121e00,
-        -8.3351e03,
-        -8.3349e03,
-        -8.3349e03,
-        -8.3359e03,
-        2.0187e01,
-        -4.8740e01,
-        -4.9057e01,
-        -4.9339e01,
-        -4.5375e01,
-        6.5000e00,
-        3.8560e00,
-        3.0122e00,
-    ]
+    y = torch.tensor([[ 2.2569e+00,  4.5920e+01, -6.3076e+00,  1.9211e+00,  8.2287e+00,
+          4.6414e+02,  2.6121e+00, -8.3351e+03, -8.3349e+03, -8.3349e+03,
+         -8.3359e+03,  2.0187e+01, -4.8740e+01, -4.9057e+01, -4.9339e+01,
+         -4.5375e+01,  6.5000e+00,  3.8560e+00,  3.0122e+00]])
+
     # Define the edges
     edges = [
         [0, 1],
@@ -438,7 +422,6 @@ def load_manual_rings():
 
     assert len(x) == len(vertices)
     assert len(pos) == len(vertices)
-    assert len(y) == len(vertices)
 
     return torch_geometric.data.Data(
         x=torch.tensor(x).float(),
