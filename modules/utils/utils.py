@@ -136,7 +136,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         if hasattr(data, "num_edges"):
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -249,7 +249,7 @@ def plot_manual_graph(data, title=None):
                 edges.append(torch.where(edge != 0)[0].numpy())
                 edge_mapper[edge_idx] = sorted(node_idxs)
             edges = np.array(edges)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             edges = data.edge_index.T.tolist()
             edge_mapper = {}
             for e, edge in enumerate(edges):
@@ -495,3 +495,54 @@ def describe_hypergraph(data: torch_geometric.data.Data):
         if he_idx >= 10:
             print("...")
             break
+
+
+def plot_2d_point_cloud(data: torch_geometric.data.Data, title: str):
+    r"""Plot a 2d point cloud.
+
+    Parameters
+    ----------
+    data : torch_geometric.data.Data
+        Data object containing the graph.
+    title: str
+        Title for the plot.
+    """
+    # Sample data
+    x = data.pos[:, 0]
+    y = data.pos[:, 1]
+    # Create scatter plot
+    plt.scatter(x, y, color="blue", marker="o")
+
+    plt.title(title)
+    plt.show()
+
+
+def plot_graph_data(data: torch_geometric.data.Data, title: str):
+    r"""Plot graph data.
+
+    Parameters
+    ----------
+    data : torch_geometric.data.Data
+        Data object containing the graph.
+    title: str
+        Title for the plot.
+    """
+    # Sample data
+    x = data.pos[:, 0]
+    y = data.pos[:, 1]
+
+    edges = list(zip(data.edge_index[0].numpy(), data.edge_index[1].numpy(), strict=False))
+
+    # Create scatter plot
+    plt.scatter(x, y, color="black", edgecolors="black", marker="o")
+
+    # Plot edges
+    for edge in edges:
+        point1, point2 = edge
+        plt.plot([x[point1], x[point2]], [y[point1], y[point2]], color="blue")
+
+    # Add title and labels
+    plt.title(title)
+
+    # Show plot
+    plt.show()
