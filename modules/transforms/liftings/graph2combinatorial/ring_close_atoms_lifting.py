@@ -1,17 +1,18 @@
+import logging
+
 import networkx as nx
 import torch
 import torch_geometric
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 from toponetx.classes import CellComplex
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
 from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
 class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
