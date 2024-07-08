@@ -23,34 +23,26 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
 
     def find_close_res(
         self, data: torch_geometric.data.Data
-    ) -> torch_geometric.data.Data:
-        r"""Finds the closest nodes to each node in the graph.
+    ) -> list:
+        r"""Finds the closest nodes to each connectec node in the graph.
 
         Parameters
         ----------
         data : torch_geometric.data.Data
-            The input data to be lifted.
+            Under edge_attr, the distances and angles between residues are stored.
 
         Returns
         -------
-        torch_geometric.data.Data
-            The data with the closest nodes.
-        """
-        # In data there is the nodes and the distances between them
-        # We need to find the closest nodes to each node
-        distances = data.edge_attr[:, 0]
-        # distances is a list of distances between nodes
-        # the nodes are specified in data.edge_index
-        # we need to find the nodes closer than a certain distance
-        # to each node
-        # want to create a list with the close nodes to each node
-        # For instance, if the distance is 3, and the nodes are 0, 1, 2, 3, 4, 5
-        # and the distances are [1, 2, 3, 4, 5, 6] of the first node vs all
-        # the other nodes, the closest nodes are 0, 1, 2
+        list
+            The list of the closest nodes to each connected node.
 
-        # Want to return [[0, 1, 2], ...]
-        # where the first list is the index of the closest nodes to the first node
-        # the second list is the index of the closest nodes to the second node
+            Example:
+            [[0, 1, 2], ...]
+            where the first list is the index of the closest nodes to the first node
+
+        """
+        distances = data.edge_attr[:, 0]
+
         num_nodes = data.x.shape[0]
         closest_nodes = []
         for i in range(num_nodes):
@@ -62,7 +54,9 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
             closest_nodes.append(closest_nodes_i)
         return closest_nodes
 
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+    def lift_topology(
+            self, data: torch_geometric.data.Data
+        ) -> dict:
         r"""Lifts the topology of a graph to hypergraph domain by considering k-nearest neighbors.
 
         Parameters
@@ -77,7 +71,6 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
         """
         num_nodes = data.x.shape[0]
         data.pos = data.x
-        # data_lifted = self.transform(data)
 
         # Find the closest nodes to each node
         closest_nodes = self.find_close_res(data)
