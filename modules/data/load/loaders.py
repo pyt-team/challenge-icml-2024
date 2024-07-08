@@ -57,8 +57,8 @@ class GraphLoader(AbstractLoader):
         proteins = [{"uniprot_id": row.split("\t")[0], "sequence_length": int(row.split("\t")[1])} for row in data]
 
         # Ensure we have at least the required proteins to sample from
-        if len(proteins) >= self.parameters.limit:
-            sampled_proteins = random.sample(proteins, self.parameters.limit)
+        if len(proteins) >= self.parameters.size:
+            sampled_proteins = random.sample(proteins, self.parameters.size)
         else:
             print(f"Only found {len(proteins)} proteins within the specified length range. Returning all available proteins.")
             sampled_proteins = proteins
