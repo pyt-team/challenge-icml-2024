@@ -1,7 +1,9 @@
 import torch
 
 from modules.data.utils.utils import load_manual_prot
-from modules.transforms.liftings.graph2hypergraph.close_lifting import HypergraphCloseLifting
+from modules.transforms.liftings.graph2hypergraph.close_lifting import (
+    HypergraphCloseLifting,
+)
 
 
 class TestCellRingLifting:
