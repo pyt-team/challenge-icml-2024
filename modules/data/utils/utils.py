@@ -420,7 +420,7 @@ def load_manual_rings():
     ]
 
     return torch_geometric.data.Data(
-        x=x,
+        x=torch.tensor(x).float(),
         edge_index=edge_list,
         num_nodes=len(vertices),
         y=torch.tensor(y),
