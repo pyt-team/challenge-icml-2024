@@ -1,7 +1,6 @@
 import torch
 import torch_geometric
 
-from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.attribute_lifting import (
     NodeAttributeLifting,
 )

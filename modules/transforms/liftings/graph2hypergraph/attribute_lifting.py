@@ -1,6 +1,3 @@
-import warnings
-
-import networkx
 import torch
 import torch_geometric
 
@@ -36,7 +33,7 @@ class NodeAttributeLifting(Graph2HypergraphLifting):
         attribute = data.x[:, self.attribute_idx]
         unique_attributes = torch.unique(attribute)
         num_hyperedges = unique_attributes.size(0)
-
+        # incidence matrix of the hypergraph
         incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
         for i, attr in enumerate(unique_attributes):
             nodes_with_attr = torch.where(attribute == attr)[0]
