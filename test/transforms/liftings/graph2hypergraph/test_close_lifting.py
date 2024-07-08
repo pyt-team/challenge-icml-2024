@@ -14,7 +14,7 @@ class TestCellRingLifting:
         self.data = load_manual_prot()
 
         # Initialise the CellCyclesLifting class
-        self.lifting = HypergraphCloseLifting()
+        self.lifting = HypergraphCloseLifting(distance=6.0)
 
     def test_lift_topology(self):
         # Test the lift_topology method
