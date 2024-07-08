@@ -436,6 +436,10 @@ def load_manual_rings():
         ]
     )
 
+    assert len(x) == len(vertices)
+    assert len(pos) == len(vertices)
+    assert len(y) == len(vertices)
+
     return torch_geometric.data.Data(
         x=torch.tensor(x).float(),
         edge_index=edge_list,

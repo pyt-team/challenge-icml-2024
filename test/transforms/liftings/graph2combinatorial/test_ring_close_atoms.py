@@ -20,10 +20,10 @@ class TestCombinatorialRingCloseAtomsLifting:
         # Test the lift_topology method
         lifted_data = self.lifting.forward(self.data.clone())
 
-        expected_num_hyperedgees = 16
+        expected_num_hyperedges = 16
 
         assert (
-            expected_num_hyperedgees == lifted_data.num_hyperedges
+            expected_num_hyperedges == lifted_data.num_hyperedges
         ), "Something is wrong with num_hyperedges."
 
         expected_incidence_hyperedges = torch.tensor(
