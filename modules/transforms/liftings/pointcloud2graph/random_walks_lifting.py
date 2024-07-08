@@ -1,12 +1,14 @@
+import random
+from collections import defaultdict
+
+import networkx as nx
 import numpy as np
 import torch
 import torch_geometric
-from torch_geometric.nn import knn_graph
 from torch_geometric.data import Data
+from torch_geometric.nn import knn_graph
+
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
-import random
-from collections import defaultdict
-import networkx as nx
 
 
 class GraphRandomWalksLifting(PointCloud2GraphLifting):
@@ -105,7 +107,7 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
             The NetworkX graph with edge weights
         """
         G = nx.DiGraph()
-        for (i, j), weight in zip(edge_index.t().tolist(), edge_weights):
+        for (i, j), weight in zip(edge_index.t().tolist(), edge_weights, strict=False):
             G.add_edge(i, j, weight=weight)
             G.add_edge(j, i, weight=weight)
         return G
@@ -119,10 +121,8 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
             The input graph with distance weights
         """
         for node in graph.nodes():
-            weights = []
             neighbors = list(graph.neighbors(node))
-            for neighbor in neighbors:
-                weights.append(graph[node][neighbor]["weight"])
+            weights = [graph[node][neighbor]["weight"] for neighbor in neighbors]
 
             normalized_weights = torch.nn.functional.softmax(
                 torch.tensor(weights)

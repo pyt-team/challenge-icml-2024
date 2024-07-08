@@ -1,6 +1,6 @@
 import torch
-from torch_geometric.nn.models import GraphSAGE
 from torch_geometric.nn import global_mean_pool
+from torch_geometric.nn.models import GraphSAGE
 
 
 class GraphSAGEModel(torch.nn.Module):

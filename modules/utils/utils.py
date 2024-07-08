@@ -531,7 +531,7 @@ def plot_graph_data(data: torch_geometric.data.Data, title: str):
     x = data.pos[:, 0]
     y = data.pos[:, 1]
 
-    edges = list(zip(data.edge_index[0].numpy(), data.edge_index[1].numpy()))
+    edges = list(zip(data.edge_index[0].numpy(), data.edge_index[1].numpy(), strict=False))
 
     # Create scatter plot
     plt.scatter(x, y, color="black", edgecolors="black", marker="o")

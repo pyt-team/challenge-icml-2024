@@ -1,5 +1,6 @@
 import numpy as np
 from torch_geometric.nn import knn_graph
+
 from modules.data.utils.utils import load_random_point_cloud
 from modules.transforms.liftings.pointcloud2graph.random_walks_lifting import (
     GraphRandomWalksLifting,
