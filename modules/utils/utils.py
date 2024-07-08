@@ -511,8 +511,8 @@ def plot_2d_point_cloud(data: torch_geometric.data.Data, title: str):
     x = data.pos[:, 0]
     y = data.pos[:, 1]
     # Create scatter plot
-    plt.scatter(x, y, color='blue', marker='o')
-    
+    plt.scatter(x, y, color="blue", marker="o")
+
     plt.title(title)
     plt.show()
 
@@ -534,12 +534,12 @@ def plot_graph_data(data: torch_geometric.data.Data, title: str):
     edges = list(zip(data.edge_index[0].numpy(), data.edge_index[1].numpy()))
 
     # Create scatter plot
-    plt.scatter(x, y, color='black', edgecolors='black', marker='o')
+    plt.scatter(x, y, color="black", edgecolors="black", marker="o")
 
     # Plot edges
     for edge in edges:
         point1, point2 = edge
-        plt.plot([x[point1], x[point2]], [y[point1], y[point2]], color='blue')
+        plt.plot([x[point1], x[point2]], [y[point1], y[point2]], color="blue")
 
     # Add title and labels
     plt.title(title)

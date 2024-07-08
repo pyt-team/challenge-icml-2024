@@ -8,6 +8,7 @@ import random
 from collections import defaultdict
 import networkx as nx
 
+
 class GraphRandomWalksLifting(PointCloud2GraphLifting):
     r"""Lifts point cloud data to graph by using Random walks.
 
@@ -19,7 +20,9 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
         Additional arguments for the class
     """
 
-    def __init__(self, k: int = 5, num_walks: int = 100, steps_per_walk: int = 50, **kwargs):
+    def __init__(
+        self, k: int = 5, num_walks: int = 100, steps_per_walk: int = 50, **kwargs
+    ):
         super().__init__(**kwargs)
         self.k = k
         self.num_walks = num_walks
@@ -42,7 +45,7 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
 
         # Construct k-NN graph
         edge_index = knn_graph(torch.tensor(point_cloud), k=self.k)
-        
+
         # Calculate distances and add them as edge weights
         edge_weights = self._calculate_edge_weights(point_cloud, edge_index)
         G = self._create_weighted_networkx_graph(edge_index, edge_weights)
@@ -55,12 +58,14 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
         topological_graph = self._create_topological_graph(G, num_walks, steps_per_walk)
 
         # Convert the NetworkX graph back to PyTorch Geometric Data
-        topological_edge_index = torch_geometric.utils.from_networkx(topological_graph).edge_index
+        topological_edge_index = torch_geometric.utils.from_networkx(
+            topological_graph
+        ).edge_index
         lifted_data = Data(pos=data.pos, edge_index=topological_edge_index)
 
         return {
             "num_nodes": lifted_data.edge_index.unique().shape[0],
-            "edge_index": lifted_data.edge_index
+            "edge_index": lifted_data.edge_index,
         }
 
     def _calculate_edge_weights(self, point_cloud, edge_index):
@@ -105,7 +110,6 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
             G.add_edge(j, i, weight=weight)
         return G
 
-
     def _normalize_edge_weights(self, graph):
         r"""Normalize edge weights to transition probabilities.
 
@@ -118,12 +122,13 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
             weights = []
             neighbors = list(graph.neighbors(node))
             for neighbor in neighbors:
-                weights.append(graph[node][neighbor]['weight'])
+                weights.append(graph[node][neighbor]["weight"])
 
-            normalized_weights = torch.nn.functional.softmax(torch.tensor(weights)).numpy()
+            normalized_weights = torch.nn.functional.softmax(
+                torch.tensor(weights)
+            ).numpy()
             for i, neighbor in enumerate(neighbors):
                 graph[node][neighbor]["weight"] = normalized_weights[i]
-            
 
     def _random_walk(self, graph, start_node, steps):
         r"""Perform a random walk on the graph.
@@ -147,7 +152,9 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
 
         for _ in range(steps):
             neighbors = list(graph.neighbors(current_node))
-            probabilities = [graph[current_node][neighbor]['weight'] for neighbor in neighbors]
+            probabilities = [
+                graph[current_node][neighbor]["weight"] for neighbor in neighbors
+            ]
             current_node = random.choices(neighbors, weights=probabilities, k=1)[0]
             path.append(current_node)
 
@@ -155,7 +162,7 @@ class GraphRandomWalksLifting(PointCloud2GraphLifting):
 
     def _create_topological_graph(self, graph, num_walks, steps_per_walk):
         r"""Create a topological graph based on random walks.
-        
+
         Parameters
         ----------
         graph : networkx.Graph

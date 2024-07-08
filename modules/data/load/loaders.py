@@ -206,6 +206,7 @@ class HypergraphLoader(AbstractLoader):
         """
         return load_hypergraph_pickle_dataset(self.parameters)
 
+
 class PointCloudLoader(AbstractLoader):
     r"""Loader for point-cloud dataset.
     Parameters
@@ -229,5 +230,9 @@ class PointCloudLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        data = load_random_point_cloud(num_classes=self.cfg["num_classes"], num_points=self.cfg["num_points"], num_features=self.cfg["num_features"])
+        data = load_random_point_cloud(
+            num_classes=self.cfg["num_classes"],
+            num_points=self.cfg["num_points"],
+            num_features=self.cfg["num_features"],
+        )
         return CustomDataset([data], self.cfg["data_dir"])

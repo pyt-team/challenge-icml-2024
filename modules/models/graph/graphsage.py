@@ -33,7 +33,7 @@ class GraphSAGEModel(torch.nn.Module):
 
     def forward(self, data):
         r"""Forward pass of the model.
-        
+
         Parameters
         ----------
         data : torch_geometric.data.Data

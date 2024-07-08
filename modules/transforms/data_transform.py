@@ -15,7 +15,9 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-from modules.transforms.liftings.pointcloud2graph.random_walks_lifting import GraphRandomWalksLifting
+from modules.transforms.liftings.pointcloud2graph.random_walks_lifting import (
+    GraphRandomWalksLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
