@@ -6,8 +6,8 @@ from modules.transforms.liftings.graph2hypergraph.close_lifting import (
 )
 
 
-class TestCellRingLifting:
-    """Test the CellRingLifting class."""
+class TestHypergraphCloseLifting:
+    """Test the HypergraphCloseLifting class."""
 
     def setup_method(self):
         # Load the graph

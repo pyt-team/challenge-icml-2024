@@ -334,7 +334,6 @@ class GraphLoader(AbstractLoader):
         # Does the same as the for loop above:
         # node_key = [torch.zeros(num_residues).scatter_(0, torch.tensor([residue_map[residue.get_resname()]]), 1) for residue in residues]
 
-
         node_map = {key: i for i, key in enumerate(keys)}
         # Set the edges
         edge_index = [[node_map[edge[0]], node_map[edge[1]]] for edge in edges]
