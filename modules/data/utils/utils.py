@@ -455,8 +455,8 @@ def load_pointcloud_dataset(cfg):
 
     if cfg.pos_to_x:
         return torch_geometric.data.Data(x=pos, pos=pos, num_nodes=num_points)
-    else:
-        return torch_geometric.data.Data(pos=pos, num_nodes=num_points)
+
+    return torch_geometric.data.Data(pos=pos, num_nodes=num_points)
 
 
 def load_manual_pointcloud(pos_to_x: bool = False):
@@ -485,8 +485,8 @@ def load_manual_pointcloud(pos_to_x: bool = False):
             pos=pos,
             num_nodes=len(pos),
         )
-    else:
-        return torch_geometric.data.Data(
-            pos=pos,
-            num_nodes=len(pos),
-        )
+
+    return torch_geometric.data.Data(
+        pos=pos,
+        num_nodes=len(pos),
+    )
