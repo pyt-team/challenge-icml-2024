@@ -514,8 +514,8 @@ def plot_pointcloud_voronoi(
     data = dataset.get(idx_sample % len(dataset))
     points = data.pos
 
-    if data.edge_index is not None:
-        color = data.edge_index[:, np.argsort(data.edge_index[0])][1]
+    if hasattr(data, "incidence_hyperedges"):
+        color = np.array(data.incidence_hyperedges.coalesce().indices()[1])
     else:
         color = np.ones(len(points))
 

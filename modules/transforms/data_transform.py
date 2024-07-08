@@ -15,7 +15,9 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-from modules.transforms.liftings.pointcloud2graph.voronoi_lifting import VoronoiLifting
+from modules.transforms.liftings.pointcloud2hypergraph.voronoi_lifting import (
+    VoronoiLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -24,7 +26,7 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
-    # Pointcloud -> Graph
+    # Pointcloud -> Hypergraph
     "VoronoiLifting": VoronoiLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,

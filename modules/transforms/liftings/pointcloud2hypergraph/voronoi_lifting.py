@@ -2,10 +2,12 @@ import torch
 import torch_geometric
 from torch_cluster import fps, knn
 
-from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
+from modules.transforms.liftings.pointcloud2hypergraph.base import (
+    PointCloud2HypergraphLifting,
+)
 
 
-class VoronoiLifting(PointCloud2GraphLifting):
+class VoronoiLifting(PointCloud2HypergraphLifting):
     r"""Lifts pointcloud to Farthest-point Voronoi graph.
 
     Parameters
@@ -33,11 +35,20 @@ class VoronoiLifting(PointCloud2GraphLifting):
         dict
             The lifted topology.
         """
-        support_indices = fps(data.pos, ratio=self.support_ratio)
-        pool_target, pool_source = knn(data.pos[support_indices], data.pos, k=1)
-        edges = torch.stack([pool_target, support_indices[pool_source]])
+
+        # Sample FPS induced Voronoi graph
+        support_idcs = fps(data.pos, ratio=self.support_ratio)
+        target_idcs, source_idcs = knn(data.pos[support_idcs], data.pos, k=1)
+
+        # Construct incidence matrix
+        incidence_matrix = torch.sparse_coo_tensor(
+            torch.stack((target_idcs, source_idcs)),
+            torch.ones(source_idcs.numel()),
+            size=(data.num_nodes, support_idcs.numel()),
+        )
 
         return {
-            "edge_index": edges,
+            "incidence_hyperedges": incidence_matrix,
+            "num_hyperedges": incidence_matrix.size(1),
             "x_0": data.x,
         }
