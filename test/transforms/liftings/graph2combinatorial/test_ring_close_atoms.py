@@ -20,7 +20,7 @@ class TestCombinatorialRingCloseAtomsLifting:
         # Test the lift_topology method
         lifted_data = self.lifting.forward(self.data.clone())
 
-        expected_num_hyperedges = 16
+        expected_num_hyperedges = 15
 
         assert (
             expected_num_hyperedges == lifted_data.num_hyperedges

@@ -12,7 +12,7 @@ from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logging.basicConfig(level=print, format="%(levelname)s: %(message)s")
 
 
 class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
@@ -471,14 +471,12 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         edges = [[edge[0], edge[1]] for edge in G.edges]
 
         # Hyperedges can be edges or list_close_atoms
-        # We should join both lists
+        # If close atoms are already in the edges, we do not need to add them
         hyperedges = edges + list_close_atoms
-        logging.info(f"Number of hyperedges: {len(hyperedges)}")
-        logging.info(f"Number of edges: {len(edges)}")
-        logging.info(f"Number of close atoms: {len(list_close_atoms)}")
-        num_hyperedges = len(edges) + len(list_close_atoms)
-
-        assert num_hyperedges == len(hyperedges)
+        # check if there are repeated hyperedges
+        # if there are, remove them
+        hyperedges = list(set([tuple(sorted(edge)) for edge in hyperedges]))
+        num_hyperedges = len(hyperedges)
 
         # create incidence matrix for hyperedges
         incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
