@@ -171,9 +171,13 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         # AllChem.UFFOptimizeMolecule(mol)
         # conformer = mol.GetConformer()
         # pos = torch.tensor([conformer.GetAtomPosition(i) for i in range(mol.GetNumAtoms())])
-
+        # print(data.num_nodes)
+        # for atom in mol.GetAtoms():
+        #     print(atom.GetIdx(), atom.GetSymbol())
         remaining_atom_indices = [atom.GetIdx() for atom in mol.GetAtoms()]
+        # print(remaining_atom_indices)
         pos = data.pos[remaining_atom_indices]
+        # print(pos)
 
         # Compute the pairwise distances between the atoms
         return torch.cdist(pos, pos, p=2)
