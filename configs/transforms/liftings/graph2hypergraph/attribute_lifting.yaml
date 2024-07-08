@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "NodeAttributeLifting"
+attribute_idx: 0
+feature_lifting: ProjectionSum
