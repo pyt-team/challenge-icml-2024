@@ -10,11 +10,11 @@ format: "tsv"
 fields: "accession,length"
 size: 500
 
-limit: 100 # minim proteins to load
-threshold: 6.0 # distance between proteins
+limit: 20 # minim proteins to load
+threshold: 6.0 # distance between proteins to create the initial graph
 
 # Dataset parameters
-num_features: 11
+num_features: 20
 num_classes: 1
 task: regression
 loss_type: mse

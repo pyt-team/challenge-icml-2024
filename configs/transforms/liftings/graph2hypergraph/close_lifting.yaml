@@ -1,6 +1,5 @@
 transform_type: 'lifting'
 transform_name: "HypergraphCloseLifting"
-loop: True
 feature_lifting: ProjectionSum
 
 distance: 6.0

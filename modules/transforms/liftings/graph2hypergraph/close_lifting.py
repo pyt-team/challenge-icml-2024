@@ -38,7 +38,7 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
         """
         # In data there is the nodes and the distances between them
         # We need to find the closest nodes to each node
-        distances = data.edge_attr[0]
+        distances = data.edge_attr[:, 0]
         # distances is a list of distances between nodes
         # the nodes are specified in data.edge_index
         # we need to find the nodes closer than a certain distance
@@ -54,8 +54,9 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
         num_nodes = data.x.shape[0]
         closest_nodes = []
         for i in range(num_nodes):
-            # Get the distances of the ith node
-            distances_i = distances[data.edge_index[0] == i]
+            # Get the indices of the edges from the ith node
+            indices = torch.where(data.edge_index[0] == i)[0]
+            distances_i = distances[indices]
             # Get the indices of the closest nodes
             closest_nodes_i = torch.where(distances_i < self.distance)[0]
             closest_nodes.append(closest_nodes_i)
@@ -91,5 +92,5 @@ class HypergraphCloseLifting(Graph2HypergraphLifting):
         return {
             "incidence_hyperedges": incidence_1,
             "num_hyperedges": num_hyperedges,
-            "x_0": data.x,
+            "x_0": data.x, # have to do something with it
         }
