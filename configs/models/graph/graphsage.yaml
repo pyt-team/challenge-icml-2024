@@ -1,0 +1,4 @@
+in_channels: null
+hidden_channels: 32
+out_channels: null
+n_layers: 2

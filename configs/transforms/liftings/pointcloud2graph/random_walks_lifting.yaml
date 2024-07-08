@@ -1,0 +1,6 @@
+transform_type: "lifting"
+transform_name: "GraphRandomWalksLifting"
+k: 5
+num_walks: 100
+steps_per_walk: 50
+feature_lifting: ProjectionSum
