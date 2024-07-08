@@ -376,17 +376,17 @@ def load_manual_rings():
     # Add smile
     smiles = "[H]O[C@@]12C([H])([H])O[C@]1([H])C2([H])[H]"
 
-    # Create a graph
-    G = nx.Graph()
+    # # Create a graph
+    # G = nx.Graph()
 
-    # Add vertices
-    G.add_nodes_from(vertices)
+    # # Add vertices
+    # G.add_nodes_from(vertices)
 
-    # Add edges
-    G.add_edges_from(edges)
+    # # Add edges
+    # G.add_edges_from(edges)
 
-    G.to_undirected()
-    edge_list = torch.Tensor(list(G.edges())).T.long()
+    # G.to_undirected()
+    # edge_list = torch.Tensor(list(G.edges())).T.long()
 
     x = [
         [0.0, 0.0, 0.0, 1.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 1.0],
@@ -425,7 +425,7 @@ def load_manual_rings():
 
     return torch_geometric.data.Data(
         x=torch.tensor(x).float(),
-        edge_index=edge_list,
+        edge_index=torch.tensor(edges).T.long(),
         num_nodes=len(vertices),
         y=torch.tensor(y),
         smiles=smiles,
