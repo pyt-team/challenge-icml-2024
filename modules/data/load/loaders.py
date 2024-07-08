@@ -5,6 +5,9 @@ import rootutils
 import torch_geometric
 from omegaconf import DictConfig
 
+# silent RDKit warnings
+from rdkit import Chem, RDLogger
+
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
 from modules.data.utils.custom_dataset import CustomDataset
@@ -14,6 +17,8 @@ from modules.data.utils.utils import (
     load_manual_graph,
     load_simplicial_dataset,
 )
+
+RDLogger.DisableLog("rdApp.*")
 
 
 class GraphLoader(AbstractLoader):
@@ -28,6 +33,15 @@ class GraphLoader(AbstractLoader):
     def __init__(self, parameters: DictConfig):
         super().__init__(parameters)
         self.parameters = parameters
+
+    def is_valid_smiles(self, smiles):
+        """Check if a SMILES string is valid using RDKit."""
+        mol = Chem.MolFromSmiles(smiles)
+        return mol is not None
+
+    def filter_qm9_dataset(self, dataset):
+        """Filter the QM9 dataset to remove invalid SMILES strings."""
+        return [data for data in dataset if self.is_valid_smiles(data.smiles)]
 
     def load(self) -> torch_geometric.data.Dataset:
         r"""Load graph dataset.
@@ -103,6 +117,13 @@ class GraphLoader(AbstractLoader):
             # Join dataset to process it
             dataset = datasets[0] + datasets[1] + datasets[2]
             dataset = ConcatToGeometricDataset(dataset)
+
+        elif self.parameters.data_name == "QM9":
+            dataset = torch_geometric.datasets.QM9(root=root_data_dir)
+            # Filter the QM9 dataset to remove invalid SMILES strings
+            valid_dataset = self.filter_qm9_dataset(dataset)
+            # dataset = ConcatToGeometricDataset(valid_dataset)
+            dataset = CustomDataset(valid_dataset, self.data_dir)
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()

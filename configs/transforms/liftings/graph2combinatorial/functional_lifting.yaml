@@ -1,0 +1,11 @@
+transform_type: 'lifting'
+transform_name: "CombinatorialFunctionalLifting"
+max_cell_length: null
+preserve_edge_attr: True
+feature_lifting: ProjectionSum
+
+functional_groups : ['C=O', 'C#N', 'C-N', 'C-O', 'C-S', 'C-F', 'C-Cl', 'C-Br', 
+                    'C-I', 'C=C-O', 'C=C-N', 'C=C-S', 'C#C-C', 'C#C-O', 'C#C-N', 
+                    'C=CC=O', 'C=CC=N', 'C=CC#N', 'C=C(C)C=O', 'C=C(C)C=N', 
+                    'C=C(C)C#N', 'C=C(C)C=O', 'C=C(C)C=N', 'C=C(C)C#N'
+                    ]
