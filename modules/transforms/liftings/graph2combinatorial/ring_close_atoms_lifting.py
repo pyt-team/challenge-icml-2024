@@ -465,8 +465,13 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         close_atoms = self.find_close_atom_groups(mol, data)
         list_close_atoms = [item for sublist in close_atoms.values() for item in sublist]
         edges = [[edge[0], edge[1]] for edge in G.edges]
+
+        # Hyperedges can be edges or list_close_atoms
+        # We should join both lists
         hyperedges = edges + list_close_atoms
-        num_hyperedges = len(hyperedges)
+        num_hyperedges = len(edges) + len(list_close_atoms)
+
+        assert num_hyperedges == len(hyperedges)
 
         # create incidence matrix for hyperedges
         incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
