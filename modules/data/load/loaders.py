@@ -4,7 +4,7 @@ import numpy as np
 import rootutils
 import torch_geometric
 from omegaconf import DictConfig
-from rdkit import Chem
+from rdkit import Chem, RDLogger
 
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
@@ -16,6 +16,8 @@ from modules.data.utils.utils import (
     load_simplicial_dataset,
 )
 
+# Silence rdkit warnings
+RDLogger.DisableLog("rdApp.*")
 
 class GraphLoader(AbstractLoader):
     r"""Loader for graph datasets.
