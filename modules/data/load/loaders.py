@@ -467,7 +467,7 @@ class GraphLoader(AbstractLoader):
             # Process each protein and create datasets
             for uniprot_id in uniprot_ids:
                 pdb_file = self.fetch_alphafold_structure(uniprot_id)
-                y = self.fetch_protein_attributes(uniprot_id)
+                y = self.fetch_protein_mass(uniprot_id)
 
                 if pdb_file and y:
                     structure = self.parse_pdb(pdb_file)
