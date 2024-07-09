@@ -15,7 +15,7 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_manual_rings,
+    load_manual_mol,
     load_simplicial_dataset,
 )
 
@@ -130,7 +130,7 @@ class GraphLoader(AbstractLoader):
             dataset = CustomDataset([data], self.data_dir)
 
         elif self.parameters.data_name in ["manual_rings"]:
-            data = load_manual_rings()
+            data = load_manual_mol()
             dataset = CustomDataset([data], self.data_dir)
 
         else:

@@ -1,6 +1,6 @@
 import torch
 
-from modules.data.utils.utils import load_manual_rings
+from modules.data.utils.utils import load_manual_mol
 from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
     CombinatorialRingCloseAtomsLifting,
 )
@@ -11,7 +11,7 @@ class TestCombinatorialRingCloseAtomsLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = load_manual_rings()
+        self.data = load_manual_mol()
 
         # Initialise the CellCyclesLifting class
         self.lifting = CombinatorialRingCloseAtomsLifting()
