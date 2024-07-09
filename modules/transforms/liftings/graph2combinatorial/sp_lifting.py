@@ -144,8 +144,9 @@ class DirectedFlagComplex:
 
         return simplices[:, combinations]
 
-    def _multiple_contained_chunked(
-        self, sigmas: torch.Tensor, taus: torch.Tensor, chunk_size: int = 1024
+
+    def _multiple_contained_chunked(self, sigmas: torch.Tensor,
+                                     taus: torch.Tensor, chunk_size: int = 1024
     ) -> torch.Tensor:
         r"""Compute the adjacency matrix induced by the relation
         :math:`\sigma_i \subseteq \tau_j`. This function is chunked to avoid
@@ -189,53 +190,48 @@ class DirectedFlagComplex:
         # Process in chunks for memory efficiency purposes.
         for i in range(0, Ns, chunk_size):
             end_i = min(i + chunk_size, Ns)
-            sigmas_chunk = sigmas[i:end_i]  # Shape: [min(chunk_size, remaining Ns), ls]
+            sigmas_chunk = sigmas[i:end_i]  # Shape: [min(chunk_size, remaining Ns), cs]
 
             temp_true_indices = []
 
             # Compute diffs and matches for this chunk
-            for j in range(0, total_faces, chunk_size * Nf):
-                end_j = min(j + chunk_size * Nf, total_faces)
-                faces_chunk = faces.view(-1, cs)[
-                    j:end_j
-                ]  # Shape: [min(chunk_size * Nt, remaining faces), ls]
+            for j in range(0, total_faces, chunk_size):
+                end_j = min(j + chunk_size, total_faces)
+                faces_chunk = faces.view(-1, cs)[j:end_j]  # Shape: [min(chunk_size, remaining faces), cs]
 
                 # Broadcasting happens here with much smaller tensors
-                diffs = sigmas_chunk.unsqueeze(1) - faces_chunk.unsqueeze(
-                    0
-                )  # shape: [min(chunk_size, remaining Ns), # min(chunk_size * Nt, remaining faces), ls]
+                diffs = sigmas_chunk.unsqueeze(1) - faces_chunk.unsqueeze(0)  # shape: [min(chunk_size, remaining Ns), min(chunk_size, remaining faces), cs]
 
-                matches = diffs.abs().sum(dim=2) == 0  # shape: [min(
-                # chunk_size, remaining Ns), min(chunk_size * Nt, remaining
-                # faces)]
+                matches = diffs.abs().sum(dim=2) == 0  # shape: [min(chunk_size, remaining Ns), min(chunk_size, remaining faces)]
 
-                # (endi - i) is the number of sigmas in the chunk.
-                # (endj - j)// Nf is the number of taus in the chunk
-                # Nf is the number of faces in each tau of dimension equal to
-                # the dimension of the simplices in sigma.
+                # (end_i - i) is the number of sigmas in the chunk.
+                # (end_j - j) // Nf is the number of taus in the chunk
+                # Nf is the number of faces in each tau of dimension equal to the dimension of the simplices in sigma.
                 matches_reshaped = matches.view(end_i - i, (end_j - j) // Nf, Nf)
 
                 matches_aggregated = matches_reshaped.any(dim=2)
 
                 # Update temporary result for this chunk of sigmas
-                temp_true_indices.append(matches_aggregated.nonzero().T)
+                if matches_aggregated.nonzero(as_tuple=False).size(0) > 0:
+                    temp_indices = matches_aggregated.nonzero(as_tuple=False).T
+                    temp_indices[0] += i  # Adjust sigma indices for chunk offset
+                    temp_indices[1] += j // Nf  # Adjust tau indices for chunk offset
+                    temp_true_indices.append(temp_indices)
 
-                # Concatenate tensors in temp_true_indices before appending
-                if len(temp_true_indices) > 0:
-                    true_indices_concat = torch.cat(temp_true_indices, dim=1)
-                    # Adjust indices for the current chunk offset
-                    true_indices_concat[0] += i  # Adjust sigma indices for chunk offset
-                    true_indices_concat[1] += j  # Adjust tau indices for chunk offset
+            if temp_true_indices:
+                indices.append(torch.cat(temp_true_indices, dim=1))
 
-                    indices.append(true_indices_concat)
+        if indices:
+            indices = torch.cat(indices, dim=1)
+        else:
+            indices = torch.empty([2, 0], dtype=torch.long)
 
-        indices = torch.cat(indices, dim=1)
+        print(len(indices[0]))
 
         A = torch.sparse_coo_tensor(
             indices,
-            torch.ones(indices.size(1)),
+            torch.ones(indices.size(1), dtype=torch.bool),
             size=(Ns, Nt),
-            dtype=torch.bool,
             device="cpu",
         )
 

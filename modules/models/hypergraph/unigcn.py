@@ -1,7 +1,6 @@
 import torch
 from topomodelx.nn.hypergraph.unigcn import UniGCN
 
-
 class UniGCNModel(torch.nn.Module):
     r"""A simple UniGCN model that runs over hypergraph data.
     Note that some parameters are defined by the considered dataset.
