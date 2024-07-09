@@ -1,3 +1,5 @@
+from toponetx.classes import CombinatorialComplex
+
 from modules.transforms.liftings.lifting import GraphLifting
 
 
