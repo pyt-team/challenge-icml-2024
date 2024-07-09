@@ -112,9 +112,15 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
             )
 
         if self.theshold_direction == "upper":
-            compare_to_threshold = lambda x: x > th_cutoff
+
+            def compare_to_threshold(x):
+                return x > th_cutoff
+
         elif self.theshold_direction == "lower":
-            compare_to_threshold = lambda x: x < th_cutoff
+
+            def compare_to_threshold(x):
+                return x < th_cutoff
+
         else:
             raise NotImplementedError(
                 f"threshold theshold_direction {self.theshold_direction} not implemented"
