@@ -5,7 +5,10 @@ import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
 from modules.transforms.data_manipulations.manipulations import IdentityTransform
-from modules.transforms.feature_liftings.feature_liftings import ProjectionSum, ElementwiseMean
+from modules.transforms.feature_liftings.feature_liftings import (
+    ElementwiseMean,
+    ProjectionSum,
+)
 
 # Implemented Feature Liftings
 FEATURE_LIFTINGS = {
