@@ -489,6 +489,6 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         ccc_lifted_topology["x_0"] = data.x
         ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(
             incidence_hyperedges
-        ).to_sparse_coo()
+        )
 
         return ccc_lifted_topology

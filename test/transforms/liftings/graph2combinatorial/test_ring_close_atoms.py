@@ -40,9 +40,12 @@ class TestCombinatorialRingCloseAtomsLifting:
             [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.],
             [0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
         ])
+        incidence_hyperedges = lifted_data.incidence_hyperedges.to_dense()
 
+        # Print the incidence hyperedges
+        print(incidence_hyperedges)
         assert (
-            expected_incidence_hyperedges == lifted_data.incidence_hyperedges.to_dense()
+            expected_incidence_hyperedges == incidence_hyperedges
         ).all(), "Something is wrong with incidence_hyperedges."
 
         expected_incidence_2 = torch.tensor([
