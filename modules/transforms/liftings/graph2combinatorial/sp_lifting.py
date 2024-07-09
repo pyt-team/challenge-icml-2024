@@ -69,7 +69,8 @@ class DirectedFlagComplex:
             compressed=False,
         )
 
-        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = torch.device("cuda") if torch.cuda.is_available()  \
+            else torch.device("cpu")
         # else torch.device("cpu") #Server
 
         # self.device = torch.device("mps")  # my macbook
@@ -164,8 +165,8 @@ class DirectedFlagComplex:
         Returns
         -------
         A : torch.sparse_coo_tensor, shape=(Ns, Nt)
-            Adjacency matrix such that :math:`A(i,j) = 1` if :math:`\sigma_i \subseteq
-            \tau_j:`, and :math:`0` otherwise.
+            Adjacency matrix such that :math:`A(i,j) = 1` if
+            :math:`\sigma_i \subseteq \tau_j:`, and :math:`0` otherwise.
         """
 
         Ns, cs = sigmas.size()
@@ -226,8 +227,6 @@ class DirectedFlagComplex:
         else:
             indices = torch.empty([2, 0], dtype=torch.long)
 
-        print(len(indices[0]))
-
         A = torch.sparse_coo_tensor(
             indices,
             torch.ones(indices.size(1), dtype=torch.bool),
@@ -276,9 +275,9 @@ class DirectedFlagComplex:
 
         # Compute the intersection of the two sparse tensors to get the
         # alpha_q contained in both sigmas and taus
-        print("Before matmul")
+
         intersect = torch.sparse.mm(alpha_q_in_sigmas.t(), alpha_q_in_taus)
-        print("After matmul")
+
         values = torch.ones(intersect._indices().size(1))
 
         A = torch.sparse_coo_tensor(
@@ -436,8 +435,10 @@ def create_flag_complex_from_dataset(dataset, complex_dim=2):
 
 
 class SPLifting(Graph2CombinatorialLifting):
+
     def __init__(self, d1, d2, q, i, j, complex_dim=2,
               chunk_size=1024, threshold=1, **kwargs):
+
         self.d1 = d1
         self.d2 = d2
         self.q = q
@@ -448,10 +449,11 @@ class SPLifting(Graph2CombinatorialLifting):
         self.threshold = threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+
         FlG = create_flag_complex_from_dataset(data, complex_dim=2)
 
-        indices = FlG.qij_adj(FlG.complex[self.d1],FlG.complex[self.d2], self.q, self.i, self.j,
-                            self.chunk_size)
+        indices = FlG.qij_adj(FlG.complex[self.d1],FlG.complex[self.d2],
+                              self.q, self.i, self.j,self.chunk_size)
 
         return FlG.find_paths(indices, self.threshold)
 
