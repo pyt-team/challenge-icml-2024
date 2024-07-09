@@ -299,11 +299,14 @@ class MapperLifting(Graph2HypergraphLifting):
         """
         # Filter the data to 1-dimensional subspace
         filtered_data = self._filter(data)
+        
         # Define and fit the cover
         cover = MapperCover(self.resolution, self.gain)
         cover_mask = cover.fit_transform(filtered_data)
+        
         # Find the clusters in the fitted cover
         mapper_clusters = self._cluster(data, cover_mask)
+        
         # Construct the hypergraph dictionary
         num_nodes = data["x"].shape[0]
         num_edges = data["edge_index"].size()[1]
@@ -311,30 +314,29 @@ class MapperLifting(Graph2HypergraphLifting):
         num_clusters = len(mapper_clusters)
         num_hyperedges = num_edges + num_clusters
 
-        incidence_1_edges = torch.zeros(num_nodes, num_edges)
+        incidence_edges = torch.zeros(num_nodes, num_edges)
 
         for i, edge in enumerate(torch.t(data["edge_index"])):
-            incidence_1_edges[edge[0], i] = 1
-            incidence_1_edges[edge[1], i] = 1
+            incidence_edges[edge[0], i] = 1
+            incidence_edges[edge[1], i] = 1
 
-        incidence_1_hyperedges = torch.zeros(num_nodes, num_clusters)
+        incidence_hyperedges = torch.zeros(num_nodes, num_clusters)
 
         
         for i, hyperedge in enumerate(mapper_clusters):
             for j in mapper_clusters[hyperedge][1]:
-                incidence_1_hyperedges[j.int(), i] = 1
+                incidence_hyperedges[j.int(), i] = 1
                 
         # Incidence matrix is (num_nodes, num_edges + num_clusters) size matrix
 
-        
-        incidence_1 = torch.hstack([incidence_1_edges, incidence_1_hyperedges])
+        incidence = torch.hstack([incidence_edges, incidence_hyperedges])
             
-        incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
+        incidence = torch.Tensor(incidence).to_sparse_coo()
 
-        print(incidence_1) 
+        print(incidence) 
         
         return {
-            "incidence_hyperedges": incidence_1,
+            "incidence_hyperedges": incidence,
             "num_hyperedges": num_hyperedges,
             "x_0": data.x,
         }
