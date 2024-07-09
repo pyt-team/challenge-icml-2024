@@ -334,7 +334,7 @@ def load_manual_graph():
     )
 
 
-def load_manual_rings():
+def load_manual_mol():
     """Create a manual graph for testing the ring implementation.
     Actually is the 471 molecule of QM9 dataset."""
     # Define the vertices

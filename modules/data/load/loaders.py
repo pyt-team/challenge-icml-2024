@@ -13,6 +13,7 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
+    load_manual_mol,
     load_simplicial_dataset,
 )
 
@@ -124,6 +125,10 @@ class GraphLoader(AbstractLoader):
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
+            dataset = CustomDataset([data], self.data_dir)
+
+        elif self.parameters.data_name in ["manual_mol"]:
+            data = load_manual_mol()
             dataset = CustomDataset([data], self.data_dir)
 
         else:
