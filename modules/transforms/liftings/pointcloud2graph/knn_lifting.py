@@ -80,8 +80,8 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
         lifted_data = Data(edge_index=edge_index, edge_attr=edge_attr)
 
         return {
-            'num_nodes': lifted_data.edge_index.unique().shape[0],
-            'edge_index': lifted_data.edge_index,
-            'edge_attr': edge_attr,
+            "num_nodes": lifted_data.edge_index.unique().shape[0],
+            "edge_index": lifted_data.edge_index,
+            "edge_attr": edge_attr,
         }
 
