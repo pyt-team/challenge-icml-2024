@@ -83,6 +83,8 @@ class Matroid2CombinatorialLifting(AbstractLifting):
 
     Parameters
     ----------
+    max_rank : int, optional
+        The maximum length of the complex to be lifted. Default is None.
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -93,6 +95,19 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         self.max_rank = max_rank
 
     def matroid2cc(self, matroid: CCMatroid) -> CombinatorialComplex:
+        """Turns a matroid to the more general combinatorial complex
+        This method may be a little bit repetitive.
+
+        Parameters
+        ----------
+        matroid
+            Some `CCMatroid`
+
+        Returns
+        -------
+        CombinatorialComplex
+            The combinatorial complex of `matroid`.
+        """
         cc = CombinatorialComplex()
         rank = matroid.cells.get_rank
         for ind in matroid.cells:
@@ -107,6 +122,8 @@ class Matroid2CombinatorialLifting(AbstractLifting):
     def _get_cell_attributes(
         self, cc: CombinatorialComplex, name: str, rank=None
     ) -> dict:
+        """This is a copycat of get_cell_attributes. Unknown if this is actually needed,
+        it's just that I get errors when calling the vanilla method."""
         attributes = cc.get_cell_attributes(name)
         if rank is None:
             return attributes
@@ -114,6 +131,7 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         return {ranked: attributes[ranked] for ranked in cc.skeleton(rank)}
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+        """The topological lifting to the graphic curve matroid."""
         ground = data["ground"]
         bases = data["bases"]
         M = CCMatroid.from_bases(ground=ground, bases=bases)
@@ -141,7 +159,8 @@ class Graph2CombinatorialLifting(GraphLifting):
 
     Parameters
     ----------
-    *liftings : the topological liftings needed to go from a graph to a combinatorial complex
+    *liftings : optional
+        the topological liftings needed to go from a graph to a combinatorial complex
     **kwargs : optional
         Additional arguments for the class.
     """

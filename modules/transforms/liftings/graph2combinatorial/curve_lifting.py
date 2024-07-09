@@ -13,8 +13,8 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
 
     Parameters
     ----------
-    max_cell_length : int, optional
-        The maximum length of the cycles to be lifted. Default is None.
+    max_rank : int, optional
+        The maximum length of the complex to be lifted. Default is None.
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -24,6 +24,19 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         self.max_rank = max_rank
 
     def _graph_curve_matroid(self, data: torch_geometric.data.Data) -> CCMatroid:
+        """Algorithm proposed by Geiger et. al
+        We compute the graph curve matroid by computing its circuits
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            pytorch geometric data that contains data of a graph.
+
+        Returns
+        -------
+        CCMatroid
+            The associated graphic curve matroid of the graph in `data`.
+        """
         graphic_matroid = self._generate_matroid_from_data(data)
         num_nodes = data.x.shape[0]
         r_d = graphic_matroid.dual().matroid_rank
