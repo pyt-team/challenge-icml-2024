@@ -1,6 +1,6 @@
 data_domain: graph
 data_type: toy_dataset
-data_name: manual
+data_name: manual_prot
 data_dir: datasets/${data_domain}/${data_type}
 
 # Dataset parameters
