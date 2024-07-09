@@ -1,7 +1,7 @@
+import numpy as np
 import torch
 from torch_geometric.data import Data
 from torch_geometric.nn import knn_graph
-import numpy as np
 
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
 
