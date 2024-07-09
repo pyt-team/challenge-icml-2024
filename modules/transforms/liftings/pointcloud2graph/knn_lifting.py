@@ -1,6 +1,7 @@
 import torch
 from torch_geometric.data import Data
 from torch_geometric.nn import knn_graph
+import numpy as np
 
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
 
@@ -15,8 +16,8 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
     def calculate_vector_angle(self, v1, v2):
         if v1 is None or v2 is None:
             return None
-        v1 = torch.tensor(v1.clone(), dtype=torch.float)
-        v2 = torch.tensor(v2.clone(), dtype=torch.float)
+        v1 = torch.tensor(np.copy(v1), dtype=torch.float)
+        v2 = torch.tensor(np.copy(v2), dtype=torch.float)
         norm_v1 = torch.linalg.norm(v1)
         norm_v2 = torch.linalg.norm(v2)
         if norm_v1 == 0 or norm_v2 == 0:
