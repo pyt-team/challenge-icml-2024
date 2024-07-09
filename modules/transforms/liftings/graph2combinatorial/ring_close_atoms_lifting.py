@@ -470,7 +470,8 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         hyperedges = edges + list_close_atoms
         # check if there are repeated hyperedges
         # if there are, remove them
-        hyperedges = sorted(list(set([tuple(sorted(edge)) for edge in hyperedges])))
+        hyperedges = list(set([tuple(sorted(edge)) for edge in hyperedges]))
+        hyperedges = sorted(hyperedges)
         # sort the hyperedges
         num_hyperedges = len(hyperedges)
 
