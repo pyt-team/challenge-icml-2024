@@ -16,6 +16,7 @@ from modules.data.utils.utils import (
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_simplicial_dataset,
+    load_manual_rings,
 )
 
 RDLogger.DisableLog("rdApp.*")
@@ -126,6 +127,10 @@ class GraphLoader(AbstractLoader):
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
+            dataset = CustomDataset([data], self.data_dir)
+
+        elif self.parameters.data_name in ["manual_rings"]:
+            data = load_manual_rings()
             dataset = CustomDataset([data], self.data_dir)
 
         else:
