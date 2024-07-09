@@ -7,7 +7,7 @@ from modules.transforms.data_manipulations.manipulations import (
     NodeFeaturesToFloat,
     OneHotDegreeFeatures,
 )
-from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
+from modules.transforms.feature_liftings.feature_liftings import ProjectionSum, ElementwiseMean
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
@@ -16,15 +16,21 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
 
+from modules.transforms.liftings.graph2simplicial.neighborhood_complex_lifting import (
+    NeighborhoodComplexLifting
+)
+
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
+    "NeighborhoodComplexLifting": NeighborhoodComplexLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
+    "ElementwiseMean": ElementwiseMean,
     # Data Manipulations
     "Identity": IdentityTransform,
     "NodeDegrees": NodeDegrees,
