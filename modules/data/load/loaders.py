@@ -15,8 +15,8 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_simplicial_dataset,
     load_manual_rings,
+    load_simplicial_dataset,
 )
 
 RDLogger.DisableLog("rdApp.*")
