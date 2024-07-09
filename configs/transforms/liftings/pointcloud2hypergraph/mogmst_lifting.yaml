@@ -1,4 +1,5 @@
 transform_type: 'lifting'
 transform_name: "MoGMSTLifting"
-min_components: 2
-max_components: 10
+min_components: null
+max_components: null
+random_state: null
