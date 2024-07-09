@@ -1,7 +1,8 @@
 import torch
 import torch_geometric
 
-from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
+from modules.transforms.liftings.graph2hypergraph.base import \
+    Graph2HypergraphLifting
 
 
 class HypergraphKNNLifting(Graph2HypergraphLifting):

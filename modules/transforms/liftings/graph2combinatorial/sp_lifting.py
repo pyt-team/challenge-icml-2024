@@ -1,11 +1,10 @@
 import networkx as nx
-import torch_geometric
-# from base import Graph2CombinatorialLifting
-from modules.transforms.liftings.lifting import GraphLifting
-
-import networkx as nx
 import pyflagsercount as pfc
 import torch
+import torch_geometric
+
+# from base import Graph2CombinatorialLifting
+from modules.transforms.liftings.lifting import GraphLifting
 
 
 class Graph2CombinatorialLifting(GraphLifting):
@@ -69,8 +68,9 @@ class DirectedFlagComplex:
             compressed=False,
         )
 
-        self.device = torch.device("cuda") if torch.cuda.is_available()  \
-            else torch.device("cpu")
+        self.device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
         # else torch.device("cpu") #Server
 
         # self.device = torch.device("mps")  # my macbook
@@ -117,7 +117,8 @@ class DirectedFlagComplex:
         )  # Allocated on the same device as `simplices`
         # Create a mask that excludes the i-th vertex
         mask = indices != min(i, n_vertices - 1)
-        # Use advanced indexing to select vertices while preserving the batch structure
+        # Use advanced indexing to select vertices while preserving the
+        # batch structure
         d_i = simplices[:, mask]
         return d_i
 
@@ -145,9 +146,8 @@ class DirectedFlagComplex:
 
         return simplices[:, combinations]
 
-
-    def _multiple_contained_chunked(self, sigmas: torch.Tensor,
-                                     taus: torch.Tensor, chunk_size: int = 1024
+    def _multiple_contained_chunked(
+        self, sigmas: torch.Tensor, taus: torch.Tensor, chunk_size: int = 1024
     ) -> torch.Tensor:
         r"""Compute the adjacency matrix induced by the relation
         :math:`\sigma_i \subseteq \tau_j`. This function is chunked to avoid
@@ -191,23 +191,33 @@ class DirectedFlagComplex:
         # Process in chunks for memory efficiency purposes.
         for i in range(0, Ns, chunk_size):
             end_i = min(i + chunk_size, Ns)
-            sigmas_chunk = sigmas[i:end_i]  # Shape: [min(chunk_size, remaining Ns), cs]
+            sigmas_chunk = sigmas[i:end_i]  # Shape: [min(chunk_size,
+            # remaining Ns), cs]
 
             temp_true_indices = []
 
             # Compute diffs and matches for this chunk
             for j in range(0, total_faces, chunk_size):
                 end_j = min(j + chunk_size, total_faces)
-                faces_chunk = faces.view(-1, cs)[j:end_j]  # Shape: [min(chunk_size, remaining faces), cs]
+                faces_chunk = faces.view(-1, cs)[
+                    j:end_j
+                ]  # Shape: [min(chunk_size, remaining faces), cs]
 
                 # Broadcasting happens here with much smaller tensors
-                diffs = sigmas_chunk.unsqueeze(1) - faces_chunk.unsqueeze(0)  # shape: [min(chunk_size, remaining Ns), min(chunk_size, remaining faces), cs]
+                diffs = sigmas_chunk.unsqueeze(1) - faces_chunk.unsqueeze(
+                    0
+                )  # shape: [min(chunk_size, remaining Ns), min(chunk_size,
+                # remaining faces), cs]
 
-                matches = diffs.abs().sum(dim=2) == 0  # shape: [min(chunk_size, remaining Ns), min(chunk_size, remaining faces)]
+                matches = (
+                    diffs.abs().sum(dim=2) == 0
+                )  # shape: [min(chunk_size, remaining Ns),  min(chunk_size,
+                # remaining faces)]
 
                 # (end_i - i) is the number of sigmas in the chunk.
                 # (end_j - j) // Nf is the number of taus in the chunk
-                # Nf is the number of faces in each tau of dimension equal to the dimension of the simplices in sigma.
+                # Nf is the number of faces in each tau of dimension equal
+                # to the dimension of the simplices in sigma.
                 matches_reshaped = matches.view(end_i - i, (end_j - j) // Nf, Nf)
 
                 matches_aggregated = matches_reshaped.any(dim=2)
@@ -215,8 +225,10 @@ class DirectedFlagComplex:
                 # Update temporary result for this chunk of sigmas
                 if matches_aggregated.nonzero(as_tuple=False).size(0) > 0:
                     temp_indices = matches_aggregated.nonzero(as_tuple=False).T
-                    temp_indices[0] += i  # Adjust sigma indices for chunk offset
-                    temp_indices[1] += j // Nf  # Adjust tau indices for chunk offset
+                    temp_indices[0] += i  # Adjust sigma indices for chunk
+                    # offset
+                    temp_indices[1] += j // Nf  # Adjust tau indices for
+                    # chunk offset
                     temp_true_indices.append(temp_indices)
 
             if temp_true_indices:
@@ -237,12 +249,11 @@ class DirectedFlagComplex:
         return A
 
     def _alpha_q_contained_sparse(
-        self, sigmas: torch.Tensor, taus: torch.Tensor, q: int, chunk_size:
-            int = 1024
+        self, sigmas: torch.Tensor, taus: torch.Tensor, q: int, chunk_size: int = 1024
     ) -> torch.Tensor:
         r"""Compute the adjacency matrix induced by the relation
-        :math:`\sigma_i \sim \tau_j \Leftrightarrow \exists \alpha_q 
-        \subseteq \sigma_i \cap \tau_j`. This function is chunked to avoid 
+        :math:`\sigma_i \sim \tau_j \Leftrightarrow \exists \alpha_q
+        \subseteq \sigma_i \cap \tau_j`. This function is chunked to avoid
         memory issues.
 
         Parameters
@@ -305,7 +316,8 @@ class DirectedFlagComplex:
         Parameters
         ----------
         sigmas : torch.Tensor, shape=(Ns, cs)
-           The first batch of simplices corresponds to a skeleton of the complex.
+           The first batch of simplices corresponds to a skeleton of the
+           complex.
         taus : torch.Tensor, shape=(Nt, ct)
             The second batch of simplices corresponds to a skeleton of the
             complex.
@@ -325,7 +337,8 @@ class DirectedFlagComplex:
         Returns
         -------
         indices : torch.Tensor, shape=(2, N)
-            The indices of the qij-connected simplices of the pair of skeletons.
+            The indices of the qij-connected simplices of the pair of
+            skeletons.
         """
 
         if q > self.complex_dim:
@@ -350,11 +363,9 @@ class DirectedFlagComplex:
 
         return indices
 
-
-    def find_paths(self, 
-                           indices: torch.tensor, 
-                           threshold: int):
-        r"""Find the paths in the adjacency matrix associated with the :math:`(q,
+    def find_paths(self, indices: torch.tensor, threshold: int):
+        r"""Find the paths in the adjacency matrix associated with the
+        :math:`(q,
         d_i, d_j)`-connectivity relation with length longer than a threshold.
 
         Parameters
@@ -369,25 +380,26 @@ class DirectedFlagComplex:
         paths : List[List]
             List of selected paths.
         """
+
         def dfs(node, adj_list, all_paths, path):
-                
-            if node not in adj_list: # end of recursion
+
+            if node not in adj_list:  # end of recursion
                 if len(path) > threshold:
                     all_paths.append(path.copy())
                 return
-            
+
             only_loops = True
             for new_node in adj_list[node]:
-                if new_node not in path: # avoid cycles
+                if new_node not in path:  # avoid cycles
                     only_loops = False
                     path.append(new_node)
                     dfs(new_node, adj_list, all_paths, path)
                     path.pop()
 
-            if only_loops: # then we have another longest path
+            if only_loops:  # then we have another longest path
                 if len(path) > threshold:
                     all_paths.append(path.copy())
-                
+
             return
 
         def edge_index_to_adj_list(edge_index):
@@ -417,7 +429,8 @@ class DirectedFlagComplex:
         all_paths = []
 
         for src in adj_list:
-            if src not in inc_list: # otherwise src is contained in a longer path
+            if src not in inc_list:  # otherwise src is contained in a
+                # longer path
                 path = [src]
                 dfs(src, adj_list, all_paths, path)
 
@@ -433,11 +446,10 @@ def create_flag_complex_from_dataset(dataset, complex_dim=2):
     return flag_complex
 
 
-
 class SPLifting(Graph2CombinatorialLifting):
-
-    def __init__(self, d1, d2, q, i, j, complex_dim=2,
-              chunk_size=1024, threshold=1, **kwargs):
+    def __init__(
+        self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024, threshold=1, **kwargs
+    ):
 
         self.d1 = d1
         self.d2 = d2
@@ -452,11 +464,13 @@ class SPLifting(Graph2CombinatorialLifting):
 
         FlG = create_flag_complex_from_dataset(data, complex_dim=2)
 
-        indices = FlG.qij_adj(FlG.complex[self.d1],FlG.complex[self.d2],
-                              self.q, self.i, self.j,self.chunk_size)
+        indices = FlG.qij_adj(
+            FlG.complex[self.d1],
+            FlG.complex[self.d2],
+            self.q,
+            self.i,
+            self.j,
+            self.chunk_size,
+        )
 
         return FlG.find_paths(indices, self.threshold)
-
-
-    
-

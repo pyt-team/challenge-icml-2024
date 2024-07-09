@@ -3,9 +3,8 @@
 import torch
 
 from modules.data.utils.utils import load_manual_graph
-from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
-    HypergraphKNNLifting,
-)
+from modules.transforms.liftings.graph2hypergraph.knn_lifting import \
+    HypergraphKNNLifting
 
 
 class TestHypergraphKHopLifting:
