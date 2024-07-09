@@ -1,5 +1,3 @@
-import logging
-
 import networkx as nx
 import torch
 import torch_geometric
@@ -11,8 +9,6 @@ from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
 from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
-
-logging.basicConfig(level=print, format="%(levelname)s: %(message)s")
 
 
 class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
