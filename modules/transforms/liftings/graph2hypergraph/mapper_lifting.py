@@ -316,8 +316,9 @@ class MapperLifting(Graph2HypergraphLifting):
         mapper_clusters = self._cluster(data, cover_mask)
 
         # Construct the hypergraph dictionary
-        num_nodes = data["x"].shape[0]
+        num_nodes = data["x"].shape[0]            
         num_edges = data["edge_index"].size()[1]
+        
 
         num_clusters = len(mapper_clusters)
         num_hyperedges = num_edges + num_clusters
