@@ -80,7 +80,6 @@ class TestDirectedSimplicialCliqueLifting:
         )
 
     def setup_method(self):
-
         self.setup_triangle_graph()
         self.triangle_lifting = DirectedSimplicialCliqueLifting(complex_dim=2)
 

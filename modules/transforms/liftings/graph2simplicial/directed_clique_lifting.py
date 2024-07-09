@@ -5,7 +5,6 @@ import torch_geometric
 from torch_geometric.utils.undirected import is_undirected
 from toponetx.classes import SimplicialComplex
 
-
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
 
@@ -96,7 +95,6 @@ class DirectedSimplicialCliqueLifting(Graph2SimplicialLifting):
             # check if the clique has a single source and sink
             # (i.e. is a DAG) and add as a simplex if so
             if nx.is_directed_acyclic_graph(gs):
-
                 for i in range(2, self.complex_dim + 1):
                     for c in combinations(gs, i + 1):
                         simplices[i - 2].add(tuple(c))
