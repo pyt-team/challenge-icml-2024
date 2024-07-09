@@ -2,8 +2,8 @@ from itertools import combinations
 
 import networkx as nx
 import torch_geometric
-from torch_geometric.utils.undirected import is_undirected
 from toponetx.classes import SimplicialComplex
+from torch_geometric.utils.undirected import is_undirected
 
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 

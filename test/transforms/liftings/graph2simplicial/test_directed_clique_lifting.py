@@ -1,8 +1,8 @@
 """Test the message passing module."""
 
+import networkx as nx
 import torch
 import torch_geometric
-import networkx as nx
 
 from modules.transforms.liftings.graph2simplicial.directed_clique_lifting import (
     DirectedSimplicialCliqueLifting,
