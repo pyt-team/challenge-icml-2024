@@ -26,6 +26,24 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
 
 
     def lift_topology(self, data: Data, k=10):
+        """Lifts the topology of the graph.
+        Takes the point cloud data and lifts it to a graph domain by considering k-nearest neighbors
+        and sequential edges.
+        Moreover, as edge attributes, the distance and angle between the nodes are considered.
+
+        Parameters
+        ----------
+        data : Data
+            The input data containing the point cloud.
+        k : int
+            The number of nearest neighbors to consider.
+
+        Returns
+        -------
+        Data
+            The lifted data containing the graph.
+        """
+
         coordinates = data["pos"]
         cb_vectors = data["node_attr"]
 
@@ -57,11 +75,9 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
                 existing_edges.add((j, i))
 
         knn_edge_index = torch.tensor([list(edge) for edge in existing_edges if edge not in seq_edge_index.t().tolist()], dtype=torch.long).t().contiguous()
-        # knn_edge_attr = torch.tensor(knn_edge_attr, dtype=torch.float)
 
         # Combine KNN and sequential edges
         edge_index = torch.cat([seq_edge_index, knn_edge_index], dim=1)
-        # edge_attr = torch.cat([seq_edge_attr, knn_edge_attr], dim=0)
         edge_attr = seq_edge_attr + knn_edge_attr
 
         # x = torch.stack(data["x"])
