@@ -18,6 +18,7 @@ from modules.data.utils.utils import (
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_simplicial_dataset,
+    load_manual_prot,
 )
 
 
@@ -481,6 +482,10 @@ class GraphLoader(AbstractLoader):
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
+            dataset = CustomDataset([data], self.data_dir)
+
+        elif self.parameters.data_name in ["manual_prot"]:
+            data = load_manual_prot()
             dataset = CustomDataset([data], self.data_dir)
 
         else:
