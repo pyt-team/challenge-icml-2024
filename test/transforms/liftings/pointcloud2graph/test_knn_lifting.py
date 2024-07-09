@@ -48,4 +48,8 @@ class TestPointCloudKNNLifting:
           2,  4,  1, 15, 14, 11, 13, 10,  7, 10,  7, 15,  7,  8,  4,  6,  3,  0,
          13, 15, 12,  9,  6,  0, 15, 12,  9,  8]])
 
-        assert expected_edge_index == lifted_data.edge_index.to_dense(), "Something is wrong with the edge index."
+
+        assert (
+            expected_edge_index == lifted_data.edge_index.to_dense()
+        ).all(), "Something is wrong with edge_index."
+
