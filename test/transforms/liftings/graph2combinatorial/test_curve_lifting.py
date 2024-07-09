@@ -22,8 +22,8 @@ from modules.transforms.liftings.graph2combinatorial.curve_lifting import (
 
 class TestGraphCurveLifting:
     """Test the CurveLifting class.
+
     It consists of 2 components: GraphCurveMatroidLifting & Matroid2CombinatorialLifting
-    In order to prove correctness, we will show that the graph curve matroid of the K_4 graph is isomorphic to the U_2^4 matroid.
     """
 
     def setup_method(self):
@@ -72,6 +72,7 @@ class TestGraphCurveLifting:
     def test_k4(self):
         """Test the graph curve matroid of the K_4 graph.
         In Geiger et al., it turns out the graph curve matroid on $K_4$ is actually isomorphic to the uniform matroid on 4 elements into 2 subsets.
+        In order to prove correctness, we will show that the graph curve matroid of the K_4 graph is isomorphic to the U_2^4 matroid.
         """
         k4 = load_k4_graph()
         k4_curve = self.graph_curve_lifting.lift_topology(k4)
@@ -107,7 +108,9 @@ class TestGraphCurveLifting:
 
     # Test 3: Test the matroid to combinatorial complex
     def test_lift_matroid2cc_topology(self):
-        """We inspect the combinatorial complex of the uniform matroid."""
+        """We inspect the combinatorial complex of the uniform matroid.
+        It's easy to count the level set of the uniform matroid, so we do some tests to do that.
+        """
         n = 6
         k = 4
 
@@ -147,110 +150,15 @@ class TestGraphCurveLifting:
         lifted_data = self.matroid_lifting.forward(data)
         expected_incidence_1 = torch.tensor(
             [
-                [
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                ],
-                [
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                ],
-                [
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+                [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
             ]
         )
+
         assert (
             expected_incidence_1 == lifted_data["incidence_1"].to_dense()
         ).all(), "Something is wrong with incidence_1."
@@ -274,110 +182,15 @@ class TestGraphCurveLifting:
         lifted_data = matroid_lifting_k1.forward(data)
         expected_incidence_1 = torch.tensor(
             [
-                [
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                ],
-                [
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                ],
-                [
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
-                [
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ],
+                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+                [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
             ]
         )
+
 
         assert (
             expected_incidence_1 == lifted_data["incidence_1"].to_dense()
