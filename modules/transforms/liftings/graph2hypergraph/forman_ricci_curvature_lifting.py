@@ -32,7 +32,7 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
         super().__init__(**kwargs)
         self.network_type = network_type
         self.threshold_type = threshold_type
-        self.theshold_direction = threshold_direction
+        self.threshold_direction = threshold_direction
         self.threshold = threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -111,19 +111,19 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
                 f"threshold type {self.threshold_type} not implemented"
             )
 
-        if self.theshold_direction == "upper":
+        if self.threshold_direction == "upper":
 
             def compare_to_threshold(x):
                 return x > th_cutoff
 
-        elif self.theshold_direction == "lower":
+        elif self.threshold_direction == "lower":
 
             def compare_to_threshold(x):
                 return x < th_cutoff
 
         else:
             raise NotImplementedError(
-                f"threshold theshold_direction {self.theshold_direction} not implemented"
+                f"threshold threshold_direction {self.threshold_direction} not implemented"
             )
 
         edges_to_remove = []
