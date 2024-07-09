@@ -1,0 +1,8 @@
+transform_type: 'lifting'
+transform_name: "PointCloudKNNLifting"
+max_cell_length: null
+preserve_edge_attr: False
+feature_lifting: ProjectionSum
+
+k_value: 10
+loop: False
