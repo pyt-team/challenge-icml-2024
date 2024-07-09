@@ -467,7 +467,6 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         edges = [[edge[0], edge[1]] for edge in G.edges]
 
         # Hyperedges can be edges or list_close_atoms
-        # If close atoms are already in the edges, we do not need to add them
         hyperedges = edges + list_close_atoms
         # check if there are repeated hyperedges
         # if there are, remove them
@@ -475,10 +474,10 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         num_hyperedges = len(hyperedges)
 
         # create incidence matrix for hyperedges
-        incidence_1 = torch.zeros(data.num_nodes, num_hyperedges)
+        incidence_hyperedges = torch.zeros(data.num_nodes, num_hyperedges)
         for i, edge in enumerate(hyperedges):
             for atom in edge:
-                incidence_1[atom, i] = 1
+                incidence_hyperedges[atom, i] = 1
 
         # add hyperedge attributes
         if close_atoms:
@@ -489,7 +488,7 @@ class CombinatorialRingCloseAtomsLifting(Graph2CombinatorialLifting):
         ccc_lifted_topology["num_hyperedges"] = num_hyperedges
         ccc_lifted_topology["x_0"] = data.x
         ccc_lifted_topology["incidence_hyperedges"] = torch.Tensor(
-            incidence_1
+            incidence_hyperedges
         ).to_sparse_coo()
 
         return ccc_lifted_topology
