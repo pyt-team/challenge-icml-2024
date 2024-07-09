@@ -1,4 +1,4 @@
-data_domain: graph
+data_domain: pointcloud
 data_type: UniProt
 data_name: UniProt
 data_dir: datasets/${data_domain}/${data_type}
@@ -8,9 +8,7 @@ data_dir: datasets/${data_domain}/${data_type}
 query: "length:[95 TO 155]" # number of residues per protein
 format: "tsv"
 fields: "accession,length"
-size: 100 # number of proteins to load
-
-threshold: 6.0 # distance between proteins to create the initial graph
+size: 20 # number of proteins to load
 
 # Dataset parameters
 num_features: 20
