@@ -41,14 +41,12 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
 
         Returns
         -------
-        Data
-            The lifted data containing the graph.
+        dict
+            The lifted topology.
         """
 
         coordinates = data["pos"]
         cb_vectors = data["node_attr"]
-
-        # coordinates = torch.tensor(coordinates, dtype=torch.float)
 
         # Sequential edges
         seq_edge_index = []
@@ -60,7 +58,6 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
             seq_edge_attr.append([dist, angle])
 
         seq_edge_index = torch.tensor(seq_edge_index, dtype=torch.long).t().contiguous()
-        # seq_edge_attr = torch.tensor(seq_edge_attr, dtype=torch.float)
 
         # KNN edges
         knn_edge_index = knn_graph(coordinates, k=k)
@@ -80,9 +77,11 @@ class PointCloudKNNLifting(PointCloud2GraphLifting):
         # Combine KNN and sequential edges
         edge_index = torch.cat([seq_edge_index, knn_edge_index], dim=1)
         edge_attr = seq_edge_attr + knn_edge_attr
+        lifted_data = Data(edge_index=edge_index, edge_attr=edge_attr)
 
-        # x = torch.stack(data["x"])
-        pos = coordinates
-
-        return Data(num_nodes=len(pos),edge_index=edge_index, edge_attr=edge_attr)
+        return {
+            'num_nodes': lifted_data.edge_index.unique().shape[0],
+            'edge_index': lifted_data.edge_index,
+            'edge_attr': edge_attr,
+        }
 
