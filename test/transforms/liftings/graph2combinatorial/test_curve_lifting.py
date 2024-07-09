@@ -11,13 +11,13 @@ from modules.data.utils.utils import (
     load_k4_graph,
     load_manual_graph,
 )
+from modules.matroid.matroid import CCMatroid, powerset
 from modules.transforms.liftings.graph2combinatorial.base import (
     Matroid2CombinatorialLifting,
 )
 from modules.transforms.liftings.graph2combinatorial.curve_lifting import (
     GraphCurveMatroidLifting,
 )
-from modules.utils.matroid import Matroid, powerset
 
 
 class TestGraphCurveLifting:
@@ -33,6 +33,41 @@ class TestGraphCurveLifting:
         self.graph_curve_lifting = GraphCurveMatroidLifting()
         self.matroid_lifting = Matroid2CombinatorialLifting()
 
+    # Matroid Construction Test 1:
+    def test_uniform_matroid_construction(self):
+        """In this test, we test different ways of constructing matroids."""
+        n = 11
+        k = 4
+        ground = frozenset(range(n))
+        bases = frozenset([frozenset(s) for s in powerset(ground) if len(s) == k])
+
+        bases_U_kn = CCMatroid.from_bases(ground=ground, bases=bases)
+        for base in bases_U_kn.skeleton(k - 1):
+            assert (
+                len(base) == k
+            ), f"Matroid construction of U^{n}_{k} gone wrong for {base}"
+
+        circuits = frozenset(
+            [frozenset(s) for s in powerset(ground) if len(s) == k + 1]
+        )
+        circuits_U_kn = CCMatroid.from_circuits(ground=ground, circuits=circuits)
+        assert (
+            circuits_U_kn.bases == bases_U_kn.bases
+        ), "Uniform matroid constructed from bases and circuits not equal"
+
+        def rank(X):
+            nonlocal k
+            return min(len(X), k)
+
+        rank_U_kn = CCMatroid.from_rank(ground, rank)
+        assert (
+            circuits_U_kn.bases == rank_U_kn.bases
+        ), "Uniform matroid constructed from circuits and rank not equal"
+
+        assert (
+            rank_U_kn.ground == ground
+        ), "Uniform matroid ground set is constructed incorrectly."
+
     # Test 1: check for k4 matroid correctness
     def test_k4(self):
         """Test the graph curve matroid of the K_4 graph.
@@ -41,11 +76,14 @@ class TestGraphCurveLifting:
         k4 = load_k4_graph()
         k4_curve = self.graph_curve_lifting.lift_topology(k4)
 
-        uniform_ground = k4_curve["ground"]
+        k4_curve_matroid = CCMatroid.from_bases(
+            ground=k4_curve["ground"], bases=k4_curve["bases"]
+        )
+
+        uniform_ground = k4_curve_matroid.ground
         uniform_bases = [s for s in powerset(uniform_ground) if len(s) == 2]
 
-        u_24 = Matroid(ground=uniform_ground, bases=uniform_bases)
-        k4_curve_matroid = Matroid(ground=k4_curve["ground"], bases=k4_curve["bases"])
+        u_24 = CCMatroid.from_bases(ground=uniform_ground, bases=uniform_bases)
         assert (
             u_24.bases == k4_curve_matroid.bases
         ), "Matroid creation is wrong, M_g(k4) is not isomorphic to U_2^4"
@@ -57,12 +95,14 @@ class TestGraphCurveLifting:
         """
         double_house = load_double_house_graph()
         curve = self.graph_curve_lifting.lift_topology(double_house)
-        double_house_matroid = Matroid(ground=curve["ground"], bases=curve["bases"])
+        double_house_matroid = CCMatroid.from_bases(
+            ground=curve["ground"], bases=curve["bases"]
+        )
 
         A = frozenset({0, 1, 2})
 
         assert (
-            A in double_house_matroid.circuits
+            A not in double_house_matroid
         ), f"Graph Curve Matroid creation is wrong, {A} is not in the circuits of the double house graph"
 
     # Test 3: Test the matroid to combinatorial complex
@@ -74,7 +114,7 @@ class TestGraphCurveLifting:
         uniform_ground = [i for i in range(n)]
         uniform_bases = [s for s in powerset(uniform_ground) if len(s) == k]
 
-        u_kn = Matroid(ground=uniform_ground, bases=uniform_bases)
+        u_kn = CCMatroid.from_bases(ground=uniform_ground, bases=uniform_bases)
 
         cc = self.matroid_lifting.matroid2cc(u_kn)
         assert len(cc.skeleton(1 - 1)) == comb(
@@ -107,15 +147,110 @@ class TestGraphCurveLifting:
         lifted_data = self.matroid_lifting.forward(data)
         expected_incidence_1 = torch.tensor(
             [
-                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0],
-                [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-                [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+                [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                ],
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                ],
+                [
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
             ]
         )
-
         assert (
             expected_incidence_1 == lifted_data["incidence_1"].to_dense()
         ).all(), "Something is wrong with incidence_1."
@@ -126,7 +261,7 @@ class TestGraphCurveLifting:
         n = 6
         k = 4
 
-        matroid_lifting_k1 = Matroid2CombinatorialLifting(max_rank=k-2)
+        matroid_lifting_k1 = Matroid2CombinatorialLifting(max_rank=k - 2)
         assert k - 2 > 0
         uniform_ground = [i for i in range(n)]
         uniform_bases = [s for s in powerset(uniform_ground) if len(s) == k]
@@ -139,12 +274,108 @@ class TestGraphCurveLifting:
         lifted_data = matroid_lifting_k1.forward(data)
         expected_incidence_1 = torch.tensor(
             [
-                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0],
-                [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-                [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+                [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                ],
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                ],
+                [
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],
             ]
         )
 

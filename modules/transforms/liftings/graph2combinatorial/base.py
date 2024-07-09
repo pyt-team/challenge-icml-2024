@@ -5,8 +5,8 @@ import torch_geometric
 from toponetx.classes import CombinatorialComplex
 
 from modules.data.utils.utils import get_ccc_connectivity
+from modules.matroid.matroid import CCGraphicMatroid, CCMatroid
 from modules.transforms.liftings.lifting import AbstractLifting, GraphLifting
-from modules.utils.matroid import GraphicMatroid, Matroid
 
 
 class Graph2MatroidLifting(GraphLifting):
@@ -25,7 +25,7 @@ class Graph2MatroidLifting(GraphLifting):
 
     def _generate_matroid_from_data(
         self, data: torch_geometric.data.Data
-    ) -> GraphicMatroid:
+    ) -> CCGraphicMatroid:
         r"""Generates a graphic matroid from the input data object.
 
         Parameters
@@ -39,11 +39,11 @@ class Graph2MatroidLifting(GraphLifting):
             The generated graphic matroid M(G).
         """
         edges = data.edge_index.t().tolist()
-        return GraphicMatroid(edgelist=edges)
+        return CCGraphicMatroid(edgelist=edges)
 
     def get_edges_incident(
         self, vertex: int | Iterable[int], data: torch_geometric.data.Data
-    ):
+    ) -> torch.Tensor:
         r"""Computes the edges incident by looking at data.edge_index
 
         Parameters
@@ -78,6 +78,9 @@ class Graph2MatroidLifting(GraphLifting):
 class Matroid2CombinatorialLifting(AbstractLifting):
     r"""Abstract class for lifting matroids to combinatorial complexes.
 
+    This handles any pecularities for converting a matroid to the more general CC.
+    This class is then redundant, but it is included for completeness.
+
     Parameters
     ----------
     **kwargs : optional
@@ -89,21 +92,16 @@ class Matroid2CombinatorialLifting(AbstractLifting):
         self.type = "matroid2combinatorial"
         self.max_rank = max_rank
 
-    def matroid2cc(self, matroid: Matroid) -> CombinatorialComplex:
-        # rnk = matroid.rank
-        # def cc_rank(s):
-        #    return rnk(s) - 1
-
+    def matroid2cc(self, matroid: CCMatroid) -> CombinatorialComplex:
         cc = CombinatorialComplex()
-        for ind in matroid.independent_sets:
-            if len(ind) == 0:  # empty set isn't part of a CC
+        rank = matroid.cells.get_rank
+        for ind in matroid.cells:
+            if len(ind) == 0:
                 continue
-            # ind_rank = cc_rank(ind)
-            # the below is the same as the commented above, since ind is independent.
-            ind_rank = len(ind)
+            ind_rank = rank(ind)
             # this condition forms a truncated matroid.
-            if not self.max_rank or ind_rank <= self.max_rank + 1:
-                cc.add_cell([i for i in ind], ind_rank - 1)
+            if not self.max_rank or ind_rank <= self.max_rank:
+                cc.add_cell([i for i in ind], ind_rank)
         return cc
 
     def _get_cell_attributes(
@@ -118,8 +116,8 @@ class Matroid2CombinatorialLifting(AbstractLifting):
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         ground = data["ground"]
         bases = data["bases"]
-        M = Matroid(ground=ground, bases=bases)
-        matroid_rank = M.rank(ground) - 1
+        M = CCMatroid.from_bases(ground=ground, bases=bases)
+        matroid_rank = M.max_rank
         if self.max_rank:
             matroid_rank = min(matroid_rank, self.max_rank)
         cc = self.matroid2cc(M)
