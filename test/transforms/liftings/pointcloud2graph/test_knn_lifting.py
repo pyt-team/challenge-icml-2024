@@ -1,6 +1,6 @@
 import torch
 
-from modules.data.utils.utils import load_manual_prot
+from modules.data.utils.utils import load_manual_prot_pointcloud
 from modules.transforms.liftings.pointcloud2graph.knn_lifting import (
     PointCloudKNNLifting,
 )
@@ -11,7 +11,7 @@ class TestPointCloudKNNLifting:
 
     def setup_method(self):
         # Load the graph
-        self.data = load_manual_prot()
+        self.data = load_manual_prot_pointcloud()
 
         # Initialise the CellCyclesLifting class
         self.lifting = PointCloudKNNLifting()
