@@ -5,16 +5,15 @@ data_dir: datasets/${data_domain}/${data_type}
 #data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
 
 # Some parameters to do the query
-query: "length:[95 TO 155]"
+query: "length:[95 TO 155]" # number of residues per protein
 format: "tsv"
 fields: "accession,length"
-size: 500
+size: 100 # number of proteins to load
 
-limit: 100 # minim proteins to load
-threshold: 6.0 # distance between proteins
+threshold: 6.0 # distance between proteins to create the initial graph
 
 # Dataset parameters
-num_features: 11
+num_features: 20
 num_classes: 1
 task: regression
 loss_type: mse

@@ -43,7 +43,6 @@ dependencies=[
     "rootutils",
     "pytest",
     "Bio",
-    "random",
     "toponetx @ git+https://github.com/pyt-team/TopoNetX.git",
     "topomodelx @ git+https://github.com/pyt-team/TopoModelX.git",
     "topoembedx @ git+https://github.com/pyt-team/TopoEmbedX.git",

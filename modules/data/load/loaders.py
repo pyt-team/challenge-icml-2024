@@ -1,6 +1,7 @@
 import os
 import random
 
+import networkx as nx
 import numpy as np
 import requests
 import rootutils
@@ -8,7 +9,6 @@ import torch
 import torch_geometric
 from Bio import PDB
 from omegaconf import DictConfig
-import networkx as nx
 
 from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
@@ -40,6 +40,7 @@ class GraphLoader(AbstractLoader):
     #######################################################################
 
     def fetch_uniprot_ids(self) -> list[dict]:
+        r"""Fetch UniProt IDs by its API under the parameters specified in the configuration file."""
         query_url = "https://rest.uniprot.org/uniprotkb/search"
         params = {
             "query": self.parameters.query,
@@ -56,9 +57,9 @@ class GraphLoader(AbstractLoader):
         data = response.text.strip().split("\n")[1:]
         proteins = [{"uniprot_id": row.split("\t")[0], "sequence_length": int(row.split("\t")[1])} for row in data]
 
-        # Ensure we have at least 100 proteins to sample from
-        if len(proteins) >= self.parameters.limit:
-            sampled_proteins = random.sample(proteins, self.parameters.limit)
+        # Ensure we have at least the required proteins to sample from
+        if len(proteins) >= self.parameters.size:
+            sampled_proteins = random.sample(proteins, self.parameters.size)
         else:
             print(f"Only found {len(proteins)} proteins within the specified length range. Returning all available proteins.")
             sampled_proteins = proteins
@@ -72,9 +73,46 @@ class GraphLoader(AbstractLoader):
 
         return sampled_proteins
 
+    def fetch_protein_mass(
+            self, uniprot_id : str
+        ) -> float:
+        r"""Returns the mass of a protein given its UniProt ID.
+        This will be used as our target variable.
+
+        Parameters
+        ----------
+        uniprot_id : str
+            The UniProt ID of the protein.
+
+        Returns
+        -------
+        float
+            The mass of the protein.
+        """
+        url = f"https://www.ebi.ac.uk/proteins/api/proteins/{uniprot_id}"
+        response = requests.get(url, headers={"Accept": "application/json"})
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("sequence", {}).get("mass")
+        return None
+
     def fetch_alphafold_structure(
             self, uniprot_id : str
         ) -> str:
+        r"""Fetches the AlphaFold structure for a given UniProt ID.
+        Not all the proteins have a structure available.
+        This ones will be descarded.
+
+        Parameters
+        ----------
+        uniprot_id : str
+            The UniProt ID of the protein.
+
+        Returns
+        -------
+        str
+            The path to the downloaded PDB file.
+        """
         pdb_dir = self.data_dir + "/pdbs"
         os.makedirs(pdb_dir, exist_ok=True)
         file_path = os.path.join(pdb_dir, f"{uniprot_id}.pdb")
@@ -96,13 +134,39 @@ class GraphLoader(AbstractLoader):
     def parse_pdb(
             self, file_path : str
         ) -> PDB.Structure:
+        r"""Parse a PDB file and return a BioPython structure object.
+
+        Parameters
+        ----------
+        file_path : str
+            The path to the PDB file.
+
+        Returns
+        -------
+        PDB.Structure
+            The BioPython structure object.
+        """
+
         return PDB.PDBParser(QUIET=True).get_structure("alphafold_structure", file_path)
 
     def residue_mapping(
             self, uniprot_ids : list[str]
         ) -> dict:
+        r"""Create a mapping of residue types to unique integers.
+        Each residue type will be represented as a one unique integer.
+        There are 20 standard amino acids, so we will have 20 unique integers (at maximum).
 
-        # Create a dictionary to map residue types to unique integers
+        Parameters
+        ----------
+        uniprot_ids : list[str]
+            The list of UniProt IDs to process.
+
+        Returns
+        -------
+        dict
+            The mapping of residue types to unique integers.
+        """
+
         residue_map = {}
         residue_counter = 0
 
@@ -122,6 +186,26 @@ class GraphLoader(AbstractLoader):
     def calculate_residue_ca_distances_and_vectors(
             self, structure : PDB.Structure
         ):
+        r"""Calculate the distances between the alpha carbon atoms of the residues.
+        Also, calculate the vectors between the alpha carbon and beta carbon atoms of each residue.
+
+        Parameters
+        ----------
+        structure : PDB.Structure
+            The BioPython structure object.
+
+        Returns
+        -------
+        list
+            The list of residues.
+        dict
+            The dictionary of alpha carbon coordinates.
+        dict
+            The dictionary of beta carbon vectors.
+        np.ndarray
+            The matrix of distances between the residues.
+        """
+
         residues = [residue for model in structure for chain in model for residue in chain]
         ca_coordinates = {}
         cb_vectors = {}
@@ -148,12 +232,47 @@ class GraphLoader(AbstractLoader):
 
         return residues, ca_coordinates, cb_vectors , distances
 
-    def calculate_vector_angle(self, v1, v2):
+    def calculate_vector_angle(
+            self, v1 : np.ndarray, v2 : np.ndarray
+        ) -> float:
+        r"""Calculate the angle between two vectors.
+
+        Parameters
+        ----------
+        v1 : np.ndarray
+            The first vector.
+        v2 : np.ndarray
+            The second vector.
+
+        Returns
+        -------
+        float
+            The angle between the two vectors.
+        """
+
         cos_theta = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
         return np.arccos(np.clip(cos_theta, -1.0, 1.0)) * 180 / np.pi
 
     def calculate_edges(
-            self, ca_coordinates, cb_vectors, distances):
+            self, ca_coordinates : dict, cb_vectors : dict, distances : np.ndarray
+        ) -> list:
+        r"""Calculate the edges between the residues based on the distances and angles between them.
+
+        Parameters
+        ----------
+        ca_coordinates : dict
+            The dictionary of alpha carbon coordinates.
+        cb_vectors : dict
+            The dictionary of beta carbon vectors.
+        distances : np.ndarray
+            The matrix of distances between the residues.
+
+        Returns
+        -------
+        list
+            The list of edges.
+        """
+
         edges = set()  # Use a set to track unique edges
         keys = list(ca_coordinates.keys())  # Which represent different residues
 
@@ -173,28 +292,62 @@ class GraphLoader(AbstractLoader):
 
 
     def  create_torch_geometric_data(
-            self, residues : list, ca_coordinates : dict, residue_map : dict, cb_vectors : dict, edges : list
+            self, residues : list, ca_coordinates : dict, residue_map : dict, cb_vectors : dict, edges : list, y : float
         ) -> None:
+        r"""Create a torch_geometric.data.Data object from the protein data.
+
+        Parameters
+        ----------
+        residues : list
+            The list of residues.
+        ca_coordinates : dict
+            The dictionary of alpha carbon coordinates.
+        residue_map : dict
+            The mapping of residue types to unique integers.
+        cb_vectors : dict
+            The dictionary of beta carbon vectors.
+        edges : list
+            The list of edges.
+        y : float
+            The target variable.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The torch_geometric.data.Data object.
+        """
 
         keys = list(ca_coordinates.keys()) # residue name
         pos = [ca_coordinates[key] for key in keys]
         # check if cb_vectors exists for the key
-        node_features = [cb_vectors[key] for key in keys if cb_vectors[key] is not None]
+        # Not all nodes have carbon beta, hence not all of them will have an attribute
+        node_attr = [cb_vectors[key] for key in keys if cb_vectors[key] is not None]
 
-        # Make One-Hot encoding of residue types
-        node_key = []
+        # Make One-Hot encoding of residue types, keep it in node_key
         num_residues = len(residue_map)
+
+        node_key = []
         one_hot = torch.zeros(num_residues)
         for residue in residues:
             residue_type = residue.get_resname()
             one_hot[residue_map[residue_type]] = 1
             node_key.append(one_hot)
+        # Does the same as the for loop above:
+        # node_key = [torch.zeros(num_residues).scatter_(0, torch.tensor([residue_map[residue.get_resname()]]), 1) for residue in residues]
 
         node_map = {key: i for i, key in enumerate(keys)}
         # Set the edges
         edge_index = [[node_map[edge[0]], node_map[edge[1]]] for edge in edges]
         # Adding distance and angle as edge attributes
         edge_attr = [[edge[2], edge[3]] if edge[3] is not None else [edge[2], 0] for edge in edges]
+
+        for edge in edges:
+            edge_index.append([node_map[edge[0]], node_map[edge[1]]])
+            # edge_attr.append([edge[2], edge[3]])
+            if edge[3] is not None:
+                edge_attr.append([edge[2], edge[3]])
+            else:
+                edge_attr.append([edge[2], 500]) # since to vectors can never have 500 as an angle
 
         # Create a graph
         G = nx.Graph()
@@ -210,15 +363,17 @@ class GraphLoader(AbstractLoader):
         # Convert to torch tensors
         pos = torch.tensor(np.array(pos), dtype=torch.float)
         node_key = torch.stack(node_key)
-        node_features = torch.tensor(np.array(node_features), dtype=torch.float)
+        node_attr = torch.tensor(np.array(node_attr), dtype=torch.float)
         edge_attr = torch.tensor(edge_attr, dtype=torch.float)
+        y = torch.tensor([y], dtype=torch.float)
 
         return torch_geometric.data.Data(
             x=node_key,
             pos=pos,
-            x_0=node_features,
+            node_attr=node_attr,
             edge_index=edge_list,
-            edge_attr=edge_attr
+            edge_attr=edge_attr,
+            y = y
         )
 
     def load(self) -> torch_geometric.data.Dataset:
@@ -297,6 +452,13 @@ class GraphLoader(AbstractLoader):
             dataset = ConcatToGeometricDataset(dataset)
 
         elif self.parameters.data_name in ["UniProt"]:
+            """
+            The UniProt dataset is a custom dataset that is created by fetching data from the UniProt API.
+            The dataset is created by fetching a list of proteins based on a query and then fetching the structure
+            of each protein using the AlphaFold API. The dataset is then created by creating a graph for each protein
+            where the nodes are the residues and the edges are the connected residues. The target variable is the mass
+            of the protein.
+            """
             datasets = []
             protein_data = self.fetch_uniprot_ids()
             uniprot_ids = [protein["uniprot_id"] for protein in protein_data]
@@ -305,12 +467,14 @@ class GraphLoader(AbstractLoader):
             # Process each protein and create datasets
             for uniprot_id in uniprot_ids:
                 pdb_file = self.fetch_alphafold_structure(uniprot_id)
-                if pdb_file:
+                y = self.fetch_protein_mass(uniprot_id)
+
+                if pdb_file and y:
                     structure = self.parse_pdb(pdb_file)
                     residues, ca_coordinates, cb_vectors, distances = self.calculate_residue_ca_distances_and_vectors(structure)
                     edges = self.calculate_edges(ca_coordinates, cb_vectors, distances)
 
-                    data = self.create_torch_geometric_data(residues, ca_coordinates, residue_map, cb_vectors, edges)
+                    data = self.create_torch_geometric_data(residues, ca_coordinates, residue_map, cb_vectors, edges, y)
                     data.id = uniprot_id
                     datasets.append(data)
 
