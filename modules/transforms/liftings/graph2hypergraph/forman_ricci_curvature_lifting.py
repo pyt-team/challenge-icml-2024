@@ -21,10 +21,19 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, network_type="weighted", th_quantile=0.6, **kwargs):
+    def __init__(
+        self,
+        network_type="weighted",
+        threshold_type="quantile",
+        threshold_direction="upper",
+        threshold=0.1,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.network_type = network_type
-        self.th_quantile = th_quantile
+        self.threshold_type = threshold_type
+        self.theshold_direction = threshold_direction
+        self.threshold = threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to hypergraph domain using Forman-Ricci curvature based backbone estimation.
@@ -55,7 +64,8 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
             edge_attr = data.edge_attr
 
         if data.x is None or self.network_type == "unweighted" or data.x.shape[1] > 1:
-            node_attr = data.x = np.ones(shape=(data.num_nodes, 1))
+            node_attr = np.ones(shape=(data.num_nodes, 1))
+            # data.x = torch.from_numpy(data.x.astype("f4"))
         elif isinstance(data.x, torch.Tensor):
             node_attr = data.x.numpy()
         else:
@@ -91,11 +101,28 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
 
         # estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone(s), i.e. hyperedges
         w_frc = list(nx.get_edge_attributes(G, "w_frc").values())
-        th_cutoff = np.quantile(w_frc, self.th_quantile)
+
+        if self.threshold_type == "quantile":
+            th_cutoff = np.quantile(w_frc, self.threshold)
+        elif self.threshold_type == "absolute":
+            th_cutoff = self.threshold
+        else:
+            raise NotImplementedError(
+                f"threshold type {self.threshold_type} not implemented"
+            )
+
+        if self.theshold_direction == "upper":
+            compare_to_threshold = lambda x: x > th_cutoff
+        elif self.theshold_direction == "lower":
+            compare_to_threshold = lambda x: x < th_cutoff
+        else:
+            raise NotImplementedError(
+                f"threshold theshold_direction {self.theshold_direction} not implemented"
+            )
 
         edges_to_remove = []
         for v1, v2 in G.edges():
-            if G[v1][v2]["w_frc"] > th_cutoff:
+            if compare_to_threshold(G[v1][v2]["w_frc"]):
                 edges_to_remove.append((v1, v2))
 
         G.remove_edges_from(edges_to_remove)
@@ -111,11 +138,11 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
             for i, nodes in enumerate(hyperedges):
                 incidence_matrix[list(nodes), i] = 1
 
-        incidences = torch.Tensor(incidence_matrix).to_sparse_coo()
+        assert len(hyperedges) > 0
 
-        coo_indices = torch.stack(
-            (incidences.indices()[0], incidences.indices()[1])  # nodes  # hyperedges
-        )
+        incidences = torch.Tensor(incidence_matrix.astype("f4")).to_sparse_coo()
+
+        coo_indices = torch.stack((incidences.indices()[0], incidences.indices()[1]))
 
         coo_values = incidences.values()
 

@@ -16,7 +16,7 @@ class TestHypergraphFormanRicciCurvatureLifting:
 
         self.lifting = HypergraphFormanRicciCurvatureLifting(
             network_type="weighted",
-            th_quantile=0.6,
+            threshold=0.6,
         )
 
     def test_lift_topology(self):
