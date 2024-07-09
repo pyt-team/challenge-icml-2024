@@ -333,7 +333,7 @@ def load_manual_graph():
         y=torch.tensor(y),
     )
 
-def load_manual_prot():
+def load_manual_mol():
     """Create a manual graph for testing the ring implementation.
     Actually is the 471 molecule of QM9 dataset."""
     # Define the vertices
