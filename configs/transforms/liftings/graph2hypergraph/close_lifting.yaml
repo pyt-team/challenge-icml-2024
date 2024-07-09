@@ -1,0 +1,5 @@
+transform_type: 'lifting'
+transform_name: "HypergraphCloseLifting"
+feature_lifting: ProjectionSum
+
+distance: 6.0
