@@ -474,14 +474,10 @@ class PointCloudLoader(AbstractLoader):
                         one_hot_residues.append(one_hot)
 
                     x = torch.stack(one_hot_residues)
-                    pos = torch.tensor([ca_coordinates[res_id] for res_id in residue_keys], dtype=torch.float)
-                    # node_attr = [cb_vectors[res_id] for res_id in residue_keys if cb_vectors[res_id] is not None else None]
-                    node_attr = []
-                    for res_id in residue_keys:
-                        if cb_vectors[res_id] is None:
-                            node_attr.append(None)
-                        else:
-                            node_attr.append(cb_vectors[res_id])
+                    pos_np = np.array([ca_coordinates[res_id] for res_id in residue_keys])
+                    pos = torch.tensor(pos_np, dtype=torch.float)
+
+                    node_attr = [None if cb_vectors[res_id] is None else cb_vectors[res_id] for res_id in residue_keys]
 
                     data = torch_geometric.data.Data(
                         x=x,
