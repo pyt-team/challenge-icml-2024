@@ -1,7 +1,12 @@
 import networkx as nx
 import torch
 import torch_geometric
-from torch_geometric.transforms import AddLaplacianEigenvectorPE, SVDFeatureReduction, ToUndirected, Compose
+from torch_geometric.transforms import (
+    AddLaplacianEigenvectorPE,
+    Compose,
+    SVDFeatureReduction,
+    ToUndirected,
+)
 from torch_geometric.utils import subgraph
 
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
@@ -46,7 +51,8 @@ class MapperCover:
          < (n_sample, resolution) boolean Tensor.
             Mask which identifies which data points are
             in each cover set. Covers which are empty
-            are removed so k = number of nonempty cover sets.
+            are removed so output tensor has at most
+            size (n_sample, resolution).
         """
 
         data_min = torch.min(filtered_data)
@@ -54,16 +60,28 @@ class MapperCover:
         data_range = torch.max(filtered_data) - torch.min(filtered_data)
         # width of each interval in the cover
         cover_width = data_range / (self.resolution - (self.resolution - 1) * self.gain)
-        lower_endpoints = torch.linspace(
-            data_min, data_max - cover_width, self.resolution + 1
+        last_lower_endpoint = data_min + cover_width * (self.resolution - 1) * (
+            1 - self.gain
         )
+        lower_endpoints = torch.linspace(data_min, last_lower_endpoint, self.resolution)
         upper_endpoints = lower_endpoints + cover_width
-        self.left_endpoints = lower_endpoints
-        self.right_endpoints = upper_endpoints
+        self.cover_intervals = torch.hstack(
+            (
+                lower_endpoints.reshape([self.resolution, 1]),
+                upper_endpoints.reshape([self.resolution, 1]),
+            )
+        )
         # want a n x resolution Boolean tensor
         lower_values = torch.ge(filtered_data, lower_endpoints)
         upper_values = torch.le(filtered_data, upper_endpoints)
-        mask = torch.logical_and(lower_values, upper_values)
+        # need to check close values to deal with some endpoint issues
+        lower_is_close_values = torch.isclose(filtered_data, lower_endpoints)
+        upper_is_close_values = torch.isclose(filtered_data, upper_endpoints)
+        # construct the boolean mask
+        mask = torch.logical_and(
+            torch.logical_or(lower_values, lower_is_close_values),
+            torch.logical_or(upper_values, upper_is_close_values),
+        )
         # remove empty intervals from cover
         non_empty_covers = torch.any(mask, 0)
         return mask[:, non_empty_covers]
@@ -82,13 +100,19 @@ class MapperCover:
 
 # Global filter dictionary for the MapperLifting class.
 filter_dict = {
-    "laplacian": Compose([ToUndirected(), AddLaplacianEigenvectorPE(k=1, is_undirected=True)]),
+    "laplacian": Compose(
+        [ToUndirected(), AddLaplacianEigenvectorPE(k=1, is_undirected=True)]
+    ),
     "svd": SVDFeatureReduction(out_channels=1),
     "feature_sum": lambda data: torch.sum(data.x, dim=1).unsqueeze(1),
     "position_sum": lambda data: torch.sum(data.pos, dim=1).unsqueeze(1),
-    "feature_pca": lambda data: torch.pca_lowrank(data.x, q=1),
-    "position_pca": lambda data: torch.pca_lowrank(data.pos, q=1),
-    }
+    "feature_pca": lambda data: torch.matmul(
+        data.x, torch.pca_lowrank(data.x, q=1)[2][:, :1]
+    ),
+    "position_pca": lambda data: torch.matmul(
+        data.pos, torch.pca_lowrank(data.pos, q=1)[2][:, :1]
+    ),
+}
 
 
 class MapperLifting(Graph2HypergraphLifting):
@@ -125,11 +149,13 @@ class MapperLifting(Graph2HypergraphLifting):
     The following are common filter functions which can be called with
     filter_attr.
 
-    1. "laplacian" : Applies the torch_geometric.transforms.AddLaplacianEigenvectorPE(k=1)
-    transform and projects onto the 1st eigenvector.
+    1. "laplacian" : Converts data to an undirected graph and then applies the
+    torch_geometric.transforms.AddLaplacianEigenvectorPE(k=1) transform and
+    projects onto the 1st eigenvector.
 
     2. "svd" : Applies the torch_geometric.transforms.SVDFeatureReduction(out_channels=1)
-    transform to project to 1-dimensional subspace.
+    transform to the node feature matrix (ie. torch_geometric.Data.data.x)
+    to project data to a 1-dimensional subspace.
 
     3. "feature_pca" : Applies torch.pca_lowrank(q=1) transform to node feature matrix
     (ie. torch_geometric.Data.data.x) and then projects to the 1st principle component.
@@ -147,6 +173,7 @@ class MapperLifting(Graph2HypergraphLifting):
 
     7. "my_filter_attr" : my_filter_func = lambda data : my_filter_func(data)
     where my_filter_func(data) outputs a (n_sample, 1) Tensor.
+    Additionally, assign filter_func = my_filter_func.
 
     References
     ----------
@@ -169,7 +196,7 @@ class MapperLifting(Graph2HypergraphLifting):
         self.resolution = resolution
         self.gain = gain
         self.filter_func = filter_func
-        self._verify_filter_parameters()
+        self._verify_filter_parameters(filter_attr, filter_func)
 
     def _filter(self, data):
         """Applies 1-dimensional filter function to
@@ -182,15 +209,9 @@ class MapperLifting(Graph2HypergraphLifting):
                 filtered_data = transformed_data["laplacian_eigenvector_pe"]
             if self.filter_attr == "svd":
                 filtered_data = transformed_data.x
-            if self.filter_attr == "feature_pca":
-                filtered_data = torch.matmul(data.x, transformed_data[2][:, :1])
-            if self.filter_attr == "position_pca":
-                filtered_data = torch.matmul(data.pos, transformed_data[2][:, :1])
             if self.filter_attr not in [
                 "laplacian",
                 "svd",
-                "feature_pca",
-                "position_pca",
             ]:
                 filtered_data = transformed_data
 
@@ -205,7 +226,6 @@ class MapperLifting(Graph2HypergraphLifting):
 
         return filtered_data
 
-    
     def _cluster(self, data, cover_mask):
         """Finds clusters in each cover set within cover_mask.
         For each cover set, a cluster is a
@@ -214,45 +234,33 @@ class MapperLifting(Graph2HypergraphLifting):
         """
         mapper_clusters = {}
         num_clusters = 0
-        # Each cover set is of the form [1, n_samples]
+        # convert data to undirected graph for clustering
+        to_undirected = ToUndirected()
+        data = to_undirected(data)
 
-
-        
-        for i, cover_set in enumerate(cover_mask.T):
+        # Each cover set is of the form [n_samples]
+        for i, cover_set in enumerate(torch.t(cover_mask)):
             # Find indices of nodes which are in each cover set
             # cover_data = data.subgraph(cover_set.T) does not work
             # as it relabels node indices
-                  
+
             cover_data, _ = torch_geometric.utils.subgraph(
-
-                torch.t(cover_set), data["edge_index"]
-
+                cover_set, data["edge_index"]
             )
-            
+
             edges = [
                 (i.item(), j.item())
                 for i, j in zip(cover_data[0], cover_data[1], strict=False)
             ]
 
-            
-            nodes = [i.item() for i in torch.where(cover_set.T)[0]]
-            
-            if data.is_undirected():
-                cover_graph = nx.Graph()
-                cover_graph.add_nodes_from(nodes)
-                cover_graph.add_edges_from(edges)
-                # find clusters
-                clusters = nx.connected_components(cover_graph)
-                
-            if data.is_directed():
-                cover_graph = nx.DiGraph()
-                cover_graph.add_edges_from(edges)
-                cover_graph.add_nodes_from(nodes)
-                # find clusters
-                clusters = nx.weakly_connected_components(cover_graph)
-                
+            nodes = [i.item() for i in torch.where(cover_set)[0]]
+            # build graph to find clusters
+            cover_graph = nx.Graph()
+            cover_graph.add_nodes_from(nodes)
+            cover_graph.add_edges_from(edges)
+            # find clusters
+            clusters = nx.connected_components(cover_graph)
 
-            
             for cluster in clusters:
                 # index is the subset of nodes in data
                 # contained in cluster
@@ -264,7 +272,7 @@ class MapperLifting(Graph2HypergraphLifting):
                 num_clusters += 1
 
         self.clusters = mapper_clusters
-                
+
         return mapper_clusters
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
@@ -299,14 +307,14 @@ class MapperLifting(Graph2HypergraphLifting):
         """
         # Filter the data to 1-dimensional subspace
         filtered_data = self._filter(data)
-        
+
         # Define and fit the cover
         cover = MapperCover(self.resolution, self.gain)
         cover_mask = cover.fit_transform(filtered_data)
-        
+
         # Find the clusters in the fitted cover
         mapper_clusters = self._cluster(data, cover_mask)
-        
+
         # Construct the hypergraph dictionary
         num_nodes = data["x"].shape[0]
         num_edges = data["edge_index"].size()[1]
@@ -322,34 +330,33 @@ class MapperLifting(Graph2HypergraphLifting):
 
         incidence_hyperedges = torch.zeros(num_nodes, num_clusters)
 
-        
         for i, hyperedge in enumerate(mapper_clusters):
             for j in mapper_clusters[hyperedge][1]:
                 incidence_hyperedges[j.int(), i] = 1
-                
+
         # Incidence matrix is (num_nodes, num_edges + num_clusters) size matrix
 
         incidence = torch.hstack([incidence_edges, incidence_hyperedges])
-            
+
         incidence = torch.Tensor(incidence).to_sparse_coo()
 
-        print(incidence) 
-        
+        print(incidence)
+
         return {
             "incidence_hyperedges": incidence,
             "num_hyperedges": num_hyperedges,
             "x_0": data.x,
         }
 
-    def _verify_filter_parameters(self):
-        assert type(self.filter_attr) is str, f"filter_attr must be a string or None."
-        if self.filter_func is None:
+    def _verify_filter_parameters(self, filter_attr, filter_func):
+        if filter_func is None:
             assert (
                 self.filter_attr in filter_dict
             ), f"Please add function to filter_func or choose filter_attr from {list(filter_dict)}. \
-            Currently filter_func is {self.filter_func} and filter_attr is {self.filter_attr}."
-        if self.filter_func is not None:
+            Currently filter_func is {filter_func} and filter_attr is {filter_attr}."
+        if filter_func is not None:
             assert (
                 self.filter_attr not in filter_dict
             ), f"Assign new filter_attr not in {list(filter_dict)} or leave filter_func as None. \
-            Currently filter_func is {self.filter_func} and filter_attr is {self.filter_attr}"
+            Currently filter_func is {filter_func} and filter_attr is {filter_attr}"
+            assert type(filter_attr) is str, f"filter_attr must be a string."
