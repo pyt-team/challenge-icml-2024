@@ -60,7 +60,7 @@ class AbstractLifting(torch_geometric.transforms.BaseTransform):
         """
         initial_data = data.to_dict()
         lifted_topology = self.lift_topology(data)
-        # lifted_topology = self.feature_lifting(lifted_topology)
+        lifted_topology = self.feature_lifting(lifted_topology)
         return torch_geometric.data.Data(**initial_data, **lifted_topology)
 
 
