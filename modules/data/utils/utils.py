@@ -50,16 +50,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -332,6 +332,62 @@ def load_manual_graph():
         num_nodes=len(vertices),
         y=torch.tensor(y),
     )
+
+
+def load_manual_hypergraph():
+    """Create a manual hypergraph for testing purposes."""
+    # Define the vertices (just 8 vertices)
+    vertices = [i for i in range(8)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0]
+    # Define the hyperedges
+    hyperedges = [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [0, 1, 2],
+        [0, 1, 3],
+        [0, 2, 3],
+        [1, 2, 3],
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [1, 2],
+        [1, 3],
+        [2, 3],
+        [3, 4],
+        [4, 5],
+        [4, 7],
+        [5, 6],
+        [6, 7],
+    ]
+
+    # Generate feature from 0 to 7
+    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+    labels = torch.tensor(y, dtype=torch.long)
+
+    edge_idx = 0
+    node_list = []
+    edge_list = []
+
+    for he in hyperedges:
+        cur_size = len(he)
+        node_list += he
+        edge_list += [edge_idx] * cur_size
+        edge_idx += 1
+
+    edge_index = np.array([node_list, edge_list], dtype=int)
+    edge_index = torch.LongTensor(edge_index)
+
+    incidence_hyperedges = torch.sparse_coo_tensor(
+        edge_index,
+        values=torch.ones(edge_index.shape[1]),
+        size=(len(vertices), len(hyperedges)),
+    )
+
+    data = Data(
+        x=x, edge_index=edge_index, y=labels, incidence_hyperedges=incidence_hyperedges
+    )
+
+    return data
 
 
 def get_Planetoid_pyg(cfg):
