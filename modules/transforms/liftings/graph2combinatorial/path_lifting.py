@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
+from typing import Any, Optional
 
 import networkx as nx
 import torch
@@ -13,8 +13,8 @@ from modules.transforms.liftings.graph2combinatorial.base import (
 
 
 def get_all_paths_from_single_node(
-    n: int, g: Dict[int, List[int]], path_length: int
-) -> Set[FrozenSet[int]]:
+    n: int, g: dict[int, list[int]], path_length: int
+) -> set[frozenset[int]]:
     r"""Get all paths from a dictionary of edges and a list of nodes
 
     Parameters
@@ -45,8 +45,8 @@ def get_all_paths_from_single_node(
 
 
 def get_all_paths_from_nodes(
-    nodes: List[int], g: Dict[int, List[int]], path_length: int
-) -> Set[FrozenSet[int]]:
+    nodes: list[int], g: dict[int, list[int]], path_length: int
+) -> set[frozenset[int]]:
     r"""Get all paths from a dictionary of edges and a list of nodes
 
     Parameters
@@ -121,7 +121,7 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
         self,
         graphs: list[nx.Graph],
         lifting_procedure: Optional[str] = None,
-        lifting_procedure_kwargs: Optional[Union[str, dict[Any, Any]]] = None,
+        lifting_procedure_kwargs: str | dict[Any, Any] = None,
         **kwargs,
     ) -> list[CombinatorialComplex]:
         r"""Convert a list of graphs to a list of combinatorial complexes (of dimension 1).

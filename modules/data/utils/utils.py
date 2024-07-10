@@ -9,7 +9,6 @@ import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
 from topomodelx.utils.sparse import from_sparse
-from toponetx.classes import CellComplex, CombinatorialComplex, SimplicialComplex
 from torch_geometric.data import Data
 from torch_sparse import coalesce
 
