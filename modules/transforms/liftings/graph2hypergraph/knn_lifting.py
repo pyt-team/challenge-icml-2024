@@ -67,9 +67,7 @@ class HypergraphKNNLifting(Graph2HypergraphLifting):
                     data_lifted.edge_index[:, idx] = torch.tensor([[i, i]]).T
 
         incidence_1[data_lifted.edge_index[1], data_lifted.edge_index[0]] = 1
-
         incidence_1 = torch.Tensor(incidence_1).to_sparse_coo()
-
         return {
             "incidence_hyperedges": incidence_1,
             "num_hyperedges": num_hyperedges,
