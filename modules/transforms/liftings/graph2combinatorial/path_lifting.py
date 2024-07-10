@@ -123,7 +123,7 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
         lifting_procedure: Optional[str] = None,
         lifting_procedure_kwargs: Optional[Union[str, Dict[Any, Any]]] = None,
         **kwargs,
-    ) -> List[CombinatorialComplex]:
+    ) -> list[CombinatorialComplex]:
         r"""Convert a list of graphs to a list of combinatorial complexes (of dimension 1).
 
         Parameters
