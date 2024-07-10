@@ -5,23 +5,67 @@ from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLi
 
 
 class ModularityMaximizationLifting(Graph2HypergraphLifting):
+    r"""Lifts graphs to hypergraph domain using modularity maximization and community detection.
+
+    This method creates hyperedges based on the community structure of the graph and
+    k-nearest neighbors within each community.
+
+    Parameters
+    ----------
+    num_communities : int, optional
+        The number of communities to detect. Default is 2.
+    k_neighbors : int, optional
+        The number of nearest neighbors to consider within each community. Default is 3.
+    **kwargs : optional
+        Additional arguments for the base class.
+    """
+
     def __init__(self, num_communities=2, k_neighbors=3, **kwargs):
         super().__init__(**kwargs)
         self.num_communities = num_communities
         self.k_neighbors = k_neighbors
 
     def modularity_matrix(self, data):
+        r"""Compute the modularity matrix B of the graph.
+
+        B_ij = A_ij - (k_i * k_j) / (2m)
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input graph data.
+
+        Returns
+        -------
+        torch.Tensor
+            The modularity matrix B.
+        """
         a = torch.zeros((data.num_nodes, data.num_nodes))
         a[data.edge_index[0], data.edge_index[1]] = 1
         k = a.sum(dim=1)
         m = data.edge_index.size(1) / 2
-        b = a - torch.outer(k, k) / (2 * m)
-        return b
+        return a - torch.outer(k, k) / (2 * m)
 
     def kmeans(self, x, n_clusters, n_iterations=100):
+        r"""Perform k-means clustering on the input data.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            The input data to cluster.
+        n_clusters : int
+            The number of clusters to form.
+        n_iterations : int, optional
+            The maximum number of iterations. Default is 100.
+
+        Returns
+        -------
+        torch.Tensor
+            The cluster assignments for each input point.
+        """
         # Initialize cluster centers randomly
         centroids = x[torch.randperm(x.shape[0])[:n_clusters]]
-
+        cluster_assignments = torch.zeros(x.shape[0], dtype=torch.long)
         for _ in range(n_iterations):
             # Assign points to the nearest centroid
             distances = torch.cdist(x, centroids)
@@ -40,16 +84,40 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
         return cluster_assignments
 
     def detect_communities(self, b):
+        r"""Detect communities using spectral clustering on the modularity matrix.
+
+        Parameters
+        ----------
+        b : torch.Tensor
+            The modularity matrix.
+
+        Returns
+        -------
+        torch.Tensor
+            The community assignments for each node.
+        """
         eigvals, eigvecs = torch.linalg.eigh(b)
         leading_eigvecs = eigvecs[
             :, torch.argsort(eigvals, descending=True)[: self.num_communities]
         ]
 
         # Use implemented k-means clustering on the leading eigenvectors
-        community_assignments = self.kmeans(leading_eigvecs, self.num_communities)
-        return community_assignments
+        return self.kmeans(leading_eigvecs, self.num_communities)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+        r"""Lift the graph topology to a hypergraph based on community structure and k-nearest neighbors.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input graph data.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the incidence matrix of the hypergraph, number of hyperedges,
+            and the original node features.
+        """
         b = self.modularity_matrix(data)
         community_assignments = self.detect_communities(b)
 
