@@ -31,7 +31,7 @@ class TestMoGMSTLifting:
         self.data = Data(x=x, pos=pos, y=torch.tensor(y))
 
         # Initialise the HypergraphKHopLifting class
-        self.lifting = MoGMSTLifting(min_components=3, max_components=3, random_state=0)
+        self.lifting = MoGMSTLifting(min_components=3, random_state=0)
 
     def test_find_mog(self):
         labels, num_components, means = self.lifting.find_mog(
@@ -54,19 +54,6 @@ class TestMoGMSTLifting:
         lifted_data_k = self.lifting.forward(self.data.clone())
 
         expected_n_hyperedges = 6
-
-        expected_incidence_1 = torch.tensor(
-            [
-                [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-                [0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
-                [0.0, 1.0, 0.0, 1.0, 0.0, 1.0],
-            ]
-        )
 
         assert (
             lifted_data_k.num_hyperedges == expected_n_hyperedges

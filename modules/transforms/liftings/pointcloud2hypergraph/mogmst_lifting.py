@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch_geometric
 from networkx import from_numpy_array, minimum_spanning_tree
-from sklearn.metrics import pairwise_distances, silhouette_score
+from sklearn.metrics import pairwise_distances
 from sklearn.mixture import GaussianMixture
 
 from modules.transforms.liftings.pointcloud2hypergraph.base import (
@@ -67,7 +67,9 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
 
     def find_mog(self, data) -> tuple[np.ndarray, int, np.ndarray]:
         if self.min_components is not None and self.max_components is not None:
-            possible_num_components = range(self.min_components, self.max_components)
+            possible_num_components = range(
+                self.min_components, self.max_components + 1
+            )
         elif self.min_components is None and self.max_components is None:
             possible_num_components = [
                 2**i for i in range(1, int(np.log2(data.shape[0] / 2)) + 1)
