@@ -327,7 +327,6 @@ class MapperLifting(Graph2HypergraphLifting):
         """
         # Filter the data to 1-dimensional subspace
         filtered_data = self._filter(data)
-        self.filtered_data = filtered_data
 
         # Define and fit the cover
         cover = MapperCover(self.resolution, self.gain)
