@@ -1,6 +1,7 @@
 from modules.transforms.liftings.lifting import GraphLifting
 
 
+
 class Graph2CombinatorialLifting(GraphLifting):
     r"""Abstract class for lifting graphs to combinatorial complexes.
 
@@ -13,3 +14,4 @@ class Graph2CombinatorialLifting(GraphLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = "graph2combinatorial"
+
