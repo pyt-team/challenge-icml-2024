@@ -243,6 +243,10 @@ expected_edge_incidence = torch.tensor(
     ]
 )
 
+""" Enrich the `load_manual_graph` graph with the necessary information to test
+    additional filter functions.
+"""
+
 
 def enriched_manual_graph():
     data = load_manual_graph()
@@ -264,7 +268,9 @@ def enriched_manual_graph():
     return data
 
 
-"""Construct a naive implementation to create the filtered data set given data and filter function."""
+""" Construct a naive implementation to create the filtered data set given data and filter function.
+    Used for testing filter function.
+"""
 
 
 def naive_filter(data, filter):
@@ -296,7 +302,9 @@ def naive_filter(data, filter):
     return filtered_data
 
 
-"""Construct a cover_mask from filtered data and default lift parameters."""
+""" Construct a naive cover_mask from filtered data and default lift parameters.
+    This tests the cover method.
+"""
 
 
 def naive_cover(filtered_data):
@@ -359,7 +367,7 @@ class TestMapperLifting:
                 torch.isclose(lift_filter_data, naive_filter_data)
             ), f"Something is wrong with filtered values using {self.filter_name}. The lifted filter data is {lift_filter_data} and the naive filter data is {naive_filter_data}."
         if filter == "laplacian":
-            # laplacian produce eigenvector up to a unit multiple.
+            # laplacian filter produces an eigenvector up to a unit multiple.
             # instead we check their absolute values.
             assert torch.all(
                 torch.isclose(torch.abs(lift_filter_data), torch.abs(naive_filter_data))
@@ -453,7 +461,7 @@ class TestMapperLifting:
             assert (
                 expected_clusters[self.filter_name].keys() == lift_clusters.keys()
             ), f"Different number of clusters using {filter}. Expected {list(expected_clusters[filter])} but got {list(lift_clusters)}."
-            for cluster in lift_clusters.keys():
+            for cluster in lift_clusters:
                 assert (
                     expected_clusters[self.filter_name][cluster][0]
                     == lift_clusters[cluster][0]
@@ -462,7 +470,7 @@ class TestMapperLifting:
                     expected_clusters[self.filter_name][cluster][1],
                     lift_clusters[cluster][1],
                 ), f"Something is wrong with the clustering using {self.filter_name}. Expected node subset {expected_clusters[self.filter_name][cluster][1]} but got {lift_clusters[cluster][1]} for cluster {cluster}."
-        # Laplacian function projects up to a unit. This causes clusters to not be identical
+        # Laplacian function projects up to a unit. This causes clusters to not be identical by index
         # instead we check if the node subsets of the lifted set are somewhere in the expected set.
         if filter == "laplacian":
             assert len(lift_clusters) == len(
