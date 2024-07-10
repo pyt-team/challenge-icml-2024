@@ -246,3 +246,4 @@ class PointCloudLoader(AbstractLoader):
             return load_random_shape_point_cloud(
                 num_points=self.cfg["num_points"], num_classes=self.cfg["num_classes"]
             )
+        return None
