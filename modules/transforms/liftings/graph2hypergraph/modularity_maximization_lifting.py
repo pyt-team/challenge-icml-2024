@@ -49,6 +49,9 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
     def kmeans(self, x, n_clusters, n_iterations=100):
         r"""Perform k-means clustering on the input data.
 
+        Note: This implementation uses random initialization, so results may vary
+        between runs even for the same input data.
+
         Parameters
         ----------
         x : torch.Tensor
@@ -62,6 +65,11 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
         -------
         torch.Tensor
             The cluster assignments for each input point.
+
+        Warning
+        -------
+        Due to random initialization of centroids, the resulting hyperedges
+        may differ each time the code is run, even with the same input.
         """
         # Initialize cluster centers randomly
         centroids = x[torch.randperm(x.shape[0])[:n_clusters]]
