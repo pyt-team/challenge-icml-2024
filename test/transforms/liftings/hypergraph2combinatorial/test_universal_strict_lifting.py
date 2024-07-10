@@ -127,8 +127,3 @@ class TestUniversalStrictLifting:
         assert (
             abs(expected_adjacency_3) == lifted_data.adjacency_3.to_dense()
         ).all(), "Something is wrong with adjacency_3 (3-cell adjacencies)"
-
-        print(lifted_data.adjacency_0.to_dense())
-        print(lifted_data.adjacency_1.to_dense())
-        print(lifted_data.adjacency_2.to_dense())
-        print(lifted_data.adjacency_3.to_dense())
