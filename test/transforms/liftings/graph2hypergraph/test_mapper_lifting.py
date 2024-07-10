@@ -3,16 +3,12 @@ import torch
 import torch_geometric
 from torch_geometric.transforms import (
     AddLaplacianEigenvectorPE,
-    Compose,
     SVDFeatureReduction,
     ToUndirected,
 )
 
 from modules.data.utils.utils import load_manual_graph
-from modules.transforms.liftings.graph2hypergraph.mapper_lifting import (
-    MapperCover,
-    MapperLifting,
-)
+from modules.transforms.liftings.graph2hypergraph.mapper_lifting import MapperLifting
 
 expected_edge_incidence = torch.tensor(
     [
@@ -314,7 +310,6 @@ def naive_cover(filtered_data):
     data_range = data_max - data_min
     # width of each interval in the cover
     cover_width = data_range / (10 - (10 - 1) * 0.3)
-    last = data_min + (10 - 1) * (1 - 0.3) * cover_width
     lows = torch.zeros(10)
     for i in range(10):
         lows[i] = (data_min) + (i) * (1 - 0.3) * cover_width
@@ -386,7 +381,7 @@ class TestMapperLifting:
     )
     def test_cover(self, filter):
         self.setup(filter)
-        transformed_data = self.mapper_lift.forward(self.data.clone())
+        self.mapper_lift.forward(self.data.clone())
         lift_cover_mask = self.mapper_lift.cover
         naive_cover_mask = naive_cover(self.mapper_lift.filtered_data[filter])
         assert torch.all(
@@ -455,7 +450,7 @@ class TestMapperLifting:
             },
         }
         self.setup(filter)
-        transformed_data = self.mapper_lift.forward(self.data.clone())
+        self.mapper_lift.forward(self.data.clone())
         lift_clusters = self.mapper_lift.clusters
         if filter != "laplacian":
             assert (
@@ -487,7 +482,7 @@ class TestMapperLifting:
                 expected_cluster_nodes.remove(node_subset)
             assert (
                 expected_cluster_nodes == []
-            ), f"Expected clusters contain more clusters than in the lifted cluster."
+            ), "Expected clusters contain more clusters than in the lifted cluster."
 
     @pytest.mark.parametrize(
         "filter",

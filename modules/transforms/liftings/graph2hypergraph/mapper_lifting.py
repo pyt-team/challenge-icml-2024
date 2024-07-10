@@ -7,7 +7,6 @@ from torch_geometric.transforms import (
     SVDFeatureReduction,
     ToUndirected,
 )
-from torch_geometric.utils import subgraph
 
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
 
@@ -231,7 +230,7 @@ class MapperLifting(Graph2HypergraphLifting):
                 self.filter_attr not in filter_dict
             ), f"Assign new filter_attr not in {list(filter_dict)} or leave filter_func as None. \
             Currently filter_func is {filter_func} and filter_attr is {filter_attr}"
-            assert type(filter_attr) is str, f"filter_attr must be a string."
+            assert type(filter_attr) is str, f"{filter_attr} must be a string."
 
     def _filter(self, data):
         """Applies 1-dimensional filter function to
