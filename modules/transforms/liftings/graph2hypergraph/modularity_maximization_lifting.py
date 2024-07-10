@@ -11,25 +11,25 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
         self.k_neighbors = k_neighbors
 
     def modularity_matrix(self, data):
-        A = torch.zeros((data.num_nodes, data.num_nodes))
-        A[data.edge_index[0], data.edge_index[1]] = 1
-        k = A.sum(dim=1)
+        a = torch.zeros((data.num_nodes, data.num_nodes))
+        a[data.edge_index[0], data.edge_index[1]] = 1
+        k = a.sum(dim=1)
         m = data.edge_index.size(1) / 2
-        B = A - torch.outer(k, k) / (2 * m)
-        return B
+        b = a - torch.outer(k, k) / (2 * m)
+        return b
 
-    def kmeans(self, X, n_clusters, n_iterations=100):
+    def kmeans(self, x, n_clusters, n_iterations=100):
         # Initialize cluster centers randomly
-        centroids = X[torch.randperm(X.shape[0])[:n_clusters]]
+        centroids = x[torch.randperm(x.shape[0])[:n_clusters]]
 
         for _ in range(n_iterations):
-            # Assign points to nearest centroid
-            distances = torch.cdist(X, centroids)
+            # Assign points to the nearest centroid
+            distances = torch.cdist(x, centroids)
             cluster_assignments = torch.argmin(distances, dim=1)
 
             # Update centroids
             new_centroids = torch.stack(
-                [X[cluster_assignments == k].mean(dim=0) for k in range(n_clusters)]
+                [x[cluster_assignments == k].mean(dim=0) for k in range(n_clusters)]
             )
 
             if torch.allclose(centroids, new_centroids):
@@ -39,8 +39,8 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
 
         return cluster_assignments
 
-    def detect_communities(self, B):
-        eigvals, eigvecs = torch.linalg.eigh(B)
+    def detect_communities(self, b):
+        eigvals, eigvecs = torch.linalg.eigh(b)
         leading_eigvecs = eigvecs[
             :, torch.argsort(eigvals, descending=True)[: self.num_communities]
         ]
@@ -50,8 +50,8 @@ class ModularityMaximizationLifting(Graph2HypergraphLifting):
         return community_assignments
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        B = self.modularity_matrix(data)
-        community_assignments = self.detect_communities(B)
+        b = self.modularity_matrix(data)
+        community_assignments = self.detect_communities(b)
 
         num_nodes = data.x.shape[0]
         num_hyperedges = num_nodes
