@@ -92,9 +92,8 @@ def get_combinatorial_complex_connectivity(complex, max_rank=None):
         if rank_idx > 0:
             try:
                 connectivity[f"incidence_{rank_idx}"] = from_sparse(
-                    getattr(complex, "incidence_matrix")(rank_idx - 1, rank_idx)
+                    complex.incidence_matrix(rank=rank_idx - 1, to_rank=rank_idx)
                 )
-
             except ValueError:
                 connectivity[
                     f"incidence_{rank_idx}"
@@ -104,9 +103,7 @@ def get_combinatorial_complex_connectivity(complex, max_rank=None):
 
         try:
             connectivity[f"adjacency_{rank_idx}"] = from_sparse(
-                getattr(complex, "adjacency_matrix")(
-                    rank=rank_idx, via_rank=rank_idx + 1
-                )
+                complex.adjacency_matrix(rank=rank_idx, via_rank=rank_idx + 1)
             )
         except ValueError:
             connectivity[f"adjacency_{rank_idx}"] = generate_zero_sparse_connectivity(
@@ -413,15 +410,13 @@ def load_manual_hypergraph():
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
     labels = torch.tensor(y, dtype=torch.long)
 
-    edge_idx = 0
     node_list = []
     edge_list = []
 
-    for he in hyperedges:
+    for edge_idx, he in enumerate(hyperedges):
         cur_size = len(he)
         node_list += he
         edge_list += [edge_idx] * cur_size
-        edge_idx += 1
 
     edge_index = np.array([node_list, edge_list], dtype=int)
     edge_index = torch.LongTensor(edge_index)
