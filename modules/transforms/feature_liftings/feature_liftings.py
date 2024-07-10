@@ -1,5 +1,3 @@
-from typing import Union
-
 import torch
 import torch_geometric
 
