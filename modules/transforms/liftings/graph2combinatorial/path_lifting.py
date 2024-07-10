@@ -112,7 +112,9 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
             graph[edge[1]].append(edge[0])
         paths = get_all_paths_from_nodes(sources_nodes, graph, path_length)
         for path in paths:
-            cc.add_cell(path, rank=2)  # Add paths as rank-2 cells
+            if len(path) == path_length:  # Ensure correct path length
+                cc.add_cell(path, rank=2)  # Add paths as rank-2 cells
+            # cc.add_cell(path, rank=2)  # Add paths as rank-2 cells
         return cc
 
     def graph_to_CCs(
