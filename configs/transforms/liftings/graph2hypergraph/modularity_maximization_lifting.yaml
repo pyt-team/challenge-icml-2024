@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "ModularityMaximizationLifting"
+k_value: null
+feature_lifting: ProjectionSum
