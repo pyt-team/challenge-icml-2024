@@ -401,6 +401,66 @@ def plot_manual_graph(data, title=None):
     plt.show()
 
 
+def plot_manual_hypergraph(data, scale_factor=1.1):
+    vertices = range(data.incidence_hyperedges.size(0))
+
+    # Construct hyperedges from the incidence matrix
+    if hasattr(data, "incidence_hyperedges"):
+        incidence_matrix = data.incidence_hyperedges.coalesce().to_dense()
+        hyperedges = [
+            list(
+                torch.nonzero(incidence_matrix[:, i], as_tuple=False).squeeze().numpy()
+            )
+            for i in range(incidence_matrix.size(1))
+        ]
+    else:
+        raise ValueError("Data object does not have 'incidence_hyperedges' attribute")
+
+    G = nx.Graph()
+    G.add_nodes_from(vertices)
+
+    # Add edges for each hyperedge of size 2
+    for hyperedge in hyperedges:
+        if len(hyperedge) == 2:
+            for i in range(len(hyperedge)):
+                for j in range(i + 1, len(hyperedge)):
+                    G.add_edge(hyperedge[i], hyperedge[j])
+
+    plt.figure(figsize=(12, 9))
+    pos = nx.spring_layout(G)
+
+    nx.draw_networkx_nodes(G, pos, node_color="skyblue", node_size=300)
+    nx.draw_networkx_labels(G, pos)
+
+    nx.draw_networkx_edges(G, pos, edgelist=G.edges(), edge_color="grey", width=1.5)
+
+    # For each hyperedge, draw an enlarged polygon around its vertices
+    for i, hyperedge in enumerate(hyperedges):
+        polygon_points = np.array([pos[v] for v in hyperedge if v in pos])
+        if (
+            len(polygon_points) > 2
+        ):  # Only draw polygons for hyperedges with 3 or more vertices
+            # Calculate the centroid of the polygon
+            centroid = np.mean(polygon_points, axis=0)
+            # Scale points around the centroid
+            scaled_points = centroid + scale_factor * (polygon_points - centroid)
+            polygon = Polygon(
+                scaled_points,
+                closed=True,
+                edgecolor=None,
+                facecolor=np.random.rand(
+                    3,
+                ),
+                alpha=0.5,
+                linewidth=1,
+            )
+            plt.gca().add_patch(polygon)
+
+    plt.title("Hypergraph Visualization")
+    plt.axis("off")
+    plt.show()
+
+
 def describe_simplicial_complex(data: torch_geometric.data.Data):
     r"""Describe a simplicial complex.
 
