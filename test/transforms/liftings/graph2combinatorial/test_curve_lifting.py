@@ -105,6 +105,18 @@ class TestGraphCurveLifting:
         assert (
             A not in double_house_matroid
         ), f"Graph Curve Matroid creation is wrong, {A} is not in the circuits of the double house graph"
+        # [2, 3, 5, 6, 7] is a circuit
+        assert [1, 2, 4, 5] in double_house_matroid.cells, "[1, 2, 4, 5, 6] circuit check fail"
+        assert [1, 2, 4, 6] in double_house_matroid.cells, "[1, 2, 4, 5, 6] circuit check fail"
+        assert [1, 2, 5, 6] in double_house_matroid.cells, "[1, 2, 4, 5, 6] circuit check fail"
+        assert [1, 4, 5, 6] in double_house_matroid.cells, "[1, 2, 4, 5, 6] circuit check fail"
+        assert [2, 4, 5, 6] in double_house_matroid.cells, "[1, 2, 4, 5, 6] circuit check fail"
+
+        # rank check
+        assert double_house_matroid.max_rank == 3 # this is 4 in matroid rank
+
+        # bases check
+        assert len(double_house_matroid.bases) == 54
 
     # Test 3: Test the matroid to combinatorial complex
     def test_lift_matroid2cc_topology(self):
