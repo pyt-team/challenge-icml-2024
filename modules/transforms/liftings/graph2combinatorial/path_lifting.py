@@ -77,7 +77,7 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
         super().__init__(**kwargs)
 
     def path_based_lift_CC(
-        self, input_cc: CombinatorialComplex, sources_nodes: List[int], path_length: int
+        self, input_cc: CombinatorialComplex, sources_nodes: list[int], path_length: int
     ) -> CombinatorialComplex:
         r"""Lift a 1-dimensional CC to a higher-dimensional CC by lifting the paths to higher-rank cells.
 
@@ -119,9 +119,9 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
 
     def graph_to_CCs(
         self,
-        graphs: List[nx.Graph],
+        graphs: list[nx.Graph],
         lifting_procedure: Optional[str] = None,
-        lifting_procedure_kwargs: Optional[Union[str, Dict[Any, Any]]] = None,
+        lifting_procedure_kwargs: Optional[Union[str, dict[Any, Any]]] = None,
         **kwargs,
     ) -> list[CombinatorialComplex]:
         r"""Convert a list of graphs to a list of combinatorial complexes (of dimension 1).
