@@ -1,4 +1,7 @@
+from collections.abc import Collection
+
 import torch_geometric
+import torch_geometric.data
 
 from modules.matroid.matroid import CCMatroid, powerset
 from modules.transforms.liftings.graph2combinatorial.base import (
@@ -23,6 +26,60 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         super().__init__(**kwargs)
         self.max_rank = max_rank
 
+    def edges_incident(
+        self, v: Collection | int, data: torch_geometric.data.Data
+    ) -> list[frozenset]:
+        """Returns edges incident to v based on (graph) data
+
+        Parameters
+        ----------
+        v: Collection | int
+            vertex or list of vertices to find incidence
+        data : torch_geometric.data.Data
+            pytorch geometric data that contains data of a graph.
+
+        Returns
+        -------
+        list[frozenset]
+            The list of undirected edges incident to v.
+        """
+        return [
+            frozenset(edge)
+            for edge in self.get_edges_incident(vertex=v, data=data).t().tolist()
+        ]
+
+    def rank_check(
+        self, dual: CCMatroid, V: Collection, data: torch_geometric.data.Data
+    ) -> set[frozenset]:
+        """Part of the Algorithm proposed by Geiger et. al
+        We compute the graph curve matroid by computing its circuits.
+        This function serves as a preprocessing for calculating the circuits.
+        Taken from https://mathrepo.mis.mpg.de/_downloads/30a7910c728d51fc01271eb30e46a42a/graphCurveMatroid.m2
+
+        Parameters
+        ----------
+        dual: CCMatroid
+            the dual matroid of a given graphic matroid connected to data.
+        V: Collection | int
+            vertex or set of vertices to find incidence
+        data : torch_geometric.data.Data
+            pytorch geometric data that contains data of a graph.
+
+        Returns
+        -------
+        set[frozenset]
+            The associated set of C of vertices that follow rank(dual(matroid(G)),incidentEdges(C,G)) <= |C|
+        """
+        subsets = powerset(V)
+        check_1 = set()
+        for subset in subsets:
+            if len(subset) == 0:
+                continue
+            B = self.edges_incident(subset, data)
+            if dual.matroid_rank(B) <= len(subset):
+                check_1.add(frozenset(subset))
+        return check_1
+
     def _graph_curve_matroid(self, data: torch_geometric.data.Data) -> CCMatroid:
         """Algorithm proposed by Geiger et. al
         We compute the graph curve matroid by computing its circuits
@@ -39,32 +96,22 @@ class GraphCurveMatroidLifting(Graph2MatroidLifting):
         """
         graphic_matroid = self._generate_matroid_from_data(data)
         num_nodes = data.x.shape[0]
-        r_d = graphic_matroid.dual().matroid_rank
+        dual = graphic_matroid.dual()
 
-        def d(v):
-            return [
-                tuple(edge)
-                for edge in self.get_edges_incident(vertex=v, data=data).t().tolist()
-            ]
-
-        L = set()
-
-        for C in powerset(range(num_nodes)):
-            sizeC = len(C)
-            if sizeC == 0 or r_d(d(C)) > sizeC:
-                continue
-            subset_condition = True
+        groundset = list(range(num_nodes))
+        rank_check_set = self.rank_check(dual, groundset, data)
+        circuits = set()
+        for C in rank_check_set:
+            ok = True
             for A in powerset(C):
-                a_size = len(A)
-                if a_size == 0 or A == C:
-                    continue
-                if r_d(d(A)) <= a_size:
-                    subset_condition = False
+                A = frozenset(A)
+                if A != C and A in rank_check_set:
+                    ok = False
                     break
-            if subset_condition:
-                L.add(frozenset(C))
-        groundset = range(num_nodes)
-        return CCMatroid.from_circuits(ground=groundset, circuits=L)
+            if ok and len(C) != 0:
+                circuits.add(C)
+
+        return CCMatroid.from_circuits(ground=groundset, circuits=circuits)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         M_g = self._graph_curve_matroid(data)

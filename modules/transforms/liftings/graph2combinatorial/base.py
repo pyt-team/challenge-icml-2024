@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 
+import networkx as nx
 import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
@@ -38,8 +39,15 @@ class Graph2MatroidLifting(GraphLifting):
         GraphicMatroid
             The generated graphic matroid M(G).
         """
+        num_nodes = data.x.shape[0]
+        nodes = list(range(num_nodes))
         edges = data.edge_index.t().tolist()
-        return CCGraphicMatroid(edgelist=edges)
+        G = nx.Graph()
+        G.add_nodes_from(nodes)
+        G.add_edges_from(edges)
+        G.to_undirected()
+
+        return CCGraphicMatroid(edgelist=G.edges())
 
     def get_edges_incident(
         self, vertex: int | Iterable[int], data: torch_geometric.data.Data
@@ -58,7 +66,7 @@ class Graph2MatroidLifting(GraphLifting):
         torch.tensor
             The part of the edge_index that contains the vertex in question.
         """
-        if not vertex:
+        if not vertex and isinstance(vertex, Iterable):
             return torch.empty(0)
         row, col = data.edge_index
         vertices = (

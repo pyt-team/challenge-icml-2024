@@ -1,6 +1,7 @@
 import pprint
 import random
 import shutil
+from collections.abc import Collection
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -13,6 +14,18 @@ from matplotlib.patches import Polygon
 
 plt.rcParams["text.usetex"] = bool(shutil.which("latex"))
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
+
+
+def get_spanning_trees(edgelist: Collection):
+    graph = nx.Graph()
+    graph.add_edges_from(edgelist)
+    ground_edges = [frozenset(edge) for edge in graph.edges]
+    spanning_trees = []
+    for tree in nx.SpanningTreeIterator(graph):
+        edges = tree.edges()
+        cvt_tree = [frozenset(edge) for edge in edges]
+        spanning_trees.append(frozenset(cvt_tree))
+    return {"ground_edges": ground_edges, "spanning_trees": spanning_trees}
 
 
 def load_dataset_config(dataset_name: str) -> omegaconf.DictConfig:

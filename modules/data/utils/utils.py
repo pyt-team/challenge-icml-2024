@@ -402,23 +402,22 @@ def load_double_house_graph() -> torch_geometric.data.Data:
     vertices = [i for i in range(8)]
     y = [0, 1, 1, 1, 0, 0, 0, 0]
     edges = [
+        [0, 1],
+        [0, 2],
+        [0, 7],
         [1, 2],
         [1, 3],
-        [1, 8],
-        [1, 8],
-        [2, 3],
         [2, 4],
         [3, 5],
+        [3, 4],
         [4, 6],
-        [4, 5],
+        [5, 6],
         [5, 7],
         [6, 7],
-        [6, 8],
-        [7, 8],
     ]
     G = nx.Graph()
     G.add_nodes_from(vertices)
-    G.add_edges_from([[v1 - 1, v2 - 1] for (v1, v2) in edges])
+    G.add_edges_from([[v1, v2] for (v1, v2) in edges])
     G.to_undirected()
     edge_list = torch.Tensor(list(G.edges())).T.long()
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()

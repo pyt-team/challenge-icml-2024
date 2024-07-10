@@ -4,6 +4,8 @@ from itertools import chain, combinations
 import networkx as nx
 from toponetx.classes.combinatorial_complex import CombinatorialComplex
 
+from modules.utils.utils import get_spanning_trees
+
 
 def powerset(iterable: Iterable):
     """From https://docs.python.org/3/library/itertools.html#itertools-recipes
@@ -106,13 +108,16 @@ class CCMatroid(CombinatorialComplex):
         CCMatroid
             The associated matroid associated with the circuits.
         """
+
+        def is_independent(subset: frozenset):
+            return all(not circuit.issubset(subset) for circuit in circuits)
+
         independent_sets = []
-        for circuit in circuits:
-            for ind in powerset(circuit):
-                ind = frozenset(ind)
-                if ind == circuit:
-                    continue
-                independent_sets.append(ind)
+        for subset in powerset(ground):
+            subset = frozenset(subset)
+            if is_independent(subset):
+                independent_sets.append(subset)
+        independent_sets = frozenset(independent_sets)
         return cls(ground=ground, independent_sets=independent_sets)
 
     @classmethod
@@ -140,6 +145,7 @@ class CCMatroid(CombinatorialComplex):
             for subset in powerset(groundset)
             if len(subset) == matroid_rank(subset)
         ]
+        independent_sets = frozenset(independent_sets)
         return cls(ground=groundset, independent_sets=independent_sets)
 
     def matroid_rank(self, input_set: Iterable) -> int:
@@ -160,6 +166,8 @@ class CCMatroid(CombinatorialComplex):
         """
         input_set = fs(input_set)
         size = len(input_set)
+        if size == 0:
+            return 0
 
         for level in range(size - 1, -1, -1):
             skeleton = self.skeleton(level)
@@ -269,14 +277,8 @@ class CCGraphicMatroid(CCMatroid):
     """
 
     def __init__(self, edgelist: Collection, **kwargs):
-        graph = nx.Graph()
-        graph.add_edges_from(edgelist)
-        ground_edges = [tuple(edge) for edge in graph.edges]
-        spanning_trees = []
-        for tree in nx.SpanningTreeIterator(graph):
-            edges = tree.edges()
-            cvt_tree = [tuple(edge) for edge in edges]
-            spanning_trees.append(frozenset(cvt_tree))
+        data = get_spanning_trees(edgelist)
+        ground_edges, spanning_trees = data["ground_edges"], data["spanning_trees"]
         independent_sets = frozenset(
             [frozenset(ind) for base in spanning_trees for ind in powerset(base)]
         )
