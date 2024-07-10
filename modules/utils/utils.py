@@ -435,7 +435,7 @@ def plot_manual_hypergraph(data, scale_factor=1.1):
     nx.draw_networkx_edges(G, pos, edgelist=G.edges(), edge_color="grey", width=1.5)
 
     # For each hyperedge, draw an enlarged polygon around its vertices
-    for i, hyperedge in enumerate(hyperedges):
+    for hyperedge in hyperedges:
         polygon_points = np.array([pos[v] for v in hyperedge if v in pos])
         if (
             len(polygon_points) > 2
@@ -444,13 +444,12 @@ def plot_manual_hypergraph(data, scale_factor=1.1):
             centroid = np.mean(polygon_points, axis=0)
             # Scale points around the centroid
             scaled_points = centroid + scale_factor * (polygon_points - centroid)
+            rng = np.random.default_rng()  # Instantiate a generator object
             polygon = Polygon(
                 scaled_points,
                 closed=True,
                 edgecolor=None,
-                facecolor=np.random.rand(
-                    3,
-                ),
+                facecolor=rng.random(3),
                 alpha=0.5,
                 linewidth=1,
             )

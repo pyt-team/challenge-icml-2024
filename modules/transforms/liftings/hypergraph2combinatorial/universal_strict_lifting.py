@@ -102,7 +102,7 @@ class UniversalStrictLifting(Hypergraph2CombinatorialLifting):
         )
 
         # Sort the list according to the lengths entry
-        indices = list(zip(change_indices.tolist(), lengths.tolist()))
+        indices = list(zip(change_indices.tolist(), lengths.tolist(), strict=False))
         indices.sort(key=lambda x: x[1])
 
         return indices

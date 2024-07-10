@@ -44,7 +44,9 @@ class HMCModel(torch.nn.Module):
                 [in_channels_layer, int_channels_layer, out_channels_layer]
             )
 
-        self.base_model = HMC(channels_per_layer=channels_per_layer)
+        self.base_model = HMC(
+            channels_per_layer=channels_per_layer, negative_slope=negative_slope
+        )
         self.linear = torch.nn.Linear(hidden_channels, out_channels)
 
     def forward(self, data):

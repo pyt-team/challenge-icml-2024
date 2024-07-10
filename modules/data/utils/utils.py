@@ -92,7 +92,7 @@ def get_combinatorial_complex_connectivity(complex, max_rank=None):
         if rank_idx > 0:
             try:
                 connectivity[f"incidence_{rank_idx}"] = from_sparse(
-                    getattr(complex, f"incidence_matrix")(rank_idx - 1, rank_idx)
+                    getattr(complex, "incidence_matrix")(rank_idx - 1, rank_idx)
                 )
 
             except ValueError:
@@ -104,7 +104,7 @@ def get_combinatorial_complex_connectivity(complex, max_rank=None):
 
         try:
             connectivity[f"adjacency_{rank_idx}"] = from_sparse(
-                getattr(complex, f"adjacency_matrix")(
+                getattr(complex, "adjacency_matrix")(
                     rank=rank_idx, via_rank=rank_idx + 1
                 )
             )
@@ -271,17 +271,13 @@ def load_hypergraph_pickle_dataset(cfg):
 
     print(f"number of hyperedges: {len(hypergraph)}")
 
-    edge_idx = 0  # num_nodes
     node_list = []
     edge_list = []
-    for he in hypergraph:
-        cur_he = hypergraph[he]
+
+    for edge_idx, cur_he in enumerate(hypergraph.values()):
         cur_size = len(cur_he)
-
-        node_list += list(cur_he)
-        edge_list += [edge_idx] * cur_size
-
-        edge_idx += 1
+        node_list.extend(cur_he)
+        edge_list.extend([edge_idx] * cur_size)
 
     # check that every node is in some hyperedge
     if len(np.unique(node_list)) != num_nodes:
@@ -436,11 +432,9 @@ def load_manual_hypergraph():
         size=(len(vertices), len(hyperedges)),
     )
 
-    data = Data(
+    return Data(
         x=x, edge_index=edge_index, y=labels, incidence_hyperedges=incidence_hyperedges
     )
-
-    return data
 
 
 def get_Planetoid_pyg(cfg):
