@@ -68,8 +68,10 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
     def find_mog(self, data) -> tuple[np.ndarray, int, np.ndarray]:
         if self.min_components is not None and self.max_components is not None:
             possible_num_components = range(self.min_components, self.max_components)
-        elif self.min_components is not None and self.max_components is None:
-            possible_num_components = range(2, int(np.log2(data.shape[0] / 2)))
+        elif self.min_components is None and self.max_components is None:
+            possible_num_components = [
+                2**i for i in range(1, int(np.log2(data.shape[0] / 2)) + 1)
+            ]
         else:
             if self.min_components is not None:
                 num_components = self.min_components
@@ -85,7 +87,7 @@ class MoGMSTLifting(PointCloud2HypergraphLifting):
             labels = gm.fit_predict(data)
             return labels, num_components, gm.means_
 
-        best_score = float("int")
+        best_score = float("inf")
         best_labels = None
         best_num_components = 0
         means = None
