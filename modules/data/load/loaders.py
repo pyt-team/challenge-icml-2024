@@ -203,4 +203,13 @@ class HypergraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
+        # Manual hypergraph
+        if self.parameters.data_name in ["manual"]:
+            root_folder = rootutils.find_root()
+            root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+            self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+
+            data = load_manual_hypergraph()
+            return CustomDataset([data], self.parameters.data_dir)
+
         return load_hypergraph_pickle_dataset(self.parameters)
