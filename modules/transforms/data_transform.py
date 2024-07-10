@@ -9,11 +9,11 @@ from modules.transforms.data_manipulations.manipulations import (
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
-from modules.transforms.liftings.graph2hypergraph.forman_ricci_curvature_lifting import (
-    HypergraphFormanRicciCurvatureLifting,
-)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
+)
+from modules.transforms.liftings.graph2hypergraph.page_rank_lifting import (
+    HypergraphPageRankLifting,
 )
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
@@ -22,7 +22,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
-    "HypergraphFormanRicciCurvatureLifting": HypergraphFormanRicciCurvatureLifting,
+    "HypergraphPageRankLifting": HypergraphPageRankLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
