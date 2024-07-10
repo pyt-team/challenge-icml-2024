@@ -54,10 +54,11 @@ class MapperCover:
             are removed so output tensor has at most
             size (n_sample, resolution).
         """
-
-        data_min = torch.min(filtered_data)
-        data_max = torch.max(filtered_data)
-        data_range = torch.max(filtered_data) - torch.min(filtered_data)
+        # We add a slight buffer to the minimum and maximum
+        # values to ensure that each data point is covered.
+        data_min = torch.min(filtered_data) - 1e-3
+        data_max = torch.max(filtered_data) + 1e-3
+        data_range = data_max - data_min
         # width of each interval in the cover
         cover_width = data_range / (self.resolution - (self.resolution - 1) * self.gain)
         last_lower_endpoint = data_min + cover_width * (self.resolution - 1) * (
@@ -72,8 +73,8 @@ class MapperCover:
             )
         )
         # want a n x resolution Boolean tensor
-        lower_values = torch.ge(filtered_data, lower_endpoints)
-        upper_values = torch.le(filtered_data, upper_endpoints)
+        lower_values = torch.gt(filtered_data, lower_endpoints)
+        upper_values = torch.lt(filtered_data, upper_endpoints)
         # need to check close values to deal with some endpoint issues
         lower_is_close_values = torch.isclose(filtered_data, lower_endpoints)
         upper_is_close_values = torch.isclose(filtered_data, upper_endpoints)
@@ -82,6 +83,8 @@ class MapperCover:
             torch.logical_or(lower_values, lower_is_close_values),
             torch.logical_or(upper_values, upper_is_close_values),
         )
+        # assert every data point is covered
+        assert torch.all(torch.any(mask, 1)), f"{torch.any(mask,1)}"
         # remove empty intervals from cover
         non_empty_covers = torch.any(mask, 0)
         return mask[:, non_empty_covers]
@@ -243,7 +246,6 @@ class MapperLifting(Graph2HypergraphLifting):
             # Find indices of nodes which are in each cover set
             # cover_data = data.subgraph(cover_set.T) does not work
             # as it relabels node indices
-
             cover_data, _ = torch_geometric.utils.subgraph(
                 cover_set, data["edge_index"]
             )
@@ -266,7 +268,7 @@ class MapperLifting(Graph2HypergraphLifting):
                 # contained in cluster
                 index = torch.Tensor(list(cluster))
                 # kth cluster is item in dictionary
-                # of the form
+                # of the form:
                 # k : (cover_set_index, nodes_in_cluster)
                 mapper_clusters[num_clusters] = (i, index)
                 num_clusters += 1
@@ -311,14 +313,13 @@ class MapperLifting(Graph2HypergraphLifting):
         # Define and fit the cover
         cover = MapperCover(self.resolution, self.gain)
         cover_mask = cover.fit_transform(filtered_data)
-
+        self.cover = cover_mask
         # Find the clusters in the fitted cover
         mapper_clusters = self._cluster(data, cover_mask)
 
         # Construct the hypergraph dictionary
-        num_nodes = data["x"].shape[0]            
+        num_nodes = data["x"].shape[0]
         num_edges = data["edge_index"].size()[1]
-        
 
         num_clusters = len(mapper_clusters)
         num_hyperedges = num_edges + num_clusters
@@ -340,8 +341,7 @@ class MapperLifting(Graph2HypergraphLifting):
         incidence = torch.hstack([incidence_edges, incidence_hyperedges])
 
         incidence = torch.Tensor(incidence).to_sparse_coo()
-
-        print(incidence)
+        print("hyperedges", incidence_hyperedges)
 
         return {
             "incidence_hyperedges": incidence,
