@@ -397,7 +397,7 @@ def ensure_serializable(obj):
         for key, value in obj.items():
             obj[key] = ensure_serializable(value)
         return obj
-    elif isinstance(obj, (list, tuple)):  # noqa: RET505
+    elif isinstance(obj, list | tuple):  # noqa: RET505
         return [ensure_serializable(item) for item in obj]
     elif isinstance(obj, set):
         return {ensure_serializable(item) for item in obj}

@@ -17,8 +17,8 @@ class ProjectionSum(torch_geometric.transforms.BaseTransform):
         super().__init__()
 
     def lift_features(
-        self, data: Union[torch_geometric.data.Data, dict]
-    ) -> Union[torch_geometric.data.Data, dict]:
+        self, data: torch_geometric.data.Data | dict
+    ) -> torch_geometric.data.Data | dict:
         r"""Projects r-cell features of a graph to r+1-cell structures using the incidence matrix.
 
         Parameters
@@ -30,9 +30,7 @@ class ProjectionSum(torch_geometric.transforms.BaseTransform):
         -------
         torch_geometric.data.Data | dict
             The lifted data."""
-        keys = sorted(
-            [key.split("_")[1] for key in data.keys() if "incidence" in key]
-        )  # noqa : SIM118
+        keys = sorted([key.split("_")[1] for key in data if "incidence" in key])
         for elem in keys:
             if f"x_{elem}" not in data:
                 idx_to_project = 0 if elem == "hyperedges" else int(elem) - 1
@@ -43,8 +41,8 @@ class ProjectionSum(torch_geometric.transforms.BaseTransform):
         return data
 
     def forward(
-        self, data: Union[torch_geometric.data.Data, dict]
-    ) -> Union[torch_geometric.data.Data, dict]:
+        self, data: torch_geometric.data.Data | dict
+    ) -> torch_geometric.data.Data | dict:
         r"""Applies the lifting to the input data.
 
         Parameters
