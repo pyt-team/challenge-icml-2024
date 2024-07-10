@@ -120,8 +120,8 @@ class CombinatorialPathLifting(Graph2CombinatorialLifting):
     def graph_to_CCs(
         self,
         graphs: list[nx.Graph],
-        lifting_procedure: Optional[str] = None,
-        lifting_procedure_kwargs: str | dict[Any, Any] = None,
+        lifting_procedure: str | None = None,
+        lifting_procedure_kwargs: str | dict[Any, Any] | None = None,
         **kwargs,
     ) -> list[CombinatorialComplex]:
         r"""Convert a list of graphs to a list of combinatorial complexes (of dimension 1).
