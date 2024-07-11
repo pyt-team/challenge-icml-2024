@@ -17,7 +17,7 @@ from modules.transforms.liftings.pointcloud2simplicial.base import (
 class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
     """  Lifting of pointclouds to simplicial complexes using the Random Flag Complex construction.
     """
-    def __init__(self, steps, alpha=None, p=None, **kwargs):
+    def __init__(self, steps, alpha: float | None = None, p: float | None = None, **kwargs):
         self.alpha = alpha
         self.steps = steps
         self.p = p
@@ -28,18 +28,20 @@ class RandomFlagComplexLifting(PointCloud2SimplicialLifting):
         n = data["x"].size(0)
         if self.p is None:
             self.p = np.power(n, -self.alpha)
-        print(self.p)
+        self.p = float(self.p)
 
         adj_mat = np.zeros((n, n))
         indices = np.tril_indices(n)
 
         st = gudhi.SimplexTree()
 
+        generator = np.random.default_rng()
         # For each step, sample from random binomial distribution
         # for each edge appearign
         for _ in range(self.steps):
             number_of_edges = n*(n+1)//2
-            prob = np.random.RandomState.binomial(1, self.p, size=number_of_edges)
+            prob = generator.binomial(1, self.p, size=number_of_edges)
+            print(prob)
             tmp_mat = np.zeros((n, n))
             tmp_mat[indices] = prob
             np.logical_or(adj_mat, tmp_mat, out=adj_mat)
