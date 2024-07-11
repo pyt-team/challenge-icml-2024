@@ -19,6 +19,8 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         Fraction of most influential nodes in the network, default=0.95.
     n_most_influential: integer
         Number of most influential nodes to assign a node to. default=2.
+    do_weight_hyperedge_influence: bool
+        add a weight to the hyperedge connections per node based on the inverse spath distance to influential node. default=False.
     max_iter: integer
         Maximum number of iterations in power method eigenvalue solver.
     tol: float
@@ -34,6 +36,7 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         alpha=0.85,
         th_quantile=0.95,
         n_most_influential=2,
+        do_weight_hyperedge_influence=False,
         max_iter=100,
         tol=1e-06,
         **kwargs,
@@ -45,6 +48,7 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         self.tol = tol
         self.th_quantile = th_quantile
         self.n_most_influential = n_most_influential
+        self.do_weight_hyperedge_influence = do_weight_hyperedge_influence
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to hypergraph domain using Page Rank.
@@ -127,12 +131,15 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
                     k: v for k, v in sp[v].items() if k in nodes_most_influential
                 }
                 v_influencial = [
-                    k
-                    for i, k in enumerate(sp_v_influencial.keys())
+                    (k, v)
+                    for i, (k, v) in enumerate(sp_v_influencial.items())
                     if i < self.n_most_influential
                 ]
-                for v_inf in v_influencial:
-                    incidence_hyperedges[v, hyperedge_map[v_inf]] = 1
+                for k_infl, v_infl in v_influencial:
+                    w = 1
+                    if self.do_weight_hyperedge_influence:
+                        w = 1 / v_infl
+                    incidence_hyperedges[v, hyperedge_map[k_infl]] = w
 
         incidence_hyperedges = incidence_hyperedges.to_sparse_coo()
         return {
