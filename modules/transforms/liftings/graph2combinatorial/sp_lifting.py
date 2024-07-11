@@ -3,9 +3,10 @@ import pyflagsercount as pfc
 import torch
 import torch_geometric
 from toponetx.classes import CombinatorialComplex
+from base import Graph2CombinatorialLifting
 import numpy as np
 
-# from base import Graph2CombinatorialLifting
+
 from modules.transforms.liftings.lifting import GraphLifting
 
 
@@ -14,79 +15,82 @@ def get_complex_connectivity(combinatorial_complex, adjacencies, incidences, max
         np.pad(list(combinatorial_complex.shape), (0, max_rank + 1 - len(combinatorial_complex.shape)))
     )
     connectivity = {}
-    connectivity["shape"] = practical_shape # Is this like this?
+    connectivity["shape"] = practical_shape
     for adj in adjacencies:
         connectivity_info = "adjacency"
-        rank_idx = adj[0]
         if adj[0] < adj[1]:
             connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
         else:
             connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.coadjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
     for inc in incidences:
         connectivity_info = "incidence"
-        rank_idx = inc[0]
         connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = torch.from_numpy((combinatorial_complex.incidence_matrix(inc[0],inc[1]).todense())).to_sparse().float()
     return connectivity
 
 
-
-class Graph2CombinatorialLifting(GraphLifting):
-    r"""Abstract class for lifting graphs to combinatorial complexes.
-
-    Parameters
-    ----------
-    **kwargs : optional
-        Additional arguments for the class.
-    """
-
-    def __init__(self, **kwargs):
+class SimplicialPathsLifting(Graph2CombinatorialLifting):
+    def __init__(self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024,
+            threshold=1, **kwargs):
         super().__init__(**kwargs)
-        self.type = "graph2combinatorial"
+        self.d1 = d1
+        self.d2 = d2
+        self.q = q
+        self.i = i
+        self.j = j
+        self.complex_dim = complex_dim
+        self.chunk_size = chunk_size
+        self.threshold = threshold
 
-    def _get_lifted_topology(self, combinatorial_complex: CombinatorialComplex, graph: nx.Graph) -> dict:
+
+    def _get_lifted_topology(self, combinatorial_complex: CombinatorialComplex,
+                             graph: nx.Graph) -> dict:
         r"""Returns the lifted topology.
-
         Parameters
         ----------
         cell_complex : CellComplex
             The cell complex.
         graph : nx.Graph
             The input graph.
-
         Returns
         -------
         dict
             The lifted topology.
         """
-        adjacencies = [[0,1]]
-        incidences = [[0,2]]
-        lifted_topology = get_complex_connectivity(combinatorial_complex, adjacencies, incidences, self.complex_dim)
-        
+        adjacencies = [[0, 1]]
+        incidences = [[0, 2]]
+        lifted_topology = get_complex_connectivity(combinatorial_complex,
+                                                   adjacencies, incidences,
+                                                   self.complex_dim)
 
-        ###
-        # NOTE:
-        # The following part does not work since the constructor of CombinatorialComplex
-        # in TopoNetX does not save the node features of the graph and we can't overload it
-        # for this challenge. Therefore we generate dummy features for testing purposes.
-        ###
-
-        # lifted_topology["x_0"] = torch.stack(
-        #     list(combinatorial_complex.get_cell_attributes("features", 0).values())
-        # )
-        
-        # # If new edges have been added during the lifting process, we discard the edge attributes
-        # if self.contains_edge_attr and combinatorial_complex.shape[1] == (
-        #     graph.number_of_edges()
-        # ):
-        #     lifted_topology["x_1"] = torch.stack(
-        #         list(combinatorial_complex.get_cell_attributes("features", 1).values())
-        #     )
-        
-        feat = torch.stack(list(nx.get_node_attributes(graph, "features").values()))
+        feat = torch.stack(
+            list(nx.get_node_attributes(graph, "features").values()))
         lifted_topology["x_0"] = feat
-        lifted_topology["x_3"] = torch.matmul(lifted_topology["incidence_0_2"].t(), feat)
+        lifted_topology["x_3"] = torch.matmul(
+            lifted_topology["incidence_0_2"].t(), feat)
 
         return lifted_topology
+
+
+    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
+
+        FlG = create_flag_complex_from_dataset(data, complex_dim=2)
+
+        indices = FlG.qij_adj(FlG.complex[self.d1], FlG.complex[self.d2],
+            self.q, self.i, self.j, self.chunk_size, )
+
+        G = self._generate_graph_from_data(data)
+        paths = FlG.find_paths(indices, self.threshold)
+
+        cc = CombinatorialComplex(G)
+
+        for p in paths:  # retrieve nodes that compose each path
+            cell = list()
+            for c in p:
+                cell += list(FlG.complex[2][c].numpy())
+            cell = list(set(cell))  # remove duplicates
+            cc.add_cell(cell, rank=2)
+
+        return self._get_lifted_topology(cc, G)
 
 
 class DirectedFlagComplex:
@@ -514,44 +518,3 @@ def create_flag_complex_from_dataset(dataset, complex_dim=2):
     return flag_complex
 
 
-class SPLifting(Graph2CombinatorialLifting):
-    def __init__(
-        self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024, threshold=1, **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.d1 = d1
-        self.d2 = d2
-        self.q = q
-        self.i = i
-        self.j = j
-        self.complex_dim = complex_dim
-        self.chunk_size = chunk_size
-        self.threshold = threshold
-
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-
-        FlG = create_flag_complex_from_dataset(data, complex_dim=2)
-
-        indices = FlG.qij_adj(
-            FlG.complex[self.d1],
-            FlG.complex[self.d2],
-            self.q,
-            self.i,
-            self.j,
-            self.chunk_size,
-        )
-
-        G = self._generate_graph_from_data(data)
-        paths = FlG.find_paths(indices, self.threshold)
-
-        cc = CombinatorialComplex(G)
-
-        for p in paths: # retrieve nodes that compose each path 
-            cell = list()
-            for c in p:
-                cell += list(FlG.complex[2][c].numpy())
-            cell = list(set(cell)) # remove duplicates
-            cc.add_cell(cell, rank=2)
-
-        return self._get_lifted_topology(cc, G)
-    

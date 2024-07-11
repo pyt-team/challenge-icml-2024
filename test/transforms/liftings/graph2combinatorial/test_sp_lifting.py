@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from modules.transforms.liftings.graph2combinatorial.sp_lifting import (
-    DirectedFlagComplex, SPLifting)
+    DirectedFlagComplex, SimplicialPathsLifting)
 
 
 class TestDirectedFlagComplex:
