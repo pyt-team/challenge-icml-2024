@@ -4,8 +4,7 @@ import networkx as nx
 import torch_geometric
 from torch_geometric.utils.undirected import is_undirected, to_undirected
 
-from modules.transforms.data_manipulations.manipulations import \
-    IdentityTransform
+from modules.transforms.data_manipulations.manipulations import IdentityTransform
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 
 # Implemented Feature Liftings
@@ -119,9 +118,11 @@ class GraphLifting(AbstractLifting):
             # In case edge features are given, assign features to every edge
             edge_index, edge_attr = (
                 data.edge_index,
-                data.edge_attr
-                if is_undirected(data.edge_index, data.edge_attr)
-                else to_undirected(data.edge_index, data.edge_attr),
+                (
+                    data.edge_attr
+                    if is_undirected(data.edge_index, data.edge_attr)
+                    else to_undirected(data.edge_index, data.edge_attr)
+                ),
             )
             edges = [
                 (i.item(), j.item(), dict(features=edge_attr[edge_idx], dim=1))

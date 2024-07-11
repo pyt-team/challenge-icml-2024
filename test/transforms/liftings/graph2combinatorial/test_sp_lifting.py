@@ -3,7 +3,9 @@ import pytest
 import torch
 
 from modules.transforms.liftings.graph2combinatorial.sp_lifting import (
-    DirectedFlagComplex, SimplicialPathsLifting)
+    DirectedQConnectivity,
+    SimplicialPathsLifting,
+)
 
 
 class TestDirectedFlagComplex:
@@ -18,7 +20,7 @@ class TestDirectedFlagComplex:
     @pytest.fixture
     def dfc(self, digraph):
         """Initializes a DirectedFlagComplex instance for testing."""
-        return DirectedFlagComplex(
+        return DirectedQConnectivity(
             digraph=digraph, complex_dim=2, flagser_num_threads=4
         )
 

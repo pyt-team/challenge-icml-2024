@@ -1,36 +1,17 @@
-import networkx as nx
-import pyflagsercount as pfc
 import torch
-import torch_geometric
-from toponetx.classes import CombinatorialComplex
-from base import Graph2CombinatorialLifting
 import numpy as np
-
-
-from modules.transforms.liftings.lifting import GraphLifting
-
-
-def get_complex_connectivity(combinatorial_complex, adjacencies, incidences, max_rank):
-    practical_shape = list(
-        np.pad(list(combinatorial_complex.shape), (0, max_rank + 1 - len(combinatorial_complex.shape)))
-    )
-    connectivity = {}
-    connectivity["shape"] = practical_shape
-    for adj in adjacencies:
-        connectivity_info = "adjacency"
-        if adj[0] < adj[1]:
-            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
-        else:
-            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.coadjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
-    for inc in incidences:
-        connectivity_info = "incidence"
-        connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = torch.from_numpy((combinatorial_complex.incidence_matrix(inc[0],inc[1]).todense())).to_sparse().float()
-    return connectivity
-
+import networkx as nx
+import torch_geometric
+import pyflagsercount as pfc
+from toponetx.classes import CombinatorialComplex
+from modules.transforms.liftings.graph2combinatorial.base import (
+    Graph2CombinatorialLifting,
+)
 
 class SimplicialPathsLifting(Graph2CombinatorialLifting):
-    def __init__(self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024,
-            threshold=1, **kwargs):
+    def __init__(
+        self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024, threshold=1, **kwargs
+    ):
         super().__init__(**kwargs)
         self.d1 = d1
         self.d2 = d2
@@ -41,9 +22,57 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         self.chunk_size = chunk_size
         self.threshold = threshold
 
+    def _get_complex_connectivity(
+        combinatorial_complex, adjacencies, incidences, max_rank
+    ):
+        practical_shape = list(
+            np.pad(
+                list(combinatorial_complex.shape),
+                (0, max_rank + 1 - len(combinatorial_complex.shape)),
+            )
+        )
+        connectivity = {}
+        connectivity["shape"] = practical_shape
+        for adj in adjacencies:
+            connectivity_info = "adjacency"
+            if adj[0] < adj[1]:
+                connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
+                    torch.from_numpy(
+                        (
+                            combinatorial_complex.adjacency_matrix(
+                                adj[0], adj[1]
+                            ).todense()
+                        )
+                    )
+                    .to_sparse()
+                    .float()
+                )
+            else:
+                connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
+                    torch.from_numpy(
+                        (
+                            combinatorial_complex.coadjacency_matrix(
+                                adj[0], adj[1]
+                            ).todense()
+                        )
+                    )
+                    .to_sparse()
+                    .float()
+                )
+        for inc in incidences:
+            connectivity_info = "incidence"
+            connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = (
+                torch.from_numpy(
+                    (combinatorial_complex.incidence_matrix(inc[0], inc[1]).todense())
+                )
+                .to_sparse()
+                .float()
+            )
+        return connectivity
 
-    def _get_lifted_topology(self, combinatorial_complex: CombinatorialComplex,
-                             graph: nx.Graph) -> dict:
+    def _get_lifted_topology(
+        self, combinatorial_complex: CombinatorialComplex, graph: nx.Graph
+    ) -> dict:
         r"""Returns the lifted topology.
         Parameters
         ----------
@@ -58,25 +87,42 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         """
         adjacencies = [[0, 1]]
         incidences = [[0, 2]]
-        lifted_topology = get_complex_connectivity(combinatorial_complex,
-                                                   adjacencies, incidences,
-                                                   self.complex_dim)
+        lifted_topology = self._get_complex_connectivity(
+            combinatorial_complex, adjacencies, incidences, self.complex_dim
+        )
 
-        feat = torch.stack(
-            list(nx.get_node_attributes(graph, "features").values()))
+        feat = torch.stack(list(nx.get_node_attributes(graph, "features").values()))
         lifted_topology["x_0"] = feat
-        lifted_topology["x_3"] = torch.matmul(
-            lifted_topology["incidence_0_2"].t(), feat)
+        lifted_topology["x_2"] = torch.matmul(
+            lifted_topology["incidence_0_2"].t(), feat
+        )
 
         return lifted_topology
 
+    def _create_flag_complex_from_dataset(self, dataset, complex_dim=2):
+
+        dataset_digraph = nx.DiGraph()
+
+        dataset_digraph.add_edges_from(
+            list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist()))
+        )
+
+        dfc = DirectedQConnectivity(dataset_digraph, complex_dim)
+
+        return dfc
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
 
-        FlG = create_flag_complex_from_dataset(data, complex_dim=2)
+        FlG = self.create_flag_complex_from_dataset(data, complex_dim=2)
 
-        indices = FlG.qij_adj(FlG.complex[self.d1], FlG.complex[self.d2],
-            self.q, self.i, self.j, self.chunk_size, )
+        indices = FlG.qij_adj(
+            FlG.complex[self.d1],
+            FlG.complex[self.d2],
+            self.q,
+            self.i,
+            self.j,
+            self.chunk_size,
+        )
 
         G = self._generate_graph_from_data(data)
         paths = FlG.find_paths(indices, self.threshold)
@@ -93,14 +139,15 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         return self._get_lifted_topology(cc, G)
 
 
-class DirectedFlagComplex:
+class DirectedQConnectivity:
     r"""Let :math:`G=(V,E)` be a directed graph. The directed flag complex of
     :math:`G` :math:`dFl(G)` is the ordered simplicial complex whose
     :math:`k`-simplices vertices are all totally ordered :math:`(k+1)`-cliques,
     i.e. :math:`(v_0, \dots, v_n)` such that :math:`(v_i, v_j) \in E` for
     all :math:`i \leq j`. This class provides a way to compute the directed
-    flag complex of a directed graph and to compute the qij-connectivity of
-    the complex.
+    flag complex of a directed graph, compute the qij-connectivity of
+    the complex and find the maximal simplicial paths arising from the
+    qij-connectivity.
 
     Parameters
     ----------
@@ -436,16 +483,16 @@ class DirectedFlagComplex:
         return indices
 
     def find_paths(self, indices: torch.tensor, threshold: int):
-        r"""Find the paths in the adjacency matrix associated with the
-        :math:`(q,
-        d_i, d_j)`-connectivity relation with length longer than a threshold.
+        r"""Find the maximal simplicial paths arising from the `(q, d_i,
+        d_j)`-connectivity of the induced directed flag complex. We consider
+        the paths that are longer than the threshold.
 
         Parameters
         ----------
         indices : torch.Tensor, shape=(2, N)
-           The indices of the qij-connected simplices of the pair of skeletons.
+           The indices of the qij-connected simplices.
         threshold : int
-            The length threshold to select paths
+            The minimum length of the paths to be considered.
 
         Returns
         -------
@@ -507,14 +554,3 @@ class DirectedFlagComplex:
                 dfs(src, adj_list, all_paths, path)
 
         return all_paths
-
-
-def create_flag_complex_from_dataset(dataset, complex_dim=2):
-    dataset_digraph = nx.DiGraph()
-    dataset_digraph.add_edges_from(
-        list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist()))
-    )
-    flag_complex = DirectedFlagComplex(dataset_digraph, complex_dim)
-    return flag_complex
-
-

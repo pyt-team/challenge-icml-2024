@@ -4,10 +4,12 @@ import torch
 
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2hypergraph.knn_lifting import \
-    HypergraphKNNLifting
-from modules.transforms.liftings.graph2simplicial.clique_lifting import \
-    SimplicialCliqueLifting
+from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
+    HypergraphKNNLifting,
+)
+from modules.transforms.liftings.graph2simplicial.clique_lifting import (
+    SimplicialCliqueLifting,
+)
 
 
 class TestProjectionSum:

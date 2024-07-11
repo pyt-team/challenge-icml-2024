@@ -16,6 +16,3 @@ class Graph2CombinatorialLifting(GraphLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type = "graph2combinatorial"
-
-
-

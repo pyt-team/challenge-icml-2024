@@ -1,17 +1,23 @@
 import torch_geometric
 
 from modules.transforms.data_manipulations.manipulations import (
-    IdentityTransform, KeepOnlyConnectedComponent, NodeDegrees,
-    NodeFeaturesToFloat, OneHotDegreeFeatures)
+    IdentityTransform,
+    KeepOnlyConnectedComponent,
+    NodeDegrees,
+    NodeFeaturesToFloat,
+    OneHotDegreeFeatures,
+)
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2cell.cycle_lifting import \
-    CellCycleLifting
-from modules.transforms.liftings.graph2combinatorial.sp_lifting import \
-    SimplicialPathsLifting
-from modules.transforms.liftings.graph2hypergraph.knn_lifting import \
-    HypergraphKNNLifting
-from modules.transforms.liftings.graph2simplicial.clique_lifting import \
-    SimplicialCliqueLifting
+from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
+from modules.transforms.liftings.graph2combinatorial.sp_lifting import (
+    SimplicialPathsLifting,
+)
+from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
+    HypergraphKNNLifting,
+)
+from modules.transforms.liftings.graph2simplicial.clique_lifting import (
+    SimplicialCliqueLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
