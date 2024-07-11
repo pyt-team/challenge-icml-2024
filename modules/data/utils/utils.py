@@ -178,7 +178,7 @@ def load_simplicial_dataset(cfg):
             num_val=4, num_test=4
         )(data)
 
-    elif cfg["data_name"] == "wall_shear_stress":
+    if cfg["data_name"] == "wall_shear_stress":
         path_to_data_dir = osp.join(rootutils.find_root(), cfg["data_dir"])
         path_to_npz = osp.join(path_to_data_dir, f"{cfg['data_name']}.npz")
 
@@ -222,8 +222,7 @@ def load_simplicial_dataset(cfg):
 
         return data
 
-    else:
-        return NotImplementedError
+    return NotImplementedError
 
 
 def load_hypergraph_pickle_dataset(cfg):
