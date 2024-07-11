@@ -106,12 +106,8 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
 
         # Make sure to remove passing of duplicated data
         # so that the constructor of Data does not raise an error
-        for i in range(4):
-            if f"x_{i}" in initial_data:
-                del initial_data[f"x_{i}"]
-            if f"incidence_{i}" in initial_data:
-                del initial_data[f"incidence_{i}"]
-            if f"adjacency_{i}" in initial_data:
-                del initial_data[f"adjacency_{i}"]
-        del initial_data["shape"]
+
+        for k in lifted_topology:
+            if k in initial_data:
+                del initial_data[k]
         return Data(**initial_data, **lifted_topology)

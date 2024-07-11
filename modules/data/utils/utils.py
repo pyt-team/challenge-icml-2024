@@ -408,7 +408,7 @@ def load_manual_simplicial_complex():
         incidence_1=torch.tensor(incidence_1).to_sparse(),
         incidence_2=torch.tensor(incidence_2).to_sparse(),
         num_nodes=len(one_cells),
-        y=torch.tensor(y),
+        y=torch.tensor(y)
     )
 
 def load_manual_graph():
