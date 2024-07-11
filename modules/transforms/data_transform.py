@@ -16,7 +16,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
 from modules.transforms.liftings.pointcloud2simplicial.random_flag_complex import (
-   RandomFlagComplexLifting 
+    RandomFlagComplexLifting,
 )
 
 TRANSFORMS = {
