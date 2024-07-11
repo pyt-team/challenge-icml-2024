@@ -19,12 +19,12 @@ def get_complex_connectivity(combinatorial_complex, adjacencies, incidences, max
         connectivity_info = "adjacency"
         rank_idx = adj[0]
         if adj[0] < adj[1]:
-            connectivity[f"{connectivity_info}_{rank_idx}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse()
+            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse()
         else:
-            B = combinatorial_complex.incidence_matrix(rank=1, to_rank=2)
+            B = combinatorial_complex.incidence_matrix(rank=adj[0], incidence_type="down")
             A = B.T @ B
             A.setdiag(0)
-            connectivity[f"{connectivity_info}_{rank_idx}"] = torch.from_numpy(A.todense()).to_sparse()
+            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy(A.todense()).to_sparse()
     for inc in incidences:
         connectivity_info = "incidence"
         rank_idx = inc[0]
@@ -62,7 +62,7 @@ class Graph2CombinatorialLifting(GraphLifting):
             The lifted topology.
         """
         adjacencies = [[0,1], [1,0], [1,2], [2,1]]
-        incidences = [[0,"up"], [1,"down"], [1,"up"], [2, "down"]]
+        incidences = [[0,"up"], [1,"up"]]
         lifted_topology = get_complex_connectivity(combinatorial_complex, adjacencies, incidences, self.complex_dim)
         
 
@@ -87,6 +87,8 @@ class Graph2CombinatorialLifting(GraphLifting):
 
         lifted_topology["x_0"] = torch.zeros([graph.number_of_nodes(), 5])
         lifted_topology["x_1"] = torch.zeros([graph.number_of_edges(), 5])        
+        print(graph.number_of_nodes(), graph.number_of_edges(), combinatorial_complex.number_of_cells())
+        # lifted_topology["x_2"] = torch.zeros([combinatorial_complex.number_of_cells(), 5])        
 
         return lifted_topology
 

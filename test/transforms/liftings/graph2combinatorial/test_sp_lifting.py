@@ -480,6 +480,16 @@ class TestDirectedFlagComplex:
         )
         assert torch.equal(result, expected_indices)
 
+    # def test_find_paths(self, dfc):
+    #     """Test the find_paths method"""
+    #     indices = torch.tensor([[0,1,1,2,3,4],[1,2,5,3,7,6]])
+    #     threshold = 2
+
+    #     result = dfc.find_paths(indices, threshold)
+    #     expected = [[0,1,2,3,7]]
+
+    #     assert result == expected
+
 
 class TestSPLifting:
     def test_sp_lifting(self):

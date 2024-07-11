@@ -237,18 +237,18 @@ class SPCCNN(torch.nn.Module):
             negative_slope,
         )
 
-        self.linear = torch.nn.Linear(channels_per_layer[-1][2][0],
+        self.linear = torch.nn.Linear(channels_per_layer[-1][1][0],
                                       out_channels_0)
     def forward(
         self,
         x_0,
-        x_3,
+        x_2,
         neighborhood_0_to_0,
         neighborhood_1_to_3,
     ):
         x_0, _  = self.base_model(
             x_0,
-            x_3,
+            x_2,
             neighborhood_0_to_0,
             neighborhood_1_to_3,
         )
