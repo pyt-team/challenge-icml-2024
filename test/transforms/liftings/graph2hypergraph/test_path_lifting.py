@@ -75,7 +75,7 @@ class TestHypergraphPathLifting:
             lengths,
             include_smaller_paths=include_smaller_paths,
         ).find_hyperedges(self.data)
-        assert not frozenset({0, 1}) in res
+        assert frozenset({0, 1}) not in res
 
     def test_4(self):
         """test: include_smaller_paths=True"""
@@ -122,10 +122,12 @@ class TestHypergraphPathLifting:
 
     def test_7(self):
         """test: every hyperedge contains the source and target nodes when specified"""
-        a = np.random.choice(np.arange(len(self.data.x)), 2, replace=False)
+        a = np.random.default_rng().choice(
+            np.arange(len(self.data.x)), 2, replace=False
+        )
         source_nodes = [a[0]]
         target_nodes = [a[1]]
-        lengths = [np.random.randint(1, 5)]
+        lengths = [np.random.default_rng().integers(1, 5)]
         include_smaller_paths = False
         res = PathLifting(
             source_nodes,

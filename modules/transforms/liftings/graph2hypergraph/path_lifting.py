@@ -43,14 +43,14 @@ class PathLifting(Graph2HypergraphLifting):
         s_hyperedges = set()
 
         if self.target_nodes is None:  # all paths stemming from source nodes only
-            for source, length in zip(self.source_nodes, self.lengths):
+            for source, length in zip(self.source_nodes, self.lengths, strict=True):
                 D, d_id2label, l_leafs = self.build_stemmingTree(G, source, length)
                 s = self.extract_hyperedgesFromStemmingTree(D, d_id2label, l_leafs)
                 s_hyperedges = s_hyperedges.union(s)
 
         else:  # paths from source_nodes to target_nodes or from source nodes only
             for source, target, length in zip(
-                self.source_nodes, self.target_nodes, self.lengths
+                self.source_nodes, self.target_nodes, self.lengths, strict=True
             ):
                 if target is None:
                     D, d_id2label, l_leafs = self.build_stemmingTree(G, source, length)
