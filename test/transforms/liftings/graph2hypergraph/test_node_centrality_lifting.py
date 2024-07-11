@@ -8,8 +8,8 @@ from modules.transforms.liftings.graph2hypergraph.node_centrality_lifting import
 )
 
 
-class TestHypergraphPageRankLifting:
-    """Test the HypergraphPageRankLifting class."""
+class TestHypergraphNodeCentralityLifting:
+    """Test the HypergraphNodeCentralityLifting class."""
 
     def setup_method(self):
         self.data = load_manual_graph()
