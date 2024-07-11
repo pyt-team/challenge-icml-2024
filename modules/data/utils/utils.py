@@ -333,6 +333,39 @@ def load_manual_graph():
         y=torch.tensor(y),
     )
 
+def load_contact_primary_school(cfg: dict):
+    import gdown
+    import zipfile
+    data_dir, data_name = cfg["data_dir"], cfg["data_name"]
+    url = 'https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA'
+    target_fn = osp.join(data_dir, data_name + ".zip")
+    gdown.download(url, target_fn, quiet=False)
+    archive = zipfile.ZipFile(target_fn, "r")
+    labels = archive.open("contact-primary-school/node-labels-contact-primary-school.txt", "r").readlines()
+    hyperedges = archive.open("contact-primary-school/hyperedges-contact-primary-school.txt", "r").readlines()
+    label_names = archive.open("contact-primary-school/label-names-contact-primary-school.txt", "r").readlines()
+
+    hyperedges = [list(map(int, he.decode().replace("\n", "").strip().split(","))) for he in hyperedges]
+    labels = np.array([int(b.decode().replace("\n","").strip()) for b in labels])
+    label_names = np.array([b.decode().replace("\n","").strip() for b in label_names])
+
+    # Based on: https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.HypergraphConv.html
+    HE_coo = torch.tensor(np.array([
+        np.concatenate(hyperedges),
+        np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges])
+    ]))
+    data = Data(
+        x=torch.empty((len(labels), 0)), 
+        edge_index=HE_coo,
+        y=torch.LongTensor(labels), 
+        y_names=label_names, 
+        num_nodes=len(labels), 
+        num_node_features=0,
+        num_edges=len(hyperedges), 
+        # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
+    )
+    return data 
+    
 
 def get_Planetoid_pyg(cfg):
     r"""Loads Planetoid graph datasets from torch_geometric.
@@ -399,6 +432,8 @@ def ensure_serializable(obj):
         return dict(obj)
     else:
         return None
+
+
 
 
 def make_hash(o):

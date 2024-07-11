@@ -12,7 +12,8 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_simplicial_dataset,
+    load_simplicial_dataset, 
+    load_contact_primary_school
 )
 
 
@@ -203,4 +204,13 @@ class HypergraphLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
+        ## Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
+        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+        if self.parameters.data_name in ["ContactPrimarySchool"]:
+            data = load_contact_primary_school(self.parameters)
+            dataset = CustomDataset([data], self.data_dir)
+            return dataset 
         return load_hypergraph_pickle_dataset(self.parameters)
