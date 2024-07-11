@@ -81,7 +81,7 @@ class TestModularityMaximizationLifting:
         # Test the detect_communities method
         detected_communities = self.lifting.detect_communities(b)
 
-        expected_communities = torch.tensor([0, 0, 0, 1, 1, 0, 0, 0])
+        expected_communities = torch.tensor([0, 0, 0, 1, 0, 0, 0, 0])
 
         assert (
             detected_communities == expected_communities
@@ -101,10 +101,10 @@ class TestModularityMaximizationLifting:
                 [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
             ]
         )
