@@ -177,7 +177,8 @@ class SimplicialLoader(AbstractLoader):
         root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
 
         self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
-        return load_simplicial_dataset(self.parameters)
+        data = load_simplicial_dataset(self.parameters)
+        return CustomDataset([data], self.data_dir)
 
 
 class HypergraphLoader(AbstractLoader):

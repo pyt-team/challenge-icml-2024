@@ -1,36 +1,40 @@
-from topomodelx.utils.sparse import from_sparse
 from toponetx.classes.combinatorial_complex import CombinatorialComplex
+from toponetx.classes.hyperedge import HyperEdge
 from torch_geometric.data import Data
 
+from modules.data.utils.utils import get_combinatorial_complex_connectivity
 from modules.transforms.liftings.simplicial2combinatorial.base import (
     Simplicial2CombinatorialLifting,
 )
 
 
 class CofaceCCLifting(Simplicial2CombinatorialLifting):
-    def __init__(self, keep_features=False, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.keep_features = keep_features
+        self.keep_features = kwargs.get("keep_features", False)
 
-    def lift_topology(self, data: Data) -> dict:
+    def get_lower_cells(self, data: Data) -> list[HyperEdge]:
+        """ Get the lower cells of the complex
 
-        cells = []
-        ranks = []
+        Parameters:
+            data (Data): The input data
+        Returns:
+            List[HyperEdge]: The lower cells of the complex
+        """
+        cells: list[HyperEdge] = []
 
-        # Initialize the CC given a torch_geometric.Data
-        # graph
         ## Add 0-cells
         for cell in range(data["x_0"].size(0)):
-            cells.append(cell)
-            ranks.append(0)
+            zero_cell = HyperEdge([cell], rank=0)
+            cells.append(zero_cell)
 
         ## Add 1-cells
         for inc_c_1 in data["incidence_1"].to_dense().T:
             # Get the 0-cells that are incident to the 1-cell
             cell_0_bound = inc_c_1.nonzero().flatten().tolist()
             assert(len(cell_0_bound) == 2)
-            cells.append((cell_0_bound[0], cell_0_bound[1]))
-            ranks.append(1)
+            one_cell = HyperEdge(cell_0_bound, rank=1)
+            cells.append(one_cell)
 
         ## Add 2-cells
         for inc_c_2 in data["incidence_2"].to_dense().T:
@@ -42,25 +46,37 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
             # indexes in 2D
             cell_0_bound = cell_0_bound[:, 1]
             # Remove redudants and convert to tuple
-            cell_0 = tuple(set(cell_0_bound.tolist()))
-            cells.append(cell_0)
-            ranks.append(2)
+            two_cell = HyperEdge(tuple(set(cell_0_bound.tolist())), rank=2)
+            cells.append(two_cell)
 
-        cc = CombinatorialComplex(cells, ranks=ranks, graph_based=False)
+        return cells
+
+    def lift_topology(self, data: Data) -> dict:
+        """ Lift the simplicial topology to a combinatorial complex
+        """
+
+        # Check that the dataset has the required fields
+        # assume that it's a simplicial dataset
+        assert "incidence_1" in data
+        assert "incidence_2" in data
+
+        cells = self.get_lower_cells(data)
+
+        ccc = CombinatorialComplex(cells, graph_based=False)
 
         # Iterate over the 2-cells and add the 3-cells
-        for cell in cc.skeleton(rank=2):
+        for r_cell in ccc.skeleton(rank=2):
             # Get the coface of the 2-cell
-            indices, coface = cc.coadjacency_matrix(2, 1, index=True)
+            indices, coface = ccc.coadjacency_matrix(2, 1, index=True)
 
             # Get the indices of the 2-cell that are co-adjacent
-            coface_indices = coface.todense()[indices[cell]].nonzero()[1].tolist()
-            cell_3 = set(cell)
+            coface_indices = coface.todense()[indices[r_cell]].nonzero()[1].tolist()
+            cell_3 = set(r_cell)
 
             # Iterate over the indices of the 2-cells
             # and add their 0-cells as a 3-cell
             for idx in coface_indices:
-                cell_3 = cell_3.union(set(cc.skeleton(rank=2)[idx]))
+                cell_3 = cell_3.union(set(ccc.skeleton(rank=2)[idx]))
 
             # Adding a rank 3 cell with less than 4 vertices
             # will take this cell from the skeleton of 2-cells if it exists
@@ -69,32 +85,25 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
             if len(cell_3) < 4 and self.keep_features:
                 continue
             # Get the cofaces incident to the 2-cell `cell` and add `cell` to the set
-            cc.add_cell(cell_3, rank=3)
+            ccc.add_cell(cell_3, rank=3)
+
+        # Create the incidence, adjacency and laplacian matrices
+        lifted_data = get_combinatorial_complex_connectivity(ccc, 3)
 
         # If the user wants to keep the features
         # from the r-cells aside from the first x_0
         if self.keep_features:
-            new_graph = {"x_0": data["x_0"], "x_1": data["x_1"], "x_2": data["x_2"]}
+            lifted_data = {"x_0": data["x_0"], "x_1": data["x_1"], "x_2": data["x_2"], **lifted_data}
         else:
-            new_graph = {"x_0": data["x_0"]}
+            lifted_data = {"x_0": data["x_0"], **lifted_data}
 
-        # Create the dirac operator matrix
-        #new_graph['dirac'] = cc.dirac_operator_matrix()
-
-        # Create the incidence, adjacency and laplacian matrices
-        for r in range(cc.dim+1):
-            if r > 0:
-                new_graph[f"laplacian_{r}"] = cc.laplacian_matrix(r)
-            if r < cc.dim:
-                new_graph[f"incidence_{r+1}"] = from_sparse(cc.incidence_matrix(r , r+1, incidence_type="up"))
-            new_graph[f"adjacency_{r}"] = from_sparse(cc.adjacency_matrix(r, r+1))
-
-        return new_graph
+        return lifted_data
 
     def forward(self, data: Data) -> Data:
         initial_data = data.to_dict()
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)
+
         # Make sure to remove passing of duplicated data
         # so that the constructor of Data does not raise an error
         for i in range(4):

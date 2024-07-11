@@ -9,9 +9,83 @@ import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
 from topomodelx.utils.sparse import from_sparse
+from toponetx.classes.combinatorial_complex import CombinatorialComplex
 from torch_geometric.data import Data
 from torch_sparse import coalesce
 
+
+def get_combinatorial_complex_connectivity(complex: CombinatorialComplex, max_rank, signed=False):
+    r"""Gets the connectivity matrices for the Combinatorial Complex.
+
+    Parameters
+    ----------
+    complex : topnetx.CombinatorialComplex
+        Cell complex.
+    max_rank : int
+        Maximum rank of the complex.
+    signed : bool
+        If True, returns signed connectivity matrices.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    practical_shape = list(
+        np.pad(list(complex.shape), (0, max_rank + 1 - len(complex.shape)))
+    )
+    connectivity = {}
+    for rank_idx in range(max_rank + 1):
+        for connectivity_info in [
+            "incidence",
+            "laplacian",
+            "adjacency",
+        ]:
+            try:
+                if connectivity_info == "laplacian":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        complex.laplacian_matrix(rank=rank_idx)
+                    )
+                elif connectivity_info == "adjacency":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        getattr(complex, f"{connectivity_info}_matrix")(
+                            rank_idx, rank_idx+1
+                        )
+                    )
+                else: # incidence
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = from_sparse(
+                        getattr(complex, f"{connectivity_info}_matrix")(
+                            rank_idx-1, rank_idx
+                        )
+                    )
+            except ValueError:  # noqa: PERF203
+                if connectivity_info == "incidence":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                        )
+                    )
+                else:
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                        )
+                    )
+            except AttributeError:
+                if connectivity_info == "incidence":
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
+                        )
+                    )
+                else:
+                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
+                        generate_zero_sparse_connectivity(
+                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                        )
+                    )
+    connectivity["shape"] = practical_shape
+    return connectivity
 
 def get_complex_connectivity(complex, max_rank, signed=False):
     r"""Gets the connectivity matrices for the complex.
@@ -327,13 +401,12 @@ def load_manual_simplicial_complex():
         x_0=torch.rand(len(one_cells), num_feats),
         x_1=torch.rand(len(two_cells), num_feats),
         x_2=torch.rand(len(three_cells), num_feats),
-        x_3=torch.rand(len(three_cells), num_feats),
         incidence_0=torch.zeros((1, 5)).to_sparse(),
+        adjacency_1=torch.zeros((len(one_cells), len(one_cells))).to_sparse(),
+        adjacency_2=torch.zeros((len(two_cells), len(two_cells))).to_sparse(),
         adjacency_0=torch.zeros((5, 5)).to_sparse(),
         incidence_1=torch.tensor(incidence_1).to_sparse(),
         incidence_2=torch.tensor(incidence_2).to_sparse(),
-        adjacency_1=torch.zeros((len(one_cells), len(one_cells))).to_sparse(),
-        adjacency_2=torch.zeros((len(two_cells), len(two_cells))).to_sparse(),
         num_nodes=len(one_cells),
         y=torch.tensor(y),
     )
