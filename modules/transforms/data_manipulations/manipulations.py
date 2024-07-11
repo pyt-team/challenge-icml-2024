@@ -1,8 +1,6 @@
-import networkx as nx
 import torch
 import torch_geometric
-from toponetx.classes import SimplicialComplex
-from torch_geometric.utils import one_hot, to_networkx
+from torch_geometric.utils import one_hot
 
 
 class IdentityTransform(torch_geometric.transforms.BaseTransform):
