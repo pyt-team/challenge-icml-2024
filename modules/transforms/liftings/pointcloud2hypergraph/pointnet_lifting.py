@@ -63,8 +63,9 @@ class PointNetLifting(PointCloud2HypergraphLifting):
             size=(data.num_nodes, sampling_idcs.numel()),
         )
 
+        # Hyperedges should have at least two incident nodes
         assert (
-            1.0 not in incidence_matrix.sum(dim=1).to_dense()
+            1.0 not in incidence_matrix.sum(dim=0).to_dense()
         ), "Isolated cluster(s) detected, choose larger radius."
 
         return {

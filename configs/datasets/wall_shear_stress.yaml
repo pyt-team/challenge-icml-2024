@@ -1,0 +1,4 @@
+data_domain: simplicial_complex
+data_type: artery
+data_name: wall_shear_stress
+data_dir: datasets/${data_domain}/${data_type}
