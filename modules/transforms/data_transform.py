@@ -12,8 +12,8 @@ from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLiftin
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
-from modules.transforms.liftings.graph2hypergraph.page_rank_lifting import (
-    HypergraphPageRankLifting,
+from modules.transforms.liftings.graph2hypergraph.node_centrality_lifting import (
+    HypergraphNodeCentralityLifting,
 )
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
@@ -22,7 +22,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
-    "HypergraphPageRankLifting": HypergraphPageRankLifting,
+    "HypergraphNodeCentralityLifting": HypergraphNodeCentralityLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex

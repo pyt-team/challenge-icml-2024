@@ -3,8 +3,8 @@
 import torch
 
 from modules.data.utils.utils import load_manual_graph
-from modules.transforms.liftings.graph2hypergraph.page_rank_lifting import (
-    HypergraphPageRankLifting,
+from modules.transforms.liftings.graph2hypergraph.node_centrality_lifting import (
+    HypergraphNodeCentralityLifting,
 )
 
 
@@ -14,9 +14,8 @@ class TestHypergraphPageRankLifting:
     def setup_method(self):
         self.data = load_manual_graph()
 
-        self.lifting = HypergraphPageRankLifting(
+        self.lifting = HypergraphNodeCentralityLifting(
             network_type="weighted",
-            alpha=0.85,
             th_quantile=0.8,
             n_most_influential=1,
         )

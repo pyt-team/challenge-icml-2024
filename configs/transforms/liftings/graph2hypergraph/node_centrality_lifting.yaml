@@ -1,5 +1,5 @@
 transform_type: 'lifting'
-transform_name: "HypergraphPageRankLifting"
+transform_name: "HypergraphNodeCentralityLifting"
 network_type: 'weighted'
 alpha: 0.85
 th_quantile: 0.95

@@ -6,7 +6,7 @@ import torch_geometric
 from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
 
 
-class HypergraphPageRankLifting(Graph2HypergraphLifting):
+class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
     r"""Lifts graphs to hypergraph domain using Page Rank.
 
     Parameters
@@ -15,6 +15,15 @@ class HypergraphPageRankLifting(Graph2HypergraphLifting):
         Network type may be weighted or unweighted. Default is "weighted".
     alpha: float
         Damping parameter for PageRank, default=0.85.
+    th_quantile: float
+        Fraction of most influential nodes in the network, default=0.95.
+    n_most_influential: integer
+        Number of most influential nodes to assign a node to. default=2.
+    max_iter: integer
+        Maximum number of iterations in power method eigenvalue solver.
+    tol: float
+        Error tolerance used to check convergence in power method solver. The iteration will stop after a tolerance of len(G) * tol is reached.
+
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -67,7 +76,6 @@ class HypergraphPageRankLifting(Graph2HypergraphLifting):
 
         if data.x is None or self.network_type == "unweighted" or data.x.shape[1] > 1:
             node_attr = np.ones(shape=(data.num_nodes, 1))
-            # data.x = torch.from_numpy(data.x.astype("f4"))
         elif isinstance(data.x, torch.Tensor):
             node_attr = data.x.numpy()
         else:
@@ -96,7 +104,8 @@ class HypergraphPageRankLifting(Graph2HypergraphLifting):
                 f"network type {self.network_type} not implemented"
             )
 
-        # estimate page rank per node
+        # estimate node centrality
+
         pr = nx.pagerank(
             G, alpha=self.alpha, max_iter=self.max_iter, tol=self.tol, weight="w"
         )
