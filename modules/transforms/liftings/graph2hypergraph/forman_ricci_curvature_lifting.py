@@ -15,8 +15,12 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
     ----------
     network_type : str
         Network type may be weighted or unweighted. Default is "weighted".
-    th_quantile: float
-        Quantile to estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone. Default is 0.6
+    threshold_type : str
+        type of threshold (either based on quantile or absolute). Default is "quantile".
+    threshold_direction : str
+        direction whether to prune values above (upper) or below (lower) threshold. Default is "upper".
+    threshold: float
+        Absolute value or quantile to estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone. Default is 0.1
     **kwargs : optional
         Additional arguments for the class.
     """
