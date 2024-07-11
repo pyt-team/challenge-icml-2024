@@ -426,6 +426,54 @@ def load_double_house_graph() -> torch_geometric.data.Data:
     )
 
 
+def load_8_vertex_cubic_graphs() -> list[torch_geometric.data.Data]:
+    """Downloaded from https://mathrepo.mis.mpg.de/GraphCurveMatroids/"""
+    # fmt: off
+    edgesets = [
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {5, 8}, {6, 7}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 5}, {3, 6}, {4, 5}, {4, 7}, {5, 8}, {6, 7}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 5}, {3, 6}, {4, 7}, {4, 8}, {5, 7}, {5, 8}, {6, 7}, {6, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 5}, {2, 6}, {3, 5}, {3, 7}, {4, 6}, {4, 7}, {5, 8}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 5}, {2, 6}, {3, 5}, {3, 7}, {4, 6}, {4, 8}, {5, 8}, {6, 7}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 5}, {5, 6}, {6, 7}, {6, 8}, {7, 9}, {7, 10}, {8, 9}, {8, 10}, {9, 10}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 6}, {5, 7}, {6, 8}, {7, 9}, {7, 10}, {8, 9}, {8, 10}, {9, 10}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {5, 8}, {6, 7}, {6, 9}, {7, 10}, {8, 9}, {8, 10}, {9, 10}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {5, 8}, {6, 9}, {6, 10}, {7, 8}, {7, 9}, {8, 10}, {9, 10}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {5, 8}, {6, 9}, {6, 10}, {7, 9}, {7, 10}, {8, 9}, {8, 10}],
+
+    ]
+    # fmt: on
+
+    list_data = []
+    for i, edgeset in enumerate(edgesets):
+        n = 8 if i < 5 else 10
+        vertices = [i for i in range(n)]
+        x = (
+            torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+            if i < 5
+            else torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000])
+            .unsqueeze(1)
+            .float()
+        )
+        y = (
+            torch.tensor([0, 1, 1, 1, 0, 0, 0, 0])
+            if i < 5
+            else torch.tensor([0, 1, 1, 1, 0, 0, 0, 0, 1, 1])
+        )
+        edgeset = [[v1 - 1, v2 - 1] for (v1, v2) in edgeset]
+        G = nx.Graph()
+        G.add_nodes_from(vertices)
+        # offset by 1, since the graphs presented start at 1.
+        G.add_edges_from(edgeset)
+        G.to_undirected()
+        edge_list = torch.Tensor(list(G.edges())).T.long()
+
+        data = torch_geometric.data.Data(x=x, edge_index=edge_list, num_nodes=n, y=y)
+
+        list_data.append(data)
+    return list_data
+
+
 def get_Planetoid_pyg(cfg):
     r"""Loads Planetoid graph datasets from torch_geometric.
 

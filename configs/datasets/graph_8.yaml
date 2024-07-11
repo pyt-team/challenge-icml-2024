@@ -1,0 +1,12 @@
+data_domain: graph
+data_type: trivalent
+data_name: graphs_8vertices
+data_dir: datasets/${data_domain}/${data_type}
+
+# Dataset parameters
+num_features: 1
+num_classes: 2
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: node

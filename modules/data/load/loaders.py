@@ -9,6 +9,7 @@ from modules.data.load.base import AbstractLoader
 from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
 from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
+    load_8_vertex_cubic_graphs,
     load_cell_complex_dataset,
     load_double_house_graph,
     load_hypergraph_pickle_dataset,
@@ -111,6 +112,9 @@ class GraphLoader(AbstractLoader):
             data3 = load_double_house_graph()
             dataset = CustomDataset([data1, data3], self.data_dir)
 
+        elif self.parameters.data_name in ["graphs_8vertices"]:
+            graphs = load_8_vertex_cubic_graphs()
+            dataset = CustomDataset(graphs, self.data_dir)
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
