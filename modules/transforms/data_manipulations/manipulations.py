@@ -1,6 +1,8 @@
+import networkx as nx
 import torch
 import torch_geometric
-from torch_geometric.utils import one_hot
+from toponetx.classes import SimplicialComplex
+from torch_geometric.utils import one_hot, to_networkx
 
 
 class IdentityTransform(torch_geometric.transforms.BaseTransform):
@@ -302,5 +304,86 @@ class KeepSelectedDataFields(torch_geometric.transforms.BaseTransform):
         for key, _ in data.items():  # noqa : PERF102
             if key not in self.parameters["keep_fields"]:
                 del data[key]
+
+        return data
+
+class AlexanderDual(torch_geometric.transforms.BaseTransform):
+    r"""The Alexander dual of a Simplicial Complex `\sigma` denoted
+    `\bar{\sigma}` is the simplicial complex whose simplices are the 
+    complements of the simplices of `\sigma`.
+
+    Parameters
+    ----------
+    **kwargs : optional
+        Parameters for the transform.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.type = "alexander_dual"
+        self.parameters = kwargs
+
+    def forward(self, data: torch_geometric.data.Data):
+        r"""Apply the transform to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The transformed data.
+        """
+
+        G = to_networkx(data)
+        S = SimplicialComplex(simplices=G)
+        S_star = SimplicialComplex()
+
+        nodes = set(S.nodes)
+        for s in S.simplices:
+            s_bar = frozenset(nodes - set(s))
+            if s_bar not in S:
+                S_star.add_simplex(s)
+
+        S_star
+
+        return data
+
+
+class RandomGraph(torch_geometric.transforms.BaseTransform):
+    r"""A transform that generates a random graph from the input data.
+
+    Parameters
+    ----------
+    **kwargs : optional
+        Parameters for the transform.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.type = "random_graph"
+        self.parameters = kwargs
+
+    def forward(self, data: torch_geometric.data.Data):
+        r"""Apply the transform to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The transformed data.
+        """
+
+        G = to_networkx(data)
+        n = G.number_of_nodes()
+        p = self.parameters["p"]
+        G = nx.fast_gnp_random_graph(n, p)
+        data = torch_geometric.utils.from_networkx(G)
 
         return data
