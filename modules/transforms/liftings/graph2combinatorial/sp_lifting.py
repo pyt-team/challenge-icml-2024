@@ -19,16 +19,13 @@ def get_complex_connectivity(combinatorial_complex, adjacencies, incidences, max
         connectivity_info = "adjacency"
         rank_idx = adj[0]
         if adj[0] < adj[1]:
-            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse()
+            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.adjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
         else:
-            B = combinatorial_complex.incidence_matrix(rank=adj[0], incidence_type="down")
-            A = B.T @ B
-            A.setdiag(0)
-            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy(A.todense()).to_sparse()
+            connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = torch.from_numpy((combinatorial_complex.coadjacency_matrix(adj[0],adj[1]).todense())).to_sparse().float()
     for inc in incidences:
         connectivity_info = "incidence"
         rank_idx = inc[0]
-        connectivity[f"{connectivity_info}_{rank_idx}"] = torch.from_numpy((combinatorial_complex.incidence_matrix(inc[0],incidence_type=inc[1]).todense())).to_sparse()
+        connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = torch.from_numpy((combinatorial_complex.incidence_matrix(inc[0],inc[1]).todense())).to_sparse().float()
     return connectivity
 
 
@@ -61,8 +58,8 @@ class Graph2CombinatorialLifting(GraphLifting):
         dict
             The lifted topology.
         """
-        adjacencies = [[0,1], [1,0], [1,2], [2,1]]
-        incidences = [[0,"up"], [1,"up"]]
+        adjacencies = [[0,1]]
+        incidences = [[0,2]]
         lifted_topology = get_complex_connectivity(combinatorial_complex, adjacencies, incidences, self.complex_dim)
         
 
@@ -84,11 +81,10 @@ class Graph2CombinatorialLifting(GraphLifting):
         #     lifted_topology["x_1"] = torch.stack(
         #         list(combinatorial_complex.get_cell_attributes("features", 1).values())
         #     )
-
-        lifted_topology["x_0"] = torch.zeros([graph.number_of_nodes(), 5])
-        lifted_topology["x_1"] = torch.zeros([graph.number_of_edges(), 5])        
-        print(graph.number_of_nodes(), graph.number_of_edges(), combinatorial_complex.number_of_cells())
-        # lifted_topology["x_2"] = torch.zeros([combinatorial_complex.number_of_cells(), 5])        
+        
+        feat = torch.stack(list(nx.get_node_attributes(graph, "features").values()))
+        lifted_topology["x_0"] = feat
+        lifted_topology["x_3"] = torch.matmul(lifted_topology["incidence_0_2"].t(), feat)
 
         return lifted_topology
 
@@ -553,9 +549,9 @@ class SPLifting(Graph2CombinatorialLifting):
         for p in paths: # retrieve nodes that compose each path 
             cell = list()
             for c in p:
-                cell += FlG.complex[2][c]
+                cell += list(FlG.complex[2][c].numpy())
             cell = list(set(cell)) # remove duplicates
             cc.add_cell(cell, rank=2)
-        
+
         return self._get_lifted_topology(cc, G)
     

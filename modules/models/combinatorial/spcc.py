@@ -147,7 +147,7 @@ class SPCCLayer(torch.nn.Module):
         x_0_to_0 = self.hbs_0_level1(x_0, adjacency_0)
         x_0_to_3, x_3_to_0 = self.hbns_0_3(x_3, x_0, incidence_3)
 
-        x_0= self.aggr([x_0_to_0, x_0_to_3])
+        x_0= self.aggr([x_0_to_0, x_3_to_0])
         x_3 = self.aggr([x_0_to_3])
 
         return x_0, x_3
@@ -241,14 +241,16 @@ class SPCCNN(torch.nn.Module):
                                       out_channels_0)
     def forward(
         self,
-        x_0,
-        x_2,
-        neighborhood_0_to_0,
-        neighborhood_1_to_3,
+        data
     ):
+        x_0 = data["x_0"]
+        x_3 = data["x_3"]
+        neighborhood_0_to_0 = data["adjacency_0_1"]
+        neighborhood_1_to_3 = data["incidence_0_2"]
+
         x_0, _  = self.base_model(
             x_0,
-            x_2,
+            x_3,
             neighborhood_0_to_0,
             neighborhood_1_to_3,
         )
