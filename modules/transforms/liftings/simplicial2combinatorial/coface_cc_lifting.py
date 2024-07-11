@@ -113,4 +113,5 @@ class CofaceCCLifting(Simplicial2CombinatorialLifting):
                 del initial_data[f"incidence_{i}"]
             if f"adjacency_{i}" in initial_data:
                 del initial_data[f"adjacency_{i}"]
+        del initial_data["shape"]
         return Data(**initial_data, **lifted_topology)
