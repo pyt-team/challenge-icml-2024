@@ -1,5 +1,6 @@
 """Test Forman-Ricci Curvature Lifting."""
 
+import pytest
 import torch
 
 from modules.data.utils.utils import load_manual_graph
@@ -16,6 +17,8 @@ class TestHypergraphFormanRicciCurvatureLifting:
 
         self.lifting = HypergraphFormanRicciCurvatureLifting(
             network_type="weighted",
+            threshold_type="quantile",
+            threshold_direction="upper",
             threshold=0.6,
         )
 
@@ -40,7 +43,16 @@ class TestHypergraphFormanRicciCurvatureLifting:
 
         assert (
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
-        ).all(), "Something is wrong with incidence_hyperedges (k=1)."
+        ).all(), "Something is wrong with incidence_hyperedges."
         assert (
             expected_n_hyperedges == lifted_data.num_hyperedges
-        ), "Something is wrong with the number of hyperedges (k=1)."
+        ), "Something is wrong with the number of hyperedges."
+
+    def test_validations(self):
+        with pytest.raises(NotImplementedError):
+            self.lifting.threshold_type = "relative"
+            self.lifting.forward(self.data.clone())
+
+        with pytest.raises(NotImplementedError):
+            self.lifting.threshold_direction = "middle"
+            self.lifting.forward(self.data.clone())

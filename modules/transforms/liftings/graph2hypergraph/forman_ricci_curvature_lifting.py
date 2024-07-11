@@ -65,7 +65,6 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
 
         if data.x is None or self.network_type == "unweighted" or data.x.shape[1] > 1:
             node_attr = np.ones(shape=(data.num_nodes, 1))
-            # data.x = torch.from_numpy(data.x.astype("f4"))
         elif isinstance(data.x, torch.Tensor):
             node_attr = data.x.numpy()
         else:
@@ -99,13 +98,13 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
 
             G[v1][v2]["w_frc"] = w_e * (w_v1 / w_e + w_v2 / w_e - (ev1_sum + ev2_sum))
 
-        # estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone(s), i.e. hyperedges
-        w_frc = list(nx.get_edge_attributes(G, "w_frc").values())
-
         if self.threshold_type == "quantile":
-            th_cutoff = np.quantile(w_frc, self.threshold)
+            # estimate threshold from Forman-Ricci curvature distribution to prune network and reveal backbone(s), i.e. hyperedges
+            w_frc = list(nx.get_edge_attributes(G, "w_frc").values())
+            th_frc = np.quantile(w_frc, self.threshold)
         elif self.threshold_type == "absolute":
-            th_cutoff = self.threshold
+            # define absolute Forman-Ricci curvature threshold to prune network and reveal backbone(s), i.e. hyperedges
+            th_frc = self.threshold
         else:
             raise NotImplementedError(
                 f"threshold type {self.threshold_type} not implemented"
@@ -114,12 +113,12 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
         if self.threshold_direction == "upper":
 
             def compare_to_threshold(x):
-                return x > th_cutoff
+                return x > th_frc
 
         elif self.threshold_direction == "lower":
 
             def compare_to_threshold(x):
-                return x < th_cutoff
+                return x < th_frc
 
         else:
             raise NotImplementedError(
