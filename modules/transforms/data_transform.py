@@ -27,7 +27,7 @@ TRANSFORMS = {
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Hypergraph -> Simplicial Complex 
-    "HypergraphHeatLift": HypergraphHeatLifting,
+    "HypergraphHeatLifting": HypergraphHeatLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
