@@ -1,7 +1,5 @@
 import torch
-import torch.nn.functional as F
 from torch.nn.parameter import Parameter
-
 from topomodelx.base.aggregation import Aggregation
 from topomodelx.nn.combinatorial.hmc_layer import HBS, HBNS
 
