@@ -18,7 +18,7 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
     threshold_type : str
         type of threshold (either based on quantile or absolute). Default is "quantile".
     threshold_direction : str
-        direction whether to prune values above (upper) or below (lower) threshold. Default is "upper".
+        direction whether to prune values above or below  threshold. Default is "above".
     threshold: float
         Absolute value or quantile to estimate cutoff threshold from Forman-Ricci curvature distribution to prune network and reveal backbone. Default is 0.1
     **kwargs : optional
@@ -27,10 +27,10 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
 
     def __init__(
         self,
-        network_type="weighted",
-        threshold_type="quantile",
-        threshold_direction="upper",
-        threshold=0.1,
+        network_type: str = "weighted",
+        threshold_type: str = "quantile",
+        threshold_direction: str = "above",
+        threshold: float = 0.1,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -114,14 +114,14 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
                 f"threshold type {self.threshold_type} not implemented"
             )
 
-        if self.threshold_direction == "upper":
-
-            def compare_to_threshold(x):
+        if self.threshold_direction == "above":
+            # select edge with curvature above threshold for pruning
+            def select_edge_for_pruning(x):
                 return x > th_frc
 
-        elif self.threshold_direction == "lower":
-
-            def compare_to_threshold(x):
+        elif self.threshold_direction == "below":
+            # select edge with curvature below threshold for pruning
+            def select_edge_for_pruning(x):
                 return x < th_frc
 
         else:
@@ -129,14 +129,16 @@ class HypergraphFormanRicciCurvatureLifting(Graph2HypergraphLifting):
                 f"threshold threshold_direction {self.threshold_direction} not implemented"
             )
 
+        # select all edges that meet criterium for pruning
         edges_to_remove = []
         for v1, v2 in G.edges():
-            if compare_to_threshold(G[v1][v2]["w_frc"]):
+            if select_edge_for_pruning(G[v1][v2]["w_frc"]):
                 edges_to_remove.append((v1, v2))
 
+        # remove selected edges from curvature graph
         G.remove_edges_from(edges_to_remove)
 
-        # find connected components (hyperedges)
+        # find connected components in curvature graph (hyperedges)
         hyperedges = [
             c for c in sorted(nx.connected_components(G), key=len, reverse=True)
         ]
