@@ -15,8 +15,12 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.pointcloud2simplicial.ball_pivoting_lifting import (
+    BallPivotingLifting,
+)
 
 TRANSFORMS = {
+    "BallPivotingLifting": BallPivotingLifting,
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex

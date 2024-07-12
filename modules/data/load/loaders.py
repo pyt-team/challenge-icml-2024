@@ -1,5 +1,6 @@
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import rootutils
 import torch_geometric
@@ -13,6 +14,7 @@ from modules.data.utils.utils import (
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_simplicial_dataset,
+    load_sphere_point_cloud,
 )
 
 
@@ -204,3 +206,69 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         return load_hypergraph_pickle_dataset(self.parameters)
+
+
+class SpherePointCloudLoader(AbstractLoader):
+    r"""Loader for the sphere pointcloud dataset.
+
+    Parameters
+    ----------
+    parameters : DictConfig
+        Configuration parameters.
+    """
+
+    def __init__(self, parameters: DictConfig):
+        super().__init__(parameters)
+        self.parameters = parameters
+
+    def load(
+        self,
+    ) -> torch_geometric.data.Dataset:
+        r"""Load simplicial dataset.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        torch_geometric.data.Dataset
+            torch_geometric.data.Dataset object containing the loaded data.
+        """
+        # Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+
+        function_params = {
+            "num_classes": self.parameters.get("num_classes", 2),
+            "num_points": self.parameters.get("num_points", 1000),
+            "num_features": self.parameters.get("num_features", 1),
+            "seed": self.parameters.get("seed", 0)
+        }
+        return load_sphere_point_cloud(**function_params)
+
+    def plot_point(
+            self,
+            data: torch_geometric.data.Data
+    ) -> None:
+        r"""Plot 3d point cloud dataset.
+
+        Parameters
+        ----------
+        data: torch_geometric.data.Data | dict
+            The input data to be plotted.
+
+        Returns
+        -------
+        None
+        """
+        x = np.asarray(data.pos)[:, 0]
+        y = np.asarray(data.pos)[:, 1]
+        z = np.asarray(data.pos)[:, 2]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(x, y, z)
+        plt.show()
+        return

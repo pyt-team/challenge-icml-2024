@@ -1,0 +1,6 @@
+data_domain: pointcloud
+data_type: toy_dataset
+data_name: sphere_point_cloud
+num_features: 1
+num_classes: 2
+data_dir: datasets/${data_domain}/${data_type}

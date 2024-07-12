@@ -421,3 +421,21 @@ def make_hash(o):
     hash_as_hex = sha1.hexdigest()
     # Convert the hex back to int and restrict it to the relevant int range
     return int(hash_as_hex, 16) % 4294967295
+
+
+def load_sphere_point_cloud(num_classes: int = 2, num_points: int = 1000, num_features: int = 1, seed: int = 0):
+    """Create a point cloud dataset in the shape of a sphere"""
+
+    # Generate random points from a normal distribution
+    points = torch.randn(num_points, 3)
+    # Normalize each point to lie on the surface of a unit sphere
+    points = points / points.norm(dim=1, keepdim=True)
+    # Generate the normals
+    normals = points.clone()
+
+    rng = np.random.default_rng(seed)
+    # points = torch.tensor(rng.random((5, 3)), dtype=torch.float)
+    classes = torch.tensor(rng.integers(num_classes, size=num_points), dtype=torch.long)
+    features = torch.tensor(rng.integers(num_features, size=(num_points, 1)), dtype=torch.float)
+
+    return torch_geometric.data.Data(x=features, y=classes, pos=points, normals=normals)

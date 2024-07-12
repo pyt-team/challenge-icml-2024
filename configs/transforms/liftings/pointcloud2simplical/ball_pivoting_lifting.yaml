@@ -1,0 +1,6 @@
+transform_type: 'lifting'
+transform_name: "BallPivotingLifting"
+# complex_dim: 3
+# preserve_edge_attr: False
+radii: [0.1, 0.5]
+feature_lifting: ProjectionSum
