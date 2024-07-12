@@ -108,6 +108,12 @@ class GraphLoader(AbstractLoader):
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
 
+        elif self.parameters.data_name in ["ShapeNet"]:
+            dataset = torch_geometric.datasets.ShapeNet(
+                root=root_data_dir,
+                include_normals=True,
+            )
+
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
