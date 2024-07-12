@@ -15,8 +15,8 @@ class TestTangentialLifting:
         data = load_point_cloud(num_points=5, seed=SEED)
 
         # Initialise the TangentialLifting class
-        self.lifting_signed = Tangential(signed=True)
-        self.lifting_unsigned = Tangential(signed=False)
+        self.lifting_signed = TangentialLifting(signed=True)
+        self.lifting_unsigned = TangentialLifting(signed=False)
 
     def test_lift_topology(self):
         """Test the lift_topology method."""
