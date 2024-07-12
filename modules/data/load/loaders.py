@@ -209,7 +209,6 @@ class HypergraphLoader(AbstractLoader):
 
 class PointCloudLoader(AbstractLoader):
     r"""Loader for point-cloud dataset.
-
     Parameters
     ----------
     parameters: DictConfig
@@ -225,18 +224,15 @@ class PointCloudLoader(AbstractLoader):
 
     def load(self) -> torch_geometric.data.Dataset:
         r"""Load point-cloud dataset.
-
         Parameters
         ----------
         None
-
         Returns
         -------
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        if "data_name" not in self.parameters:
-            data = load_point_cloud(num_classes=self.cfg["num_classes"])
-            return CustomDataset([data], self.cfg["data_dir"])
-        else:  # noqa: RET505
-            raise NotImplementedError
+        data = load_point_cloud(
+            num_classes=self.cfg["num_classes"], num_points=self.cfg["num_points"]
+        )
+        return CustomDataset([data], self.cfg["data_dir"])
