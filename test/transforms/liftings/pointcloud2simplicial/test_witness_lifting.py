@@ -11,11 +11,12 @@ class TestWitnessLifting:
 
     def setup_method(self):
         # Load the point cloud
-        self.data = load_point_cloud(num_points=5)
+        SEED = 42
+        self.data = load_point_cloud(num_points=5, seed=SEED)
 
         # Initialise the WitnessLifting class
-        self.lifting_signed = WitnessLifting(signed=True)
-        self.lifting_unsigned = WitnessLifting(signed=False)
+        self.lifting_signed = WitnessLifting(signed=True, seed=SEED)
+        self.lifting_unsigned = WitnessLifting(signed=False, seed=SEED)
 
     def test_lift_topology(self):
         """Test the lift_topology method."""
@@ -26,11 +27,11 @@ class TestWitnessLifting:
 
         expected_incidence_1 = torch.tensor(
             [
-                [1.0, 1.0, 0.0, 0.0],
-                [1.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 1.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
+                [1.0, 1.0, 1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0, 1.0],
             ]
         )
 
@@ -41,7 +42,7 @@ class TestWitnessLifting:
             expected_incidence_1 == lifted_data_signed.incidence_1.to_dense()
         ).all(), "Something is wrong with signed incidence_1 (nodes to edges)."
 
-        expected_incidence_2 = torch.tensor([[1.0], [1.0], [1.0], [0.0]])
+        expected_incidence_2 = torch.tensor([[1.0], [1.0], [0.0], [1.0], [0.0]])
 
         assert (
             abs(expected_incidence_2) == lifted_data_unsigned.incidence_2.to_dense()

@@ -17,6 +17,7 @@ class WitnessLifting(PointCloud2SimplicialLifting):
         landmark_proportion: int = 0.8,
         max_alpha_square=0.15,
         complex_dim=2,
+        seed=42,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -25,6 +26,8 @@ class WitnessLifting(PointCloud2SimplicialLifting):
         self.landmark_proportion = landmark_proportion
         self.max_alpha_square = max_alpha_square
         self.complex_dim = complex_dim
+        self.seed = seed
+        torch.manual_seed(seed)
 
     def _get_lifted_topology(self, simplicial_complex: SimplicialComplex) -> dict:
         r"""Returns the lifted topology.
@@ -49,6 +52,7 @@ class WitnessLifting(PointCloud2SimplicialLifting):
         witnesses: torch_geometric.data.Data,
     ) -> dict:
         n = len(witnesses.pos)
+
         perm = torch.randperm(n)
         idx = perm[: round(n * self.landmark_proportion)]
         landmarks_position = witnesses.pos[idx]
