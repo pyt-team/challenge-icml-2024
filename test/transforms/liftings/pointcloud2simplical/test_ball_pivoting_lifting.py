@@ -1,6 +1,7 @@
 """Test the message passing module."""
 
 import torch
+
 from modules.data.utils.utils import load_sphere_point_cloud
 from modules.transforms.liftings.pointcloud2simplicial.ball_pivoting_lifting import BallPivotingLifting
 

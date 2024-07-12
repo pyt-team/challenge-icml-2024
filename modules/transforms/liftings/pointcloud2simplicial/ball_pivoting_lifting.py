@@ -1,7 +1,7 @@
-import open3d
-import torch_geometric
 import warnings
 import numpy as np
+import open3d
+import torch_geometric
 
 from toponetx.classes import SimplicialComplex
 
@@ -31,7 +31,7 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         open3d_point_cloud = open3d.geometry.PointCloud(open3d.cpu.pybind.utility.Vector3dVector(data.pos.numpy()))
         # Check that the input point cloud includes normals. The Ball Pivoting Algorithm requires normals.
         if "normals" not in data:
-            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.", 
+            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.",
                           stacklevel=1)
 
             open3d_point_cloud.estimate_normals()
@@ -69,7 +69,7 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         open3d_point_cloud = open3d.geometry.PointCloud(open3d.cpu.pybind.utility.Vector3dVector(data.pos.numpy()))
         # Check that the input point cloud includes normals. The Ball Pivoting Algorithm requires normals.
         if "normals" not in data:
-            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.", 
+            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.",
                           stacklevel=1)
 
             open3d_point_cloud.estimate_normals()
