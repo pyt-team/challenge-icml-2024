@@ -17,6 +17,9 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         ----------
         data : torch_geometric.data.Data | dict
             The input data to be lifted.
+
+        radii : list[float]
+            The radii of the balls used in the algorithm.
         Returns
         -------
         torch_geometric.data.Data | dict
@@ -65,6 +68,15 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         return get_complex_connectivity(simplicial_complex, self.complex_dim)
 
     def plot_lifted_topology(self, data: torch_geometric.data.Data):
+        r"""Plots the lifted topology.
+        Parameters
+        ----------
+        data : torch_geometric.data.Data | dict
+            The input data to be lifted.
+        Returns
+        ---------
+        None
+        """
         # Convert input data into an open3d point cloud
         open3d_point_cloud = open3d.geometry.PointCloud(open3d.cpu.pybind.utility.Vector3dVector(data.pos.numpy()))
         # Check that the input point cloud includes normals. The Ball Pivoting Algorithm requires normals.

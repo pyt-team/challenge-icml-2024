@@ -261,8 +261,7 @@ class SpherePointCloudLoader(AbstractLoader):
 
         Returns
         -------
-        torch_geometric.data.Dataset
-            torch_geometric.data.Dataset object containing the loaded data.
+        None
         """
         x = np.asarray(data.pos)[:, 0]
         y = np.asarray(data.pos)[:, 1]
