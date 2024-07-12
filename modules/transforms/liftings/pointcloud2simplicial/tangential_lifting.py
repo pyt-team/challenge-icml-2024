@@ -11,7 +11,7 @@ from modules.transforms.liftings.pointcloud2simplicial.base import (
 
 class TangentialLifting(PointCloud2SimplicialLifting):
     # intrinsic dimension of the manifold set to 1 by default
-    def __init__(self, intrisic_dim=1, **kwargs):
+    def __init__(self, intrisic_dim=2, **kwargs):
         super().__init__(**kwargs)
         self.intrisic_dim = intrisic_dim
 
@@ -25,15 +25,14 @@ class TangentialLifting(PointCloud2SimplicialLifting):
         return lifted_topology
 
     def lift_topology(self, data: torch_geometric.data.Data, **kwargs) -> dict:
+
+        # initialize tangential complex object
         tangential_complex = gd.TangentialComplex(self.intrisic_dim, data.pos)
 
-        print("complex created")
+        # build the complex
+        tangential_complex.compute_tangential_complex()
 
-        simplicial_complex = SimplicialComplex().from_gudhi(
-            tangential_complex.create_simplex_tree()
-        )
-
-        print("complex built")
+        simplicial_complex = SimplicialComplex().from_gudhi(tangential_complex.create_simplex_tree())
 
         self.complex_dim = simplicial_complex.dim
 
