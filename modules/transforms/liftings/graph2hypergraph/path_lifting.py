@@ -12,9 +12,9 @@ class PathLifting(Graph2HypergraphLifting):
 
     def __init__(
         self,
-        source_nodes: list[int] = None,
-        target_nodes: list[int] = None,
-        lengths: list[int] = None,
+        source_nodes: list[int] | None = None,
+        target_nodes: list[int] | None = None,
+        lengths: list[int] | None = None,
         include_smaller_paths=False,
         **kwargs,
     ):
