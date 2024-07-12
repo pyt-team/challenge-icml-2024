@@ -536,7 +536,7 @@ class DirectedQConnectivity:
         def is_subpath(p1, p2):
             if len(p1) > len(p2):
                 return False
-            elif len(p1) == len(p2):
+            if len(p1) == len(p2):
                 return p1 == p2
             else:
                 diff = len(p2) - len(p1)
