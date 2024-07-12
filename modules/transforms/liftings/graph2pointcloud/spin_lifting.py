@@ -132,6 +132,4 @@ class SpinLifting(Graph2PointcloudLifting):
                 max_separation_distance = max_distance
             remaining_nodes = set(node_list) - coords.keys()
 
-        topology = self._get_lifted_topology(coords)
-
-        return topology
+        return self._get_lifted_topology(coords)
