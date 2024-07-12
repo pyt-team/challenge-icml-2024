@@ -1,9 +1,10 @@
-import torch
-import numpy as np
 import networkx as nx
-import torch_geometric
+import numpy as np
 import pyflagsercount as pfc
+import torch
+import torch_geometric
 from toponetx.classes import CombinatorialComplex
+
 from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
@@ -39,11 +40,11 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             if adj[0] < adj[1]:
                 connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
                     torch.from_numpy(
-                        (
+
                             combinatorial_complex.adjacency_matrix(
                                 adj[0], adj[1]
                             ).todense()
-                        )
+
                     )
                     .to_sparse()
                     .float()
@@ -51,11 +52,11 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             else:
                 connectivity[f"{connectivity_info}_{adj[0]}_{adj[1]}"] = (
                     torch.from_numpy(
-                        (
+
                             combinatorial_complex.coadjacency_matrix(
                                 adj[0], adj[1]
                             ).todense()
-                        )
+
                     )
                     .to_sparse()
                     .float()
@@ -64,7 +65,7 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             connectivity_info = "incidence"
             connectivity[f"{connectivity_info}_{inc[0]}_{inc[1]}"] = (
                 torch.from_numpy(
-                    (combinatorial_complex.incidence_matrix(inc[0], inc[1]).todense())
+                    combinatorial_complex.incidence_matrix(inc[0], inc[1]).todense()
                 )
                 .to_sparse()
                 .float()
@@ -107,9 +108,8 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist(), strict=False))
         )
 
-        dfc = DirectedQConnectivity(dataset_digraph, complex_dim)
+        return DirectedQConnectivity(dataset_digraph, complex_dim)
 
-        return dfc
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
 
@@ -239,8 +239,7 @@ class DirectedQConnectivity:
         mask = indices != min(i, n_vertices - 1)
         # Use advanced indexing to select vertices while preserving the
         # batch structure
-        d_i = simplices[:, mask]
-        return d_i
+        return simplices[:, mask]
 
     def _gen_q_faces_batched(self, simplices: torch.tensor, c: int) -> torch.tensor:
         r"""Compute the :math:`q`-dimensional faces of the simplices in the
@@ -359,14 +358,13 @@ class DirectedQConnectivity:
         else:
             indices = torch.empty([2, 0], dtype=torch.long)
 
-        A = torch.sparse_coo_tensor(
+        return torch.sparse_coo_tensor(
             indices,
             torch.ones(indices.size(1), dtype=torch.bool),
             size=(Ns, Nt),
             device="cpu",
         )
 
-        return A
 
     def _alpha_q_contained_sparse(
         self, sigmas: torch.Tensor, taus: torch.Tensor, q: int, chunk_size: int = 1024
@@ -411,14 +409,13 @@ class DirectedQConnectivity:
 
         values = torch.ones(intersect._indices().size(1))
 
-        A = torch.sparse_coo_tensor(
+        return torch.sparse_coo_tensor(
             intersect._indices(),
             values,
             dtype=torch.bool,
             size=(sigmas.size(0), taus.size(0)),
         )
 
-        return A
 
     def qij_adj(
         self,
@@ -473,15 +470,13 @@ class DirectedQConnectivity:
             di_sigmas, dj_taus, q, chunk_size
         )
 
-        indices = (
+        return (
             torch.cat(
                 (contained._indices().t(), alpha_q_contained._indices().t()), dim=0
             )
             .unique(dim=0)
             .t()
         )
-
-        return indices
 
     def find_paths(self, indices: torch.tensor, threshold: int):
         r"""Find the paths in the adjacency matrix associated with the
@@ -494,7 +489,6 @@ class DirectedQConnectivity:
         threshold : int
             The length threshold to select paths
 
-
         Returns
         -------
         paths : List[List]
@@ -502,7 +496,6 @@ class DirectedQConnectivity:
         """
 
         def dfs(node, adj_list, all_paths, path):
-
             if node not in adj_list:  # end of recursion
                 if len(path) > threshold:
                     all_paths = add_path(path.copy(), all_paths)
@@ -516,9 +509,9 @@ class DirectedQConnectivity:
                     dfs(new_node, adj_list, all_paths, path)
                     path.pop()
 
-            if only_loops:  # then we have another longest path
-                if len(path) > threshold:
-                    all_paths = add_path(path.copy(), all_paths)
+            if only_loops and len(
+                    path) > threshold:  # then we have another longest path
+                all_paths = add_path(path.copy(), all_paths)
 
             return
 
@@ -537,12 +530,8 @@ class DirectedQConnectivity:
                 return False
             if len(p1) == len(p2):
                 return p1 == p2
-            else:
-                diff = len(p2) - len(p1)
-                for i in range(diff + 1):
-                    if p2[i:i + len(p1)] == p1:
-                        return True
-            return False
+            diff = len(p2) - len(p1)
+            return any(p2[i:i + len(p1)] == p1 for i in range(diff + 1))
 
         def add_path(new_path, all_paths):
             for path in all_paths:
@@ -565,3 +554,4 @@ class DirectedQConnectivity:
             dfs(src, adj_list, all_paths, path)
 
         return all_paths
+

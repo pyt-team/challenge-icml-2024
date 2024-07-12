@@ -4,7 +4,6 @@ import torch
 
 from modules.transforms.liftings.graph2combinatorial.sp_lifting import (
     DirectedQConnectivity,
-    SimplicialPathsLifting,
 )
 
 

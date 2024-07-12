@@ -1,7 +1,6 @@
 import torch
-from torch.nn.parameter import Parameter
 from topomodelx.base.aggregation import Aggregation
-from topomodelx.nn.combinatorial.hmc_layer import HBS, HBNS
+from topomodelx.nn.combinatorial.hmc_layer import HBNS, HBS
 
 
 class SPCCLayer(torch.nn.Module):
