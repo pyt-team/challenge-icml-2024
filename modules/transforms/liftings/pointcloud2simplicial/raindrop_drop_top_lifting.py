@@ -407,6 +407,7 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
             loss.backward()
             self.optimizer.step()
 
+        self.drop_top.update_simplicial_complex()
         incidence_matrices = (
             self.drop_top.inc_mat_01,
             self.drop_top.inc_mat_02,
