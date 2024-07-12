@@ -6,15 +6,15 @@ from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
 )
 
 
-class TestWitnessLifting:
-    """Test the WitnessLifting class."""
+class TestDelaunayLifting:
+    """Test the DelaunayLifting class."""
 
     def setup_method(self):
         # Load the point cloud
         SEED = 42
         self.data = load_point_cloud(num_points=5, seed=SEED)
 
-        # Initialise the WitnessLifting class
+        # Initialise the DelaunayLifting class
         self.lifting_signed = DelaunayLifting(signed=True)
         self.lifting_unsigned = DelaunayLifting(signed=False)
 
