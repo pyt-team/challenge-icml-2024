@@ -13,8 +13,8 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_sphere_point_cloud,
     load_simplicial_dataset,
+    load_sphere_point_cloud,
 )
 
 
@@ -206,7 +206,7 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         return load_hypergraph_pickle_dataset(self.parameters)
-    
+
 
 class SpherePointCloudLoader(AbstractLoader):
     r"""Loader for the sphere pointcloud dataset.
@@ -241,10 +241,10 @@ class SpherePointCloudLoader(AbstractLoader):
         self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
 
         function_params = {
-            'num_classes': self.parameters.get('num_classes', 2),
-            'num_points': self.parameters.get('num_points', 1000),
-            'num_features': self.parameters.get('num_features', 1),
-            'seed': self.parameters.get('seed', 0)
+            "num_classes": self.parameters.get("num_classes", 2),
+            "num_points": self.parameters.get("num_points", 1000),
+            "num_features": self.parameters.get("num_features", 1),
+            "seed": self.parameters.get("seed", 0)
         }
         return load_sphere_point_cloud(**function_params)
 
@@ -269,7 +269,7 @@ class SpherePointCloudLoader(AbstractLoader):
         z = np.asarray(data.pos)[:, 2]
 
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
         ax.scatter(x, y, z)
         plt.show()
         return

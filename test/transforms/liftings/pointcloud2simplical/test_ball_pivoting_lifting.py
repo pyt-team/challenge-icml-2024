@@ -1,7 +1,6 @@
 """Test the message passing module."""
 
 import torch
-
 from modules.data.utils.utils import load_sphere_point_cloud
 from modules.transforms.liftings.pointcloud2simplicial.ball_pivoting_lifting import BallPivotingLifting
 
@@ -52,7 +51,3 @@ class TestBallPivotingLifting:
         assert(
             torch.all(abs(expected_incidence_2_indices) == lifted_data["incidence_2"].indices())
         ), "Something is wrong with the incidence_2 matrix (edges to triangles)."
-
-testing = TestBallPivotingLifting()
-testing.setup_method()
-testing.test_lift_topology()

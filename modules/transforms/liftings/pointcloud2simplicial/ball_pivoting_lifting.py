@@ -1,7 +1,8 @@
-import torch_geometric
 import open3d
-import numpy as np
+import torch_geometric
 import warnings
+import numpy as np
+
 from toponetx.classes import SimplicialComplex
 
 from modules.data.utils.utils import get_complex_connectivity
@@ -30,8 +31,9 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         open3d_point_cloud = open3d.geometry.PointCloud(open3d.cpu.pybind.utility.Vector3dVector(data.pos.numpy()))
         # Check that the input point cloud includes normals. The Ball Pivoting Algorithm requires normals.
         if "normals" not in data:
-            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.")
-    
+            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.", 
+                          stacklevel=1)
+
             open3d_point_cloud.estimate_normals()
         else:
             open3d_point_cloud.normals = open3d.cpu.pybind.utility.Vector3dVector(data.normals.numpy())
@@ -48,7 +50,7 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         lifted_topology["x_0"] = data.x
 
         return lifted_topology
-    
+
     def _get_lifted_topology(self, simplicial_complex: SimplicialComplex) -> dict:
         r"""Returns the lifted topology.
         Parameters
@@ -60,16 +62,16 @@ class BallPivotingLifting(PointCloud2SimplicialLifting):
         dict
             The lifted topology.
         """
-        lifted_topology = get_complex_connectivity(simplicial_complex, self.complex_dim)
-        return lifted_topology
-    
+        return get_complex_connectivity(simplicial_complex, self.complex_dim)
+
     def plot_lifted_topology(self, data: torch_geometric.data.Data):
         # Convert input data into an open3d point cloud
         open3d_point_cloud = open3d.geometry.PointCloud(open3d.cpu.pybind.utility.Vector3dVector(data.pos.numpy()))
         # Check that the input point cloud includes normals. The Ball Pivoting Algorithm requires normals.
         if "normals" not in data:
-            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.")
-    
+            warnings.warn("Normals not found in data set. The Ball Pivoting algorithm requires oriented 3D points, thus, normals will be estimated using the 'estimate_normals' method. Note, the normals are often not estimated with great success, so the performance of the algorithm might suffer heavily from this.", 
+                          stacklevel=1)
+
             open3d_point_cloud.estimate_normals()
         else:
             open3d_point_cloud.normals = open3d.cpu.pybind.utility.Vector3dVector(data.normals.numpy())
