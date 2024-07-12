@@ -41,6 +41,7 @@ dependencies=[
     "spharapy",
     "rich",
     "rootutils",
+    "open3d",
     "pytest",
     "toponetx @ git+https://github.com/pyt-team/TopoNetX.git",
     "topomodelx @ git+https://github.com/pyt-team/TopoModelX.git",
