@@ -454,9 +454,11 @@ def load_pointcloud_dataset(cfg):
         pos = torch.tensor(pos)
 
     if cfg.pos_to_x:
-        return torch_geometric.data.Data(x=pos, pos=pos, num_nodes=num_points)
+        return torch_geometric.data.Data(
+            x=pos, pos=pos, num_nodes=num_points, num_features=pos.size(1)
+        )
 
-    return torch_geometric.data.Data(pos=pos, num_nodes=num_points)
+    return torch_geometric.data.Data(pos=pos, num_nodes=num_points, num_features=0)
 
 
 def load_manual_pointcloud(pos_to_x: bool = False):
@@ -481,12 +483,7 @@ def load_manual_pointcloud(pos_to_x: bool = False):
 
     if pos_to_x:
         return torch_geometric.data.Data(
-            x=pos,
-            pos=pos,
-            num_nodes=len(pos),
+            x=pos, pos=pos, num_nodes=pos.size(0), num_features=pos.size(1)
         )
 
-    return torch_geometric.data.Data(
-        pos=pos,
-        num_nodes=len(pos),
-    )
+    return torch_geometric.data.Data(pos=pos, num_nodes=pos.size(0), num_features=0)
