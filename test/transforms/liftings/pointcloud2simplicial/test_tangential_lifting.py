@@ -12,7 +12,7 @@ class TestTangentialLifting:
     def setup_method(self):
         # Load the point cloud
         SEED = 42
-        data = load_point_cloud(num_points=5, seed=SEED)
+        self.data = load_point_cloud(num_points=5, seed=SEED)
 
         # Initialise the TangentialLifting class
         self.lifting_signed = TangentialLifting(signed=True)
