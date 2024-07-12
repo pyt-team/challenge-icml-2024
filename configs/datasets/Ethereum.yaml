@@ -1,10 +1,10 @@
 data_domain: graph
 data_type: Transactions
-data_name: AragonNetwork
+data_name: EthereumTokenNetwork
 data_dir: datasets/${data_domain}/${data_type}
 
 num_features: 1
-num_classes: 1
+num_classes: 5
 task: classification
 loss_type: cross_entropy
 task_level: graph
