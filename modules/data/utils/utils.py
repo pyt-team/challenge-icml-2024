@@ -343,9 +343,7 @@ def load_manual_hypergraph(cfg: dict):
     rng = np.random.default_rng(1234)
     n, m = 12, 24
     hyperedges = set(
-        (
-            tuple(np.flatnonzero(rng.choice([0, 1], size=n))) for _ in range(m)
-        )  # noqa: UP034
+        [tuple(np.flatnonzero(rng.choice([0, 1], size=n))) for _ in range(m)]
     )
     hyperedges = [np.array(he) for he in hyperedges]
     R = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
