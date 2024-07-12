@@ -42,20 +42,20 @@ class TestHypergraphNodeCentralityLifting:
 
         assert (
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
-        ).all(), "Something is wrong with incidence_hyperedges (k=1)."
+        ).all(), "Something is wrong with incidence_hyperedges."
         assert (
             expected_n_hyperedges == lifted_data.num_hyperedges
-        ), "Something is wrong with the number of hyperedges (k=1)."
+        ), "Something is wrong with the number of hyperedges."
 
         self.lifting.network_type = "unweighted"
         lifted_data = self.lifting.forward(self.data.clone())
 
         assert (
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
-        ).all(), "Something is wrong with incidence_hyperedges (k=1)."
+        ).all(), "Something is wrong with incidence_hyperedges."
         assert (
             expected_n_hyperedges == lifted_data.num_hyperedges
-        ), "Something is wrong with the number of hyperedges (k=1)."
+        ), "Something is wrong with the number of hyperedges."
 
         expected_incidence_1 = torch.tensor(
             [
@@ -76,10 +76,21 @@ class TestHypergraphNodeCentralityLifting:
 
         assert (
             expected_incidence_1 == lifted_data.incidence_hyperedges.to_dense()
-        ).all(), "Something is wrong with incidence_hyperedges (k=1)."
+        ).all(), "Something is wrong with incidence_hyperedges."
         assert (
             expected_n_hyperedges == lifted_data.num_hyperedges
-        ), "Something is wrong with the number of hyperedges (k=1)."
+        ), "Something is wrong with the number of hyperedges."
+
+        assert (
+            lifted_data.x_hyperedges.to_dense() == torch.tensor([[5106.0], [1060.0]])
+        ).all(), "Something is wrong with x_hyperedges."
+
+        self.lifting.do_hyperedge_node_assignment_feature_lifting_passthrough = True
+        lifted_data = self.lifting.forward(self.data.clone())
+
+        assert (
+            lifted_data.x_hyperedges.to_dense() == torch.tensor([[1.0], [10.0]])
+        ).all(), "Something is wrong with x_hyperedges."
 
     def test_validations(self):
         with pytest.raises(NotImplementedError):

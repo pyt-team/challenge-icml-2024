@@ -23,6 +23,8 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         Number of most influential nodes to assign a node to. default=2.
     do_weight_hyperedge_influence: bool
         add a weight to the hyperedge connections per node based on the inverse spath distance to influential node. default=False.
+    do_hyperedge_node_assignment_feature_lifting_passthrough: bool
+        assign features of most influential nodes to corresponding hyperedges and pass through feature lifting. default=False.
     max_iter: integer
         Maximum number of iterations in power method eigenvalue solver.
     tol: float
@@ -39,6 +41,7 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         th_percentile: float = 0.05,
         n_most_influential: float = 2,
         do_weight_hyperedge_influence: bool = False,
+        do_hyperedge_node_assignment_feature_lifting_passthrough: bool = False,
         max_iter: int = 100,
         tol: float = 1e-06,
         **kwargs,
@@ -51,6 +54,9 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         self.th_percentile = th_percentile
         self.n_most_influential = n_most_influential
         self.do_weight_hyperedge_influence = do_weight_hyperedge_influence
+        self.do_hyperedge_node_assignment_feature_lifting_passthrough = (
+            do_hyperedge_node_assignment_feature_lifting_passthrough
+        )
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Lifts the topology of a graph to hypergraph domain using node centrality.
@@ -143,8 +149,14 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
                     incidence_hyperedges[v, hyperedge_map[k_infl]] = w
 
         incidence_hyperedges = incidence_hyperedges.to_sparse_coo()
-        return {
+        lifted_data = {
             "incidence_hyperedges": incidence_hyperedges,
             "num_hyperedges": num_hyperedges,
             "x_0": data.x,
         }
+
+        if self.do_hyperedge_node_assignment_feature_lifting_passthrough:
+            # assign features of most influential nodes to corresponding hyperedges and pass through feature lifting.
+            lifted_data["x_hyperedges"] = data.x[nodes_most_influential]
+
+        return lifted_data
