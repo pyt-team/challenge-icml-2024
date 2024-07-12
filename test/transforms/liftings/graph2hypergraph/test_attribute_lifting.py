@@ -23,7 +23,7 @@ class TestNodeAttributeLifting:
             ),
             edge_index=torch.tensor([[0, 1, 2, 3], [1, 0, 3, 2]], dtype=torch.long),
         )
-        self.lifting = NodeAttributeLifting(attribute_idx=0)
+        self.lifting = NodeAttributeLifting(attribute_idx=1)
 
     def test_lift_topology(self):
         # Test the lift_topology method
@@ -39,6 +39,13 @@ class TestNodeAttributeLifting:
             ]
         ).to_sparse_coo()
 
+        # Print for debugging
+        print("Expected Incidence Matrix (Dense):")
+        print(expected_incidence_1.to_dense())
+
+        print("Actual Incidence Matrix (Dense):")
+        print(lifted_topology["incidence_hyperedges"].to_dense())
+
         assert torch.equal(
             expected_incidence_1.to_dense(),
             lifted_topology["incidence_hyperedges"].to_dense(),
@@ -46,3 +53,10 @@ class TestNodeAttributeLifting:
         assert (
             expected_n_hyperedges == lifted_topology["num_hyperedges"]
         ), "Something is wrong with the number of hyperedges."
+
+
+# Running the test manually for debugging purposes
+if __name__ == "__main__":
+    test = TestNodeAttributeLifting()
+    test.setup_method()
+    test.test_lift_topology()
