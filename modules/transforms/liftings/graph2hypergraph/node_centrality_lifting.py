@@ -139,7 +139,7 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
                 for k_infl, v_infl in v_influencial:
                     w = 1
                     if self.do_weight_hyperedge_influence:
-                        w = 1 / v_infl
+                        w = max(1 / v_infl, 0.0001)
                     incidence_hyperedges[v, hyperedge_map[k_infl]] = w
 
         incidence_hyperedges = incidence_hyperedges.to_sparse_coo()
