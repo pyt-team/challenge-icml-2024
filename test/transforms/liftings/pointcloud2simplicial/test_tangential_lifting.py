@@ -60,3 +60,4 @@ class TestTangentialLifting:
         assert (
             expected_incidence_2 == lifted_data_signed.incidence_2.to_dense()
         ).all(), "Something is wrong with signed incidence_2 (edges to triangles)."
+        
