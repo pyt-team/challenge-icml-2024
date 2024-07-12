@@ -1,8 +1,8 @@
 import warnings
+
 import numpy as np
 import open3d
 import torch_geometric
-
 from toponetx.classes import SimplicialComplex
 
 from modules.data.utils.utils import get_complex_connectivity
