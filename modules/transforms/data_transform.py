@@ -16,7 +16,7 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
 from modules.transforms.liftings.hypergraph2simplicial.heat_lifting import (
-    HypergraphHeatLifting
+    HypergraphHeatLifting,
 )
 
 TRANSFORMS = {
@@ -26,7 +26,7 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
-    # Hypergraph -> Simplicial Complex 
+    # Hypergraph -> Simplicial Complex
     "HypergraphHeatLifting": HypergraphHeatLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,

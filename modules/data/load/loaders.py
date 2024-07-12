@@ -10,12 +10,12 @@ from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
 from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_cell_complex_dataset,
+    load_contact_primary_school,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_simplicial_dataset, 
-    load_contact_primary_school, 
-    load_senate_committee, 
-    load_manual_hypergraph
+    load_manual_hypergraph,
+    load_senate_committee,
+    load_simplicial_dataset,
 )
 
 
@@ -214,7 +214,7 @@ class HypergraphLoader(AbstractLoader):
         if self.parameters.data_name in ["ContactPrimarySchool"]:
             data = load_contact_primary_school(self.parameters, self.data_dir)
             dataset = CustomDataset([data], self.data_dir)
-            return dataset 
+            return dataset
         elif self.parameters.data_name in ["senate_committee"]:
             data = load_senate_committee(self.parameters, self.data_dir)
             dataset = CustomDataset([data], self.data_dir)

@@ -8,10 +8,10 @@ import omegaconf
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+import torch_sparse
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
-import torch_sparse
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -51,16 +51,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -338,115 +338,165 @@ def load_manual_graph():
 def load_manual_hypergraph(cfg: dict):
     """Create a manual hypergraph for testing purposes."""
     import itertools as it
+
     np.random.seed(1234)
     n, m = 12, 24
-    hyperedges = set((tuple(np.flatnonzero(np.random.choice([0,1], size=n))) for _ in range(m)))
+    hyperedges = set(
+        (tuple(np.flatnonzero(np.random.choice([0, 1], size=n))) for _ in range(m))
+    )
     hyperedges = [np.array(he) for he in hyperedges]
     R = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
-    C = torch.tensor(np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]), dtype=torch.long) 
+    C = torch.tensor(
+        np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]),
+        dtype=torch.long,
+    )
     V = torch.tensor(np.ones(len(R)))
-    incidence_hyperedges = torch_sparse.SparseTensor(row=R,col=C, value=V)
+    incidence_hyperedges = torch_sparse.SparseTensor(row=R, col=C, value=V)
     incidence_hyperedges = incidence_hyperedges.coalesce().to_torch_sparse_coo_tensor()
 
     ## Bipartite graph repr.
-    edges = np.array(list(it.chain(*[[(i,v) for v in he] for i, he in enumerate(hyperedges)])))
+    edges = np.array(
+        list(it.chain(*[[(i, v) for v in he] for i, he in enumerate(hyperedges)]))
+    )
     data = Data(
-        x=torch.empty((n, 0)), 
+        x=torch.empty((n, 0)),
         edge_index=torch.tensor(edges, dtype=torch.long),
         num_nodes=n,
         num_node_features=0,
         num_edges=len(hyperedges),
         incidence_hyperedges=incidence_hyperedges,
-        max_dim=cfg.get('max_dim', 3)
-    ) 
+        max_dim=cfg.get("max_dim", 3),
+    )
     return data
+
 
 def load_contact_primary_school(cfg: dict, data_dir: str):
     import tempfile
-    import gdown
     import zipfile
+
+    import gdown
+
     # data_dir, data_name = cfg["data_dir"], cfg["data_name"]
     data_name = cfg["data_name"]
-    url = 'https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA'
+    url = "https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA"
     fn = tempfile.NamedTemporaryFile()
     gdown.download(url, fn.name, quiet=False)
     archive = zipfile.ZipFile(fn.name, "r")
-    labels = archive.open("contact-primary-school/node-labels-contact-primary-school.txt", "r").readlines()
-    hyperedges = archive.open("contact-primary-school/hyperedges-contact-primary-school.txt", "r").readlines()
-    label_names = archive.open("contact-primary-school/label-names-contact-primary-school.txt", "r").readlines()
+    labels = archive.open(
+        "contact-primary-school/node-labels-contact-primary-school.txt", "r"
+    ).readlines()
+    hyperedges = archive.open(
+        "contact-primary-school/hyperedges-contact-primary-school.txt", "r"
+    ).readlines()
+    label_names = archive.open(
+        "contact-primary-school/label-names-contact-primary-school.txt", "r"
+    ).readlines()
 
-    hyperedges = [list(map(int, he.decode().replace("\n", "").strip().split(","))) for he in hyperedges]
-    labels = np.array([int(b.decode().replace("\n","").strip()) for b in labels])
-    label_names = np.array([b.decode().replace("\n","").strip() for b in label_names])
-    
+    hyperedges = [
+        list(map(int, he.decode().replace("\n", "").strip().split(",")))
+        for he in hyperedges
+    ]
+    labels = np.array([int(b.decode().replace("\n", "").strip()) for b in labels])
+    label_names = np.array([b.decode().replace("\n", "").strip() for b in label_names])
+
     # Based on: https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.HypergraphConv.html
-    HE_coo = torch.tensor(np.array([
-        np.concatenate(hyperedges),
-        np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges])
-    ]))
+    HE_coo = torch.tensor(
+        np.array(
+            [
+                np.concatenate(hyperedges),
+                np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]),
+            ]
+        )
+    )
     from torch_sparse import SparseTensor
-    incidence_hyperedges = SparseTensor(
-        row=HE_coo[0,:], 
-        col=HE_coo[1,:], 
-        value=torch.tensor(np.ones(HE_coo.shape[1]))
-    ).coalesce().to_torch_sparse_coo_tensor()
+
+    incidence_hyperedges = (
+        SparseTensor(
+            row=HE_coo[0, :],
+            col=HE_coo[1, :],
+            value=torch.tensor(np.ones(HE_coo.shape[1])),
+        )
+        .coalesce()
+        .to_torch_sparse_coo_tensor()
+    )
 
     data = Data(
-        x=torch.empty((len(labels), 0)), 
+        x=torch.empty((len(labels), 0)),
         edge_index=HE_coo,
-        y=torch.LongTensor(labels), 
-        y_names=label_names, 
-        num_nodes=len(labels), 
+        y=torch.LongTensor(labels),
+        y_names=label_names,
+        num_nodes=len(labels),
         num_node_features=0,
         num_edges=len(hyperedges),
-        incidence_hyperedges=incidence_hyperedges, 
-        max_dim=cfg.get('max_dim', 1)
+        incidence_hyperedges=incidence_hyperedges,
+        max_dim=cfg.get("max_dim", 1)
         # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
     )
-    return data 
-    
+    return data
+
+
 def load_senate_committee(cfg: dict, data_dir: str) -> torch_geometric.data.Data:
     import tempfile
-    import gdown
     import zipfile
+
+    import gdown
+
     data_name = "senate_committee"
     url = "https://drive.google.com/uc?id=17ZRVwki_x_C_DlOAea5dPBO7Q4SRTRRw"
     fn = tempfile.NamedTemporaryFile()
     gdown.download(url, fn.name, quiet=False)
     archive = zipfile.ZipFile(fn.name, "r")
-    labels = archive.open("senate-committees/node-labels-senate-committees.txt", "r").readlines()
-    hyperedges = archive.open("senate-committees/hyperedges-senate-committees.txt", "r").readlines()
-    label_names = archive.open("senate-committees/node-names-senate-committees.txt", "r").readlines()
-    
-    hyperedges = [list(map(int, he.decode().replace("\n", "").strip().split(","))) for he in hyperedges]
-    labels = np.array([int(b.decode().replace("\n","").strip()) for b in labels])
-    label_names = np.array([b.decode().replace("\n","").strip() for b in label_names])
+    labels = archive.open(
+        "senate-committees/node-labels-senate-committees.txt", "r"
+    ).readlines()
+    hyperedges = archive.open(
+        "senate-committees/hyperedges-senate-committees.txt", "r"
+    ).readlines()
+    label_names = archive.open(
+        "senate-committees/node-names-senate-committees.txt", "r"
+    ).readlines()
+
+    hyperedges = [
+        list(map(int, he.decode().replace("\n", "").strip().split(",")))
+        for he in hyperedges
+    ]
+    labels = np.array([int(b.decode().replace("\n", "").strip()) for b in labels])
+    label_names = np.array([b.decode().replace("\n", "").strip() for b in label_names])
 
     # Based on: https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.HypergraphConv.html
-    HE_coo = torch.tensor(np.array([
-        np.concatenate(hyperedges)-1,
-        np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges])
-    ]))
+    HE_coo = torch.tensor(
+        np.array(
+            [
+                np.concatenate(hyperedges) - 1,
+                np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]),
+            ]
+        )
+    )
     from torch_sparse import SparseTensor
-    incidence_hyperedges = SparseTensor(
-        row=HE_coo[0,:], 
-        col=HE_coo[1,:], 
-        value=torch.tensor(np.ones(HE_coo.shape[1]))
-    ).coalesce().to_torch_sparse_coo_tensor()
-    
+
+    incidence_hyperedges = (
+        SparseTensor(
+            row=HE_coo[0, :],
+            col=HE_coo[1, :],
+            value=torch.tensor(np.ones(HE_coo.shape[1])),
+        )
+        .coalesce()
+        .to_torch_sparse_coo_tensor()
+    )
+
     data = Data(
-        x=torch.empty((len(labels), 0)), 
+        x=torch.empty((len(labels), 0)),
         edge_index=HE_coo,
-        y=torch.LongTensor(labels), 
-        y_names=label_names, 
-        num_nodes=len(labels), 
+        y=torch.LongTensor(labels),
+        y_names=label_names,
+        num_nodes=len(labels),
         num_node_features=0,
         num_edges=len(hyperedges),
         incidence_hyperedges=incidence_hyperedges,
         max_dim=cfg.get("max_dim", 2)
         # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
     )
-    return data 
+    return data
 
 
 def get_Planetoid_pyg(cfg):
@@ -514,8 +564,6 @@ def ensure_serializable(obj):
         return dict(obj)
     else:
         return None
-
-
 
 
 def make_hash(o):
