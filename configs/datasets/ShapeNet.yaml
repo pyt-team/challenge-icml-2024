@@ -1,0 +1,14 @@
+data_domain: point_cloud
+data_type: ShapeNet
+data_name: ShapeNet
+data_dir: datasets/${data_domain}/${data_type}
+#data_split_dir: ${oc.env:PROJECT_ROOT}/datasets/data_splits/${data_name}
+
+# Dataset parameters
+num_features: 3
+num_classes: 50
+category: plane
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: graph
