@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "CombinatorialPathLifting"
+preserve_edge_attr: False
+feature_lifting: ProjectionSum

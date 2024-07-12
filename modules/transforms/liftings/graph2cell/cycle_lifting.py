@@ -40,9 +40,10 @@ class CellCycleLifting(Graph2CellLifting):
 
         # Eliminate self-loop cycles
         cycles = [cycle for cycle in cycles if len(cycle) != 1]
-        # Eliminate cycles that are greater than the max_cell_lenght
+        # Eliminate cycles that are greater than the max_cell_length
         if self.max_cell_length is not None:
             cycles = [cycle for cycle in cycles if len(cycle) <= self.max_cell_length]
         if len(cycles) != 0:
             cell_complex.add_cells_from(cycles, rank=self.complex_dim)
+
         return self._get_lifted_topology(cell_complex, G)

@@ -29,10 +29,14 @@ class TestProjectionSum:
     def test_lift_features(self):
         # Test the lift_features method for simplicial/cell lifting
         lifted_data = self.lifting.forward(self.data.clone())
-        del lifted_data.x_1
-        del lifted_data.x_2
-        del lifted_data.x_3
+        # print("feature lifted data:", lifted_data)
+
+        # del lifted_data.x_1
+        # del lifted_data.x_2
+        # del lifted_data.x_3
         lifted_data = self.feature_lifting.forward(lifted_data)
+
+        # print("feature lifted data:", lifted_data)
 
         expected_x1 = torch.tensor(
             [
@@ -70,7 +74,7 @@ class TestProjectionSum:
 
         # Test the lift_features method for hypergraph lifting
         lifted_data = self.lifting_h.forward(self.data.clone())
-        del lifted_data.x_hyperedges
+        # del lifted_data.x_hyperedges
         lifted_data = self.feature_lifting.forward(lifted_data)
 
         expected_x_0 = torch.tensor(
