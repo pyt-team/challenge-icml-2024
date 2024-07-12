@@ -13,7 +13,9 @@ from modules.data.utils.utils import (
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_simplicial_dataset, 
-    load_contact_primary_school
+    load_contact_primary_school, 
+    load_senate_committee, 
+    load_manual_hypergraph
 )
 
 
@@ -210,7 +212,15 @@ class HypergraphLoader(AbstractLoader):
 
         self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
         if self.parameters.data_name in ["ContactPrimarySchool"]:
-            data = load_contact_primary_school(self.parameters)
+            data = load_contact_primary_school(self.parameters, self.data_dir)
             dataset = CustomDataset([data], self.data_dir)
             return dataset 
+        elif self.parameters.data_name in ["senate_committee"]:
+            data = load_senate_committee(self.parameters, self.data_dir)
+            dataset = CustomDataset([data], self.data_dir)
+            return dataset
+        elif self.parameters.data_name in ["manual_hg"]:
+            data = load_manual_hypergraph(self.parameters)
+            dataset = CustomDataset([data], self.data_dir)
+            return dataset
         return load_hypergraph_pickle_dataset(self.parameters)
