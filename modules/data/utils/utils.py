@@ -5,13 +5,12 @@ import pickle
 import networkx as nx
 import numpy as np
 import omegaconf
-import open3d
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
-# from torch_sparse import coalesce
+from torch_sparse import coalesce
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -81,7 +80,7 @@ def generate_zero_sparse_connectivity(m, n):
     torch.sparse_coo_tensor
         Zero sparse connectivity matrix.
     """
-    # return torch.sparse_coo_tensor((m, n)).coalesce()
+    return torch.sparse_coo_tensor((m, n)).coalesce()
 
 
 def load_cell_complex_dataset(cfg):
@@ -258,9 +257,9 @@ def load_hypergraph_pickle_dataset(cfg):
     # used user function to override the default function.
     # the following will also sort the edge_index and remove duplicates.
     total_num_node_id_he_id = edge_index.max() + 1
-    # data.edge_index, data.edge_attr = coalesce(
-    #     data.edge_index, None, total_num_node_id_he_id, total_num_node_id_he_id
-    # )
+    data.edge_index, data.edge_attr = coalesce(
+        data.edge_index, None, total_num_node_id_he_id, total_num_node_id_he_id
+    )
 
     n_x = num_nodes
     num_class = len(np.unique(labels.numpy()))
@@ -424,43 +423,9 @@ def make_hash(o):
     return int(hash_as_hex, 16) % 4294967295
 
 
-def load_open3d_datasets(
-    cfg: omegaconf.DictConfig,
-    # feature_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-    # target_generator: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-) -> torch_geometric.data.Data:
-    
-    # Load stanford bunny option
-    if cfg.data_name == "open3d_eagle":
-        eagle = open3d.data.EaglePointCloud()
-        pcd = open3d.io.read_point_cloud(eagle.path)
-        # Convert pcd to torch_geometric.data.Data
-        eagle_pcd = torch_geometric.data.Data(pos=np.asarray(pcd.points))
-        eagle_pcd.normals = np.asarray(pcd.normals)
-        # We assign the RGB values of the point cloud as the features
-
-
-        return eagle_pcd
-
-    elif cfg.data_name == "open3d_bunny":
-        bunny = open3d.data.BunnyMesh()
-        bunny_mesh = open3d.io.read_triangle_mesh(bunny.path)
-        bunny_mesh.compute_vertex_normals()
-
-        pcd = bunny_mesh.sample_points_poisson_disk(3000)
-        bunny_pcd = torch_geometric.data.Data(pos=np.asarray(pcd.points))
-        bunny_pcd.normals = np.asarray(pcd.normals)
-        # Because the data does not include features, we will generate random features
-
-        return bunny_pcd
-    
-    else:
-        raise ValueError("The data_name is not a recognized open3d dataset.")
-    
-
 def load_sphere_point_cloud(num_classes: int = 2, num_points: int = 1000, num_features: int = 1, seed: int = 0):
     """Create a point cloud dataset in the shape of a sphere"""
-    
+
     # Generate random points from a normal distribution
     points = torch.randn(num_points, 3)
     # Normalize each point to lie on the surface of a unit sphere
@@ -472,5 +437,5 @@ def load_sphere_point_cloud(num_classes: int = 2, num_points: int = 1000, num_fe
     # points = torch.tensor(rng.random((5, 3)), dtype=torch.float)
     classes = torch.tensor(rng.integers(num_classes, size=num_points), dtype=torch.long)
     features = torch.tensor(rng.integers(num_features, size=(num_points, 1)), dtype=torch.float)
-    
+
     return torch_geometric.data.Data(x=features, y=classes, pos=points, normals=normals)
