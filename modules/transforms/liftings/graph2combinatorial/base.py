@@ -1,7 +1,6 @@
 from modules.transforms.liftings.lifting import GraphLifting
-import networkx as nx
-import torch
-from toponetx.classes import CombinatorialComplex
+
+
 
 
 class Graph2CombinatorialLifting(GraphLifting):
