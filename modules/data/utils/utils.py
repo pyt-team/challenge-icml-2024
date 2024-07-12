@@ -1,6 +1,9 @@
 import hashlib
+import itertools as it
 import os.path as osp
 import pickle
+import tempfile
+import zipfile
 
 import networkx as nx
 import numpy as np
@@ -11,7 +14,7 @@ import torch_geometric
 import torch_sparse
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
-from torch_sparse import coalesce
+from torch_sparse import SparseTensor, coalesce
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -337,12 +340,12 @@ def load_manual_graph():
 
 def load_manual_hypergraph(cfg: dict):
     """Create a manual hypergraph for testing purposes."""
-    import itertools as it
-
-    np.random.seed(1234)
+    rng = np.random.default_rng(1234)
     n, m = 12, 24
     hyperedges = set(
-        (tuple(np.flatnonzero(np.random.choice([0, 1], size=n))) for _ in range(m))
+        (
+            tuple(np.flatnonzero(rng.choice([0, 1], size=n))) for _ in range(m)
+        )  # noqa: UP034
     )
     hyperedges = [np.array(he) for he in hyperedges]
     R = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
@@ -358,7 +361,7 @@ def load_manual_hypergraph(cfg: dict):
     edges = np.array(
         list(it.chain(*[[(i, v) for v in he] for i, he in enumerate(hyperedges)]))
     )
-    data = Data(
+    return Data(
         x=torch.empty((n, 0)),
         edge_index=torch.tensor(edges, dtype=torch.long),
         num_nodes=n,
@@ -367,17 +370,11 @@ def load_manual_hypergraph(cfg: dict):
         incidence_hyperedges=incidence_hyperedges,
         max_dim=cfg.get("max_dim", 3),
     )
-    return data
 
 
 def load_contact_primary_school(cfg: dict, data_dir: str):
-    import tempfile
-    import zipfile
-
     import gdown
 
-    # data_dir, data_name = cfg["data_dir"], cfg["data_name"]
-    data_name = cfg["data_name"]
     url = "https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA"
     fn = tempfile.NamedTemporaryFile()
     gdown.download(url, fn.name, quiet=False)
@@ -408,7 +405,6 @@ def load_contact_primary_school(cfg: dict, data_dir: str):
             ]
         )
     )
-    from torch_sparse import SparseTensor
 
     incidence_hyperedges = (
         SparseTensor(
@@ -420,7 +416,7 @@ def load_contact_primary_school(cfg: dict, data_dir: str):
         .to_torch_sparse_coo_tensor()
     )
 
-    data = Data(
+    return Data(
         x=torch.empty((len(labels), 0)),
         edge_index=HE_coo,
         y=torch.LongTensor(labels),
@@ -432,7 +428,6 @@ def load_contact_primary_school(cfg: dict, data_dir: str):
         max_dim=cfg.get("max_dim", 1)
         # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
     )
-    return data
 
 
 def load_senate_committee(cfg: dict, data_dir: str) -> torch_geometric.data.Data:
@@ -441,7 +436,6 @@ def load_senate_committee(cfg: dict, data_dir: str) -> torch_geometric.data.Data
 
     import gdown
 
-    data_name = "senate_committee"
     url = "https://drive.google.com/uc?id=17ZRVwki_x_C_DlOAea5dPBO7Q4SRTRRw"
     fn = tempfile.NamedTemporaryFile()
     gdown.download(url, fn.name, quiet=False)
@@ -484,7 +478,7 @@ def load_senate_committee(cfg: dict, data_dir: str) -> torch_geometric.data.Data
         .to_torch_sparse_coo_tensor()
     )
 
-    data = Data(
+    return Data(
         x=torch.empty((len(labels), 0)),
         edge_index=HE_coo,
         y=torch.LongTensor(labels),
@@ -496,7 +490,6 @@ def load_senate_committee(cfg: dict, data_dir: str) -> torch_geometric.data.Data
         max_dim=cfg.get("max_dim", 2)
         # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
     )
-    return data
 
 
 def get_Planetoid_pyg(cfg):
