@@ -482,17 +482,115 @@ class TestDirectedFlagComplex:
         )
         assert torch.equal(result, expected_indices)
 
-    # def test_find_paths(self, dfc):
-    #     """Test the find_paths method"""
-    #     indices = torch.tensor([[0,1,1,2,3,4],[1,2,5,3,7,6]])
-    #     threshold = 2
+    def test_find_paths(self, dfc):
+        adj = dfc.qij_adj(dfc.complex[2], dfc.complex[2], q=1, i=0, j=2)
+        path = dfc.find_paths(adj, 1)
+        expected = [
+                [
+                    0,
+                    25,
+                    50,
+                    75,
+                    1,
+                    26,
+                    51,
+                    76,
+                    2,
+                    27,
+                    52,
+                    77,
+                    3,
+                    28,
+                    53,
+                    78,
+                    4,
+                    29,
+                    54,
+                    79,
+                    5,
+                    30,
+                    55,
+                    80,
+                    6,
+                    31,
+                    56,
+                    81,
+                    7,
+                    32,
+                    57,
+                    82,
+                    8,
+                    33,
+                    58,
+                    83,
+                    9,
+                    34,
+                    59,
+                    84,
+                    10,
+                    35,
+                    60,
+                    85,
+                    11,
+                    36,
+                    61,
+                    86,
+                    12,
+                    37,
+                    62,
+                    87,
+                    13,
+                    38,
+                    63,
+                    88,
+                    14,
+                    39,
+                    64,
+                    89,
+                    15,
+                    40,
+                    65,
+                    90,
+                    16,
+                    41,
+                    66,
+                    91,
+                    17,
+                    42,
+                    67,
+                    92,
+                    18,
+                    43,
+                    68,
+                    93,
+                    19,
+                    44,
+                    69,
+                    94,
+                    20,
+                    45,
+                    70,
+                    95,
+                    21,
+                    46,
+                    71,
+                    96,
+                    22,
+                    47,
+                    72,
+                    97,
+                    23,
+                    48,
+                    73,
+                    98,
+                    24,
+                    49,
+                    74,
+                ]
+            ]
 
-    #     result = dfc.find_paths(indices, threshold)
-    #     expected = [[0,1,2,3,7]]
-
-    #     assert result == expected
+        assert path == expected
 
 
-class TestSPLifting:
-    def test_sp_lifting(self):
-        pass
+
+

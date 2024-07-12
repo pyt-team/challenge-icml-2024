@@ -8,6 +8,7 @@ from modules.transforms.liftings.graph2combinatorial.base import (
     Graph2CombinatorialLifting,
 )
 
+
 class SimplicialPathsLifting(Graph2CombinatorialLifting):
     def __init__(
         self, d1, d2, q, i, j, complex_dim=2, chunk_size=1024, threshold=1, **kwargs
@@ -23,7 +24,7 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         self.threshold = threshold
 
     def _get_complex_connectivity(
-        combinatorial_complex, adjacencies, incidences, max_rank
+        self, combinatorial_complex, adjacencies, incidences, max_rank
     ):
         practical_shape = list(
             np.pad(
@@ -113,7 +114,7 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
 
-        FlG = self.create_flag_complex_from_dataset(data, complex_dim=2)
+        FlG = self._create_flag_complex_from_dataset(data, complex_dim=2)
 
         indices = FlG.qij_adj(
             FlG.complex[self.d1],
@@ -134,6 +135,7 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
             for c in p:
                 cell += list(FlG.complex[2][c].numpy())
             cell = list(set(cell))  # remove duplicates
+
             cc.add_cell(cell, rank=2)
 
         return self._get_lifted_topology(cc, G)
@@ -483,16 +485,16 @@ class DirectedQConnectivity:
         return indices
 
     def find_paths(self, indices: torch.tensor, threshold: int):
-        r"""Find the maximal simplicial paths arising from the `(q, d_i,
-        d_j)`-connectivity of the induced directed flag complex. We consider
-        the paths that are longer than the threshold.
-
+        r"""Find the paths in the adjacency matrix associated with the
+        :math:`(q,
+        d_i, d_j)`-connectivity relation with length longer than a threshold.
         Parameters
         ----------
         indices : torch.Tensor, shape=(2, N)
-           The indices of the qij-connected simplices.
+           The indices of the qij-connected simplices of the pair of skeletons.
         threshold : int
-            The minimum length of the paths to be considered.
+            The length threshold to select paths
+
 
         Returns
         -------
@@ -504,7 +506,7 @@ class DirectedQConnectivity:
 
             if node not in adj_list:  # end of recursion
                 if len(path) > threshold:
-                    all_paths.append(path.copy())
+                    all_paths = add_path(path.copy(), all_paths)
                 return
 
             only_loops = True
@@ -517,7 +519,7 @@ class DirectedQConnectivity:
 
             if only_loops:  # then we have another longest path
                 if len(path) > threshold:
-                    all_paths.append(path.copy())
+                    all_paths = add_path(path.copy(), all_paths)
 
             return
 
@@ -531,26 +533,36 @@ class DirectedQConnectivity:
 
             return adj_list
 
-        def edge_index_to_inc_list(edge_index):
-            inc_list = {}
-            for e in edge_index.T:
-                if e[0] != e[1]:
-                    if e[1].item() not in inc_list:
-                        inc_list[e[1].item()] = [e[0].item()]
-                    else:
-                        inc_list[e[1].item()].append(e[0].item())
+        def is_subpath(p1, p2):
+            if len(p1) > len(p2):
+                return False
+            elif len(p1) == len(p2):
+                return p1 == p2
+            else:
+                diff = len(p2) - len(p1)
+                for i in range(diff + 1):
+                    if p2[i:i + len(p1)] == p1:
+                        return True
+            return False
 
-            return inc_list
+        def add_path(new_path, all_paths):
+            for path in all_paths:
+                if is_subpath(new_path, path):
+                    # don't add a subpath
+                    return new_path
+            # Check if some paths need to be removed
+            for path in all_paths:
+                if is_subpath(path, new_path):
+                    all_paths.remove(path)
+            all_paths.append(new_path)
+            return all_paths
 
         adj_list = edge_index_to_adj_list(indices)
-        inc_list = edge_index_to_inc_list(indices)
 
         all_paths = []
 
         for src in adj_list:
-            if src not in inc_list:  # otherwise src is contained in a
-                # longer path
-                path = [src]
-                dfs(src, adj_list, all_paths, path)
+            path = [src]
+            dfs(src, adj_list, all_paths, path)
 
         return all_paths

@@ -27,7 +27,7 @@ TRANSFORMS = {
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Graph -> Combinatorial Complex
-    "Graph2CombinatorialLifting": SimplicialPathsLifting,
+    "SimplicialPathsLifting": SimplicialPathsLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
