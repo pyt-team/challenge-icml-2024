@@ -15,12 +15,11 @@ class TestCombinatorialPathLifting:
         # Load the graph
         self.data = load_manual_graph()
 
-        # Initialise the CellCyclesLifting class
+        # Initialise the CombinatorialPathLifting class
         self.lifting = CombinatorialPathLifting()
 
     def test_lift_topology(self):
         # Test the lift_topology method
-        # TODO: check here!
         lifted_data = self.lifting.forward(self.data)
 
         expected_incidence_1 = torch.tensor(
