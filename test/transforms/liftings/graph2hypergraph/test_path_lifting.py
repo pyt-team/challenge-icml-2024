@@ -41,7 +41,7 @@ class TestHypergraphPathLifting:
             lengths,
             include_smaller_paths=include_smaller_paths,
         )
-        res = path_lifting.find_hyperedges(self.data)
+        res = path_lifting._find_hyperedges(self.data)
         res_expected = [
             [0, 1],
             [0, 1, 2],
@@ -74,7 +74,7 @@ class TestHypergraphPathLifting:
             target_nodes,
             lengths,
             include_smaller_paths=include_smaller_paths,
-        ).find_hyperedges(self.data)
+        )._find_hyperedges(self.data)
         assert frozenset({0, 1}) not in res
 
     def test_4(self):
@@ -88,7 +88,7 @@ class TestHypergraphPathLifting:
             target_nodes,
             lengths,
             include_smaller_paths=include_smaller_paths,
-        ).find_hyperedges(self.data)
+        )._find_hyperedges(self.data)
         assert frozenset({0, 1}) in res
 
     def test_5(self):
@@ -103,7 +103,7 @@ class TestHypergraphPathLifting:
                 target_nodes,
                 lengths,
                 include_smaller_paths=include_smaller_paths,
-            ).find_hyperedges(self.data)
+            )._find_hyperedges(self.data)
             assert np.array([len(x) - 1 == k for x in res]).all()
 
     def test_6(self):
@@ -117,7 +117,7 @@ class TestHypergraphPathLifting:
             target_nodes,
             lengths,
             include_smaller_paths=include_smaller_paths,
-        ).find_hyperedges(self.data)
+        )._find_hyperedges(self.data)
         assert len(res) > 0
 
     def test_7(self):
@@ -134,7 +134,7 @@ class TestHypergraphPathLifting:
             target_nodes,
             lengths,
             include_smaller_paths=include_smaller_paths,
-        ).find_hyperedges(self.data)
+        )._find_hyperedges(self.data)
         if len(res) > 0:
             assert (
                 np.array([source_nodes[0] in x for x in res]).all()
@@ -152,5 +152,5 @@ class TestHypergraphPathLifting:
             target_nodes,
             lengths,
             include_smaller_paths=include_smaller_paths,
-        ).find_hyperedges(self.data)
+        )._find_hyperedges(self.data)
         assert len(res) > 0
