@@ -2,7 +2,7 @@ transform_type: 'lifting'
 transform_name: "HypergraphNodeCentralityLifting"
 network_type: 'weighted'
 alpha: 0.85
-th_quantile: 0.95
+th_percentile: 0.05
 n_most_influential: 2
 do_weight_hyperedge_influence: False
 max_iter: 100

@@ -7,16 +7,18 @@ from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLi
 
 
 class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to hypergraph domain using Page Rank.
+    r"""Lifts graphs to hypergraph domain using node centrality.
+
+    This lifting creates hyperedges based on central, i.e. highly influential, nodes in the network. Mapping a connection between individual nodes to specific nodes in the network architecture that have a specific and potentially competing influence on them is a very convenient scenario to be modelled via hyperedges. Using shortest path distance to identify the most influential nodes on any given node even allows for placing weights on the hyperedge connection to individual, connected nodes (i.e. the inverse shortest path distance to the corresponding most influential node that the hyperedge represents). To define and identify influential nodes in the network, we refer to the variant of the Eigenvector Centrality with an additional jump probability (i.e. PageRank)
 
     Parameters
     ----------
     network_type : str
         Network type may be weighted or unweighted. Default is "weighted".
     alpha: float
-        Damping parameter for PageRank, default=0.85.
-    th_quantile: float
-        Fraction of most influential nodes in the network, default=0.95.
+        jump probability, called dampening factor, which decides whether to continue following the transition matrix or teleport to random positions, default=0.85.
+    th_percentile: float
+        Fraction of most influential nodes in the network to consider, default=0.05.
     n_most_influential: integer
         Number of most influential nodes to assign a node to. default=2.
     do_weight_hyperedge_influence: bool
@@ -32,13 +34,13 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
 
     def __init__(
         self,
-        network_type="weighted",
-        alpha=0.85,
-        th_quantile=0.95,
-        n_most_influential=2,
-        do_weight_hyperedge_influence=False,
-        max_iter=100,
-        tol=1e-06,
+        network_type: str = "weighted",
+        alpha: float = 0.85,
+        th_percentile: float = 0.05,
+        n_most_influential: float = 2,
+        do_weight_hyperedge_influence: bool = False,
+        max_iter: int = 100,
+        tol: float = 1e-06,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -46,12 +48,12 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
         self.alpha = alpha
         self.max_iter = max_iter
         self.tol = tol
-        self.th_quantile = th_quantile
+        self.th_percentile = th_percentile
         self.n_most_influential = n_most_influential
         self.do_weight_hyperedge_influence = do_weight_hyperedge_influence
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to hypergraph domain using Page Rank.
+        r"""Lifts the topology of a graph to hypergraph domain using node centrality.
 
         Parameters
         ----------
@@ -108,21 +110,20 @@ class HypergraphNodeCentralityLifting(Graph2HypergraphLifting):
                 f"network type {self.network_type} not implemented"
             )
 
-        # estimate node centrality
-
+        # estimate node centrality for all nodes
         pr = nx.pagerank(
             G, alpha=self.alpha, max_iter=self.max_iter, tol=self.tol, weight="w"
         )
 
-        # hyperedges based on the number of most influencial nodes
-        th_cutoff = np.quantile(list(pr.values()), self.th_quantile)
+        # estimate fraction of most influential nodes in the network to consider, i.e. the hyperedges
+        th_cutoff = np.quantile(list(pr.values()), (1 - self.th_percentile))
         nodes_most_influential = [n for n, v in pr.items() if v >= th_cutoff]
         num_hyperedges = len(nodes_most_influential)
         hyperedge_map = {v: e for e, v in enumerate(nodes_most_influential)}
 
         incidence_hyperedges = torch.zeros(data.num_nodes, num_hyperedges)
 
-        # assign to the top n most influential
+        # assign each node to the hyeredges corresponding to the top "n_most_influential" most influential nodes
         for v in list(G.nodes()):
             if v in nodes_most_influential:
                 incidence_hyperedges[v, hyperedge_map[v]] = 1
