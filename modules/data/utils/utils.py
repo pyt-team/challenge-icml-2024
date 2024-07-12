@@ -337,19 +337,22 @@ def load_manual_graph():
 
 def load_manual_hypergraph(cfg: dict):
     """Create a manual hypergraph for testing purposes."""
+    import itertools as it
     np.random.seed(1234)
-    n, m = 8, 16 
+    n, m = 12, 24
     hyperedges = set((tuple(np.flatnonzero(np.random.choice([0,1], size=n))) for _ in range(m)))
     hyperedges = [np.array(he) for he in hyperedges]
-    R = torch.tensor(np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]), dtype=torch.long)
-    C = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
+    R = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
+    C = torch.tensor(np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]), dtype=torch.long) 
     V = torch.tensor(np.ones(len(R)))
     incidence_hyperedges = torch_sparse.SparseTensor(row=R,col=C, value=V)
     incidence_hyperedges = incidence_hyperedges.coalesce().to_torch_sparse_coo_tensor()
 
+    ## Bipartite graph repr.
+    edges = np.array(list(it.chain(*[[(i,v) for v in he] for i, he in enumerate(hyperedges)])))
     data = Data(
         x=torch.empty((n, 0)), 
-        edge_index=incidence_hyperedges,
+        edge_index=torch.tensor(edges, dtype=torch.long),
         num_nodes=n,
         num_node_features=0,
         num_edges=len(hyperedges),
