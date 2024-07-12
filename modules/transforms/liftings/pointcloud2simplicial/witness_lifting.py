@@ -14,8 +14,8 @@ class WitnessLifting(PointCloud2SimplicialLifting):
         self,
         is_weak=True,
         is_euclidian=True,
-        landmark_proportion: int = 1,
-        max_alpha_square=0.1,
+        landmark_proportion: int = 0.8,
+        max_alpha_square=0.15,
         complex_dim=2,
         **kwargs,
     ):
@@ -59,10 +59,8 @@ class WitnessLifting(PointCloud2SimplicialLifting):
                 simplex_tree = complex.create_simplex_tree(
                     self.max_alpha_square, self.complex_dim
                 )
-                dimension = simplex_tree.dimension()
-                filtered_skeleta = simplex_tree.get_skeleton(dimension)
-                skeleta = list(map(lambda x: x[0], filtered_skeleta))
-                simplicial_complex = SimplicialComplex(skeleta)
+
+                simplicial_complex = SimplicialComplex.from_gudhi(simplex_tree)
             else:
                 pass
 
