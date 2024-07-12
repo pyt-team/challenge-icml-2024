@@ -101,11 +101,10 @@ class SimplicialPathsLifting(Graph2CombinatorialLifting):
         return lifted_topology
 
     def _create_flag_complex_from_dataset(self, dataset, complex_dim=2):
-
         dataset_digraph = nx.DiGraph()
 
         dataset_digraph.add_edges_from(
-            list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist()))
+            list(zip(dataset.edge_index[0].tolist(), dataset.edge_index[1].tolist(), strict=False))
         )
 
         dfc = DirectedQConnectivity(dataset_digraph, complex_dim)
