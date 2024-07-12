@@ -1,4 +1,4 @@
 transform_type: 'lifting'
-transform_name: "NodeAttributeLifting"
+transform_name: "HypergraphNodeAttributeLifting"
 attribute_idx: 0
 feature_lifting: ProjectionSum
