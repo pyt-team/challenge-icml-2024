@@ -93,7 +93,7 @@ class SpectralLifting(Graph2HypergraphLifting):
                     max_index = i
             return max_index - 1
 
-        # Attempt to find index largest gap using eigengap heuristic
+        # Attempt to find index largest gap using eigengap heuristic.
         for a in range(a_max, a_min - 1, -1):
             k = find_gap(a)
             if k and k > 1:
