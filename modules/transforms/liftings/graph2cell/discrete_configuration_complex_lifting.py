@@ -1,90 +1,16 @@
 from itertools import permutations
-from typing import Tuple
+from typing import ClassVar
 
 import networkx as nx
 import torch_geometric
 from toponetx.classes import CellComplex
 
 from modules.transforms.liftings.graph2cell.base import Graph2CellLifting
+from modules.utils.utils import edge_cycle_to_vertex_cycle
 
 Vertex = int
-Edge = Tuple[Vertex, Vertex]
-ConfigurationTuple = Tuple[Vertex | Edge]
-
-
-def DiscreteConfigurationComplex(k: int, graph: nx.Graph):
-    class Configuration:
-        _instances: dict[ConfigurationTuple, "Configuration"] = {}
-        _counter = 0
-
-        def __new__(cls, configuration_tuple: ConfigurationTuple):
-            # Create a key from the arguments
-            key = configuration
-
-            # If an instance doesn't exist for these arguments, create one
-            if key not in cls._instances:
-                cls._instances[key] = super().__new__(cls)
-
-            # Return the instance for these arguments
-            return cls._instances[key]
-
-        def __init__(self, configuration_tuple: ConfigurationTuple) -> None:
-            if hasattr(self, "initialized"):
-                return
-
-            self.initialized = True
-            self.configuration_tuple = configuration_tuple
-            self.neighborhood = set()
-            self.dim = 0
-            for agent in configuration_tuple:
-                if isinstance(agent, Edge):
-                    self.neighborhood.update(set(agent))
-                    self.dim += 1
-                else:
-                    self.neighborhood.add(agent)
-
-            if self.dim == 0:
-                self.contents = {Configuration._counter}
-                Configuration._counter += 1
-            else:
-                self.contents = set()
-
-            self._upwards_neighbors_generated = False
-            self._generate_upwards_neighbors()
-
-        def _generate_upwards_neighbors(self):
-            if self._upwards_neighbors_generated:
-                return
-            self._upwards_neighbors_generated = True
-            for i, agent in enumerate(self.configuration_tuple):
-                if isinstance(agent, Edge):
-                    continue
-                for neighbor in graph[agent]:
-                    self._generate_new_configuration(i, agent, neighbor)
-
-        def _generate_new_configuration(
-            self, index: int, vertex_agent: Vertex, neighbor: Vertex
-        ):
-            if neighbor in self.neighborhood:
-                return
-            new_edge = (min(vertex_agent, neighbor), max(vertex_agent, neighbor))
-            new_configuration_tuple = (
-                *self.configuration_tuple[:index],
-                new_edge,
-                *self.configuration_tuple[index + 1 :],
-            )
-            new_configuration = Configuration(new_configuration_tuple)
-            new_configuration.contents.add(frozenset(self.contents))
-            new_configuration._generate_upwards_neighbors()
-
-    for dim_0_configuration_tuple in permutations(graph, k):
-        configuration = Configuration(dim_0_configuration_tuple)
-
-    cells = {i: [] for i in range(k + 1)}
-    for conf in Configuration._instances.values():
-        cells[conf.dim].append(conf.contents)
-
-    return cells
+Edge = tuple[Vertex, Vertex]
+ConfigurationTuple = tuple[Vertex | Edge]
 
 
 class DiscreteConfigurationLifting(Graph2CellLifting):
@@ -101,12 +27,15 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
     """
 
     def __init__(self, k: int = 2, **kwargs):
-        if k < 0 or k > 2:
+        if k < 1 or k > 2:
             raise NotImplementedError(
-                "Only k = 0, 1, or 2 is currently supported. This is due to TopoNetX only supporting cell complexes of dimension 2. This may change in the future."
+                "Only k = 1, or 2 is currently supported. This is due to TopoNetX only supporting cell complexes of dimension 2. This may change in the future."
             )
         super().__init__(**kwargs)
         self.k = k
+
+    def _get_lifted_topology(self, cell_complex: CellComplex) -> dict:
+        raise NotImplementedError()
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Generates the cubical complex of discrete graph configurations.
@@ -121,16 +50,120 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
         dict
             The lifted topology.
         """
+        # configurations of k = 1 agents are the same as the graph
+        if self.k == 1:
+            return data
+
         G = self._generate_graph_from_data(data)
-        cell_complex_data = DiscreteConfigurationComplex(self.k, G)
-        cc = CellComplex.from_networkx_graph()
+        if G.is_directed():
+            raise ValueError("Directed Graphs are not supported.")
+
+        cell_complex_data = generate_configuration_complex_data(self.k, G)
+        cc = CellComplex()
         cc.from_networkx_graph(nx.Graph(cell_complex_data[1]))
 
         if self.k == 1:
-            return
+            return None
 
         for dim_2_cell in cell_complex_data[2]:
-            cycle = [e[0] for e in nx.find_cycle(nx.Graph(dim_2_cell))]
-            cc.add_cell(cell=cycle, rank=2)
+            cc.add_cell(edge_cycle_to_vertex_cycle(dim_2_cell), rank=2)
 
-        return
+        return self._get_lifted_topology(cc)
+
+
+def generate_configuration_class(k: int, graph: nx.Graph):
+    """Class factory for the Configuration class."""
+
+    class Configuration:
+        """Represents a single legal configuration of k agents on a graph G. A legal configuration is a tuple of k edges and vertices of G where all the vertices and endpoints are **distinct** i.e. no two edges sharing an endpoint can simultaneously be in the configuration, and adjacent (edge, vertex) pair can be contained in the configuration.
+
+        Parameters
+        ----------
+        k : int, optional.
+            The order of the configuration complex, or the number of 'points' in the configuration.
+        graph: nx.Graph.
+            The graph on which the configurations are defined.
+        """
+
+        instances: ClassVar[dict[ConfigurationTuple, "Configuration"]] = {}
+        _counter = 0
+
+        def __new__(cls, configuration_tuple: ConfigurationTuple):
+            # Ensure that a configuration tuple corresponds to a *unique* configuration object
+            key = configuration_tuple
+            if key not in cls._instances:
+                cls._instances[key] = super().__new__(cls)
+
+            return cls._instances[key]
+
+        def __init__(self, configuration_tuple: ConfigurationTuple) -> None:
+            # If this object was already initialized earlier, maintain current state
+            if hasattr(self, "initialized"):
+                return
+
+            self.initialized = True
+            self.configuration_tuple = configuration_tuple
+            self.neighborhood = set()
+            self.dim = 0
+            for agent in configuration_tuple:
+                if isinstance(agent, Edge):
+                    self.neighborhood.update(set(agent))
+                    self.dim += 1
+                else:
+                    self.neighborhood.add(agent)
+
+            if self.dim == 0:
+                self.contents = Configuration._counter
+                Configuration._counter += 1
+            else:
+                self.contents = []
+
+            self._upwards_neighbors_generated = False
+
+        def generate_upwards_neighbors(self):
+            """For the configuration self of dimension d, generate the configurations of dimension d+1 containing it."""
+            if self._upwards_neighbors_generated:
+                return
+            self._upwards_neighbors_generated = True
+            for i, agent in enumerate(self.configuration_tuple):
+                if isinstance(agent, tuple):
+                    continue
+                for neighbor in graph[agent]:
+                    self._generate_single_neighbor(i, agent, neighbor)
+
+        def _generate_single_neighbor(
+            self, index: int, vertex_agent: int, neighbor: int
+        ):
+            """Generate a configuration containing the configuration self by 'expanding' an edge."""
+            # If adding the edge (vertex_agent, neighbor) would produce an illegal configuration, ignore it
+            if neighbor in self.neighborhood:
+                return
+
+            # We always orient edges (min -> max) to maintain uniqueness of configuration tuples
+            new_edge = (min(vertex_agent, neighbor), max(vertex_agent, neighbor))
+            new_configuration_tuple = (
+                *self.configuration_tuple[:index],
+                new_edge,
+                *self.configuration_tuple[index + 1 :],
+            )
+            new_configuration = Configuration(new_configuration_tuple)
+            new_configuration.contents.append(self.contents)
+            new_configuration.generate_upwards_neighbors()
+
+    return Configuration
+
+
+def generate_configuration_complex_data(k: int, graph: nx.Graph):
+    """Generate the cell data of the configuration complex $D_k(G)$."""
+    Configuration = generate_configuration_class(k, graph)
+
+    # The vertices of the configuration complex are just tuples of k vertices
+    for dim_0_configuration_tuple in permutations(graph, k):
+        configuration = Configuration(dim_0_configuration_tuple)
+        configuration.generate_upwards_neighbors()
+
+    cells = {i: [] for i in range(k + 1)}
+    for conf in Configuration.instances.values():
+        cells[conf.dim].append(conf.contents)
+
+    return cells

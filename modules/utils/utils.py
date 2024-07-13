@@ -495,3 +495,8 @@ def describe_hypergraph(data: torch_geometric.data.Data):
         if he_idx >= 10:
             print("...")
             break
+
+
+def edge_cycle_to_vertex_cycle(edge_cycle: list[list | tuple]):
+    """Takes a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3]."""
+    return [e[0] for e in nx.find_cycle(nx.Graph(edge_cycle))]
