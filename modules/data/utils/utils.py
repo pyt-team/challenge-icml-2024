@@ -50,18 +50,68 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
+    return connectivity
+
+
+def get_combinatorial_complex_connectivity(complex, max_rank=None):
+    r"""Gets the connectivity matrices for the combinatorial complex.
+
+    Parameters
+    ----------
+    complex : topnetx.CombinatorialComplex
+        Combinatorial complex.
+    max_rank : int
+        Maximum rank of the complex.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    if max_rank is None:
+        max_rank = complex.dim
+    practical_shape = list(
+        np.pad(list(complex.shape), (0, max_rank + 1 - len(complex.shape)))
+    )
+
+    connectivity = {}
+
+    for rank_idx in range(max_rank + 1):
+        if rank_idx > 0:
+            try:
+                connectivity[f"incidence_{rank_idx}"] = from_sparse(
+                    complex.incidence_matrix(rank=rank_idx - 1, to_rank=rank_idx)
+                )
+            except ValueError:
+                connectivity[
+                    f"incidence_{rank_idx}"
+                ] = generate_zero_sparse_connectivity(
+                    m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                )
+
+        try:
+            connectivity[f"adjacency_{rank_idx}"] = from_sparse(
+                complex.adjacency_matrix(rank=rank_idx, via_rank=rank_idx + 1)
+            )
+        except ValueError:
+            connectivity[f"adjacency_{rank_idx}"] = generate_zero_sparse_connectivity(
+                m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+            )
+
+        connectivity["shape"] = practical_shape
+
     return connectivity
 
 
@@ -325,6 +375,43 @@ def load_manual_graph():
 
     # Generate feature from 0 to 9
     x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+
+    return torch_geometric.data.Data(
+        x=x,
+        edge_index=edge_list,
+        num_nodes=len(vertices),
+        y=torch.tensor(y),
+    )
+
+
+def load_almost_cliques_graph():
+    """Create a manual graph featuring almost-cliques for testing purposes."""
+    # Define the vertices (just 9 vertices)
+    vertices = [i for i in range(9)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0, 1]
+    # Define the edges
+
+    almost_5_clique = [[i, j] for i in range(5) for j in range(i + 1, 5)]
+    almost_4_clique = [[i + 5, j + 5] for i in range(4) for j in range(i + 1, 4)]
+
+    almost_5_clique.remove([0, 1])
+    almost_4_clique.remove([7, 8])
+
+    edges = [[4, 5], [0, 8], *almost_5_clique, *almost_4_clique]
+
+    # Create a graph
+    G = nx.Graph()
+
+    # Add vertices
+    G.add_nodes_from(vertices)
+
+    # Add edges
+    G.add_edges_from(edges)
+    G.to_undirected()
+    edge_list = torch.Tensor(list(G.edges())).T.long()
+
+    # Generate feature from 0 to 9
+    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000, 10000]).unsqueeze(1).float()
 
     return torch_geometric.data.Data(
         x=x,
