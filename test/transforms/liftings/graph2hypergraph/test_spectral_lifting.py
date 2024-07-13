@@ -1,7 +1,5 @@
 """Test the message passing module."""
 
-import torch
-
 from modules.data.utils.utils import load_manual_graph
 from modules.transforms.liftings.graph2hypergraph.spectral_lifting import (
     SpectralLifting,

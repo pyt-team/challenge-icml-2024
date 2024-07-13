@@ -37,8 +37,9 @@ class SpectralLifting(Graph2HypergraphLifting):
     def init_clust_alg(self, cluster_alg: str):
         cluster_algs = {"KMeans": KMeans}
         if cluster_alg not in cluster_algs:
-            warnings.warn(
-                f"KMeans will be used since the algorithm {cluster_alg} was not recognized. Available algorithms: {list(cluster_algs.values())}"
+            warnings.warn(  # noqa: B028
+                f"KMeans will be used since the algorithm {cluster_alg} was not recognized. Available algorithms: {list(cluster_algs.values())}",
+                stacklevel=2,
             )
         self.cluster_alg = cluster_algs.get(cluster_alg, KMeans)
 
@@ -81,6 +82,7 @@ class SpectralLifting(Graph2HypergraphLifting):
                 s = v[:k].std()
                 if v[k] > m + s * a:
                     return k - 1
+            return None
 
         def find_k_largest_diff():
             """Finds index largest gap usings absolute differences"""
@@ -101,13 +103,15 @@ class SpectralLifting(Graph2HypergraphLifting):
 
         if k is None or k == 1:
             # Fall back to using largest absolute difference in case gap heuristic did not work
-            warnings.warn(
-                "Unable to confidently determine the number of clusters n_c. The largest difference between consecutive eigenvalues was used to determine the number of clusters. Please provide n_c."
+            warnings.warn(  # noqa: B028
+                "Unable to confidently determine the number of clusters n_c. The largest difference between consecutive eigenvalues was used to determine the number of clusters. Please provide n_c.",
+                stacklevel=2,
             )
             k = find_k_largest_diff()
         if k == 1:
-            warnings.warn(
-                "Please provide the number of clusters n_c. The heuristics identified a single cluster and n_c was set to 2."
+            warnings.warn(  # noqa: B028
+                "Please provide the number of clusters n_c. The heuristics identified a single cluster and n_c was set to 2.",
+                stacklevel=2,
             )
             k += 1
         return k
