@@ -1,0 +1,6 @@
+transform_type: "lifting"
+transform_name: "ProbabilisticCliqueLifting"
+max_cell_length: null
+preserve_edge_attr: False
+feature_lifting: ProjectionSum
+probability: 0.3
