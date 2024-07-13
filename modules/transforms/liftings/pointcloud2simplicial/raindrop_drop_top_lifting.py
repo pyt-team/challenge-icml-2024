@@ -17,6 +17,8 @@ from torch_geometric.utils import scatter, softmax
 from torch_sparse import SparseTensor
 from tqdm import tqdm
 
+from modules.data.utils.utils import get_complex_connectivity
+
 from .base import PointCloud2SimplicialLifting
 
 
@@ -35,7 +37,10 @@ class PositionalEncodingTF(nn.Module):
         pe = torch.cat(
             [torch.sin(scaled_time), torch.cos(scaled_time)], axis=-1
         )  # T x B x d_pe
-        pe = pe.type(torch.FloatTensor).permute(1, 0, 2)
+        if pe.is_sparse:
+            pe = pe.to_dense()
+
+        pe = pe.type(torch.FloatTensor).permute(1, 0, 2, 3)
         return torch.cat([pe, pe], dim=1)
 
 
@@ -278,7 +283,7 @@ class DropTop(nn.Module):
     def forward(self, x, times, static):
         self.update_simplicial_complex()
         N, B, S = x.shape
-        pe = self.pos_encoder(times)
+        pe = self.pos_encoder(times).permute(0, 1, 3, 2).squeeze()
         emb = self.emb(static)
 
         x01 = self.dropout(F.relu(x @ self.R_u01))
@@ -384,8 +389,10 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
         max_len=215,
         threshold=0.2,
         epoch=1,
+        batch_size=16,
+        **kwargs,
     ):
-        super(RaindropDropTopLifting, self).__init__()
+        super().__init__(**kwargs)
         self.drop_top = DropTop(
             n_sens,
             d_model,
@@ -399,14 +406,38 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
         )
         self.optimizer = torch.optim.Adam(self.drop_top.parameters(), lr=0.01)
         self.epoch = epoch
+        self.batch_size = batch_size
+
+    def _get_lifted_topology(self, sc: SimplicialComplex) -> dict:
+        lifted_topology = get_complex_connectivity(sc, self.complex_dim)
+
+        lifted_topology["x_0"] = torch.stack(
+            list(sc.get_simplex_attributes("weight", 0).values())
+        )
+        lifted_topology["x_1"] = torch.stack(
+            list(sc.get_simplex_attributes("weight", 1).values())
+        )
+        # lifted_topology["x_2"] = torch.stack(
+        #     list(sc.get_simplex_attributes("weight", 2).values())
+        # )
+        lifted_topology["eho"] = "bite"
+        print(sc.get_simplex_attributes("weight", 1), "oui")
+        return lifted_topology
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         for _ in tqdm(range(self.epoch)):
-            self.optimizer.zero_grad()
-            out = self.drop_top(data.x, data.times, data.static)
-            loss = F.cross_entropy(out, data.y)
-            loss.backward()
-            self.optimizer.step()
+            for i in range(0, data.x.shape[0], self.batch_size):
+                x, t, s, y = (
+                    data.x[:, i : i + self.batch_size, :],
+                    data.time[:, i : i + self.batch_size],
+                    data.static[i : i + self.batch_size, :],
+                    data.y[i : i + self.batch_size],
+                )
+                self.optimizer.zero_grad()
+                out = self.drop_top(x, t, s)
+                loss = F.cross_entropy(out, y)
+                loss.backward()
+                self.optimizer.step()
 
         self.drop_top.update_simplicial_complex()
         incidence_matrices = (
@@ -414,25 +445,48 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
             self.drop_top.inc_mat_02,
             self.drop_top.inc_mat_12,
         )
-        simplex = self.create_simplex(incidence_matrices)
-        return simplex
+        sc = self.create_simplex(incidence_matrices)
+        sc.set_simplex_attributes(
+            {(i,): torch.mean(data.x[:, i, :], axis=0) for i in range(data.x.shape[1])},
+            "weight",
+        )
+        self.complex_dim = sc.maxdim
+        print(f"{sc.maxdim=}")
+        return self._get_lifted_topology(sc)
 
     def create_simplex(self, incidence_matrices, threshold=0.2):
         inc_01, inc_02, inc_12 = incidence_matrices
-        sc = SimplicialComplex()
-        for i in range(inc_01.shape[0]):
-            sc.add_simplex((i,))
         complete_sc = DropTop.create_complete_simplex(inc_01.shape[0])
         one_cells = complete_sc.skeleton(1)
         two_cells = complete_sc.skeleton(2)
+        sc = SimplicialComplex()
+        for i in range(inc_01.shape[0]):
+            sc.add_simplex((i,))
 
         for i, edge in enumerate(one_cells):
-            if all(inc_01[:, i] > threshold):
-                sc.add_simplex(edge)
+            nonzero = torch.nonzero(inc_01[:, i]).T
+            if all(inc_01[nonzero, i].squeeze() > threshold):
+                sc.add_simplex((edge))
+                sc.set_simplex_attributes(
+                    {edge: torch.mean(inc_01[nonzero, i].squeeze())},
+                    "weight",
+                )
         for i, face in enumerate(two_cells):
-            if all(inc_02[:, i] > threshold):
-                sc.add_simplex(face, weight=np.mean(inc_02[i, :]))
+            nonzero = torch.nonzero(inc_02[:, i]).T
+            if all(inc_02[nonzero, i].squeeze() > threshold):
+                sc.add_simplex((face))
+                sc.set_simplex_attributes(
+                    {face: torch.mean(inc_02[nonzero, i].squeeze())},
+                    "weight",
+                )
+
         for i, face in enumerate(two_cells):
-            if all(inc_12[:, i] > threshold):
-                sc.add_simplex(face, weight=np.mean(inc_12[i, :]))
+            nonzero = torch.nonzero(inc_12[:, i]).T
+            if all(inc_12[nonzero, i].squeeze() > threshold):
+                sc.add_simplex((face))
+                sc.set_simplex_attributes(
+                    {face: torch.mean(inc_12[nonzero, i].squeeze())},
+                    "weight",
+                )
+
         return sc
