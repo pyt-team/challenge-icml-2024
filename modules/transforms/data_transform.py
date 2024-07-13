@@ -9,6 +9,9 @@ from modules.transforms.data_manipulations.manipulations import (
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
+from modules.transforms.liftings.graph2cell.discrete_configuration_complex_lifting import (
+    DiscreteConfigurationLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
@@ -31,6 +34,7 @@ TRANSFORMS = {
     "OneHotDegreeFeatures": OneHotDegreeFeatures,
     "NodeFeaturesToFloat": NodeFeaturesToFloat,
     "KeepOnlyConnectedComponent": KeepOnlyConnectedComponent,
+    "DiscreteConfigurationLifting": DiscreteConfigurationLifting,
 }
 
 
