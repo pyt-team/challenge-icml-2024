@@ -1,6 +1,5 @@
 import math
 from itertools import combinations
-from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -13,7 +12,6 @@ from torch.nn import Linear, Parameter, init
 from torch_geometric.nn import MessagePassing
 from torch_geometric.nn.inits import glorot
 from torch_geometric.typing import Adj, OptTensor, PairTensor
-from torch_geometric.utils import scatter, softmax
 from torch_sparse import SparseTensor
 from tqdm import tqdm
 
@@ -24,7 +22,7 @@ from .base import PointCloud2SimplicialLifting
 
 class PositionalEncodingTF(nn.Module):
     def __init__(self, d_model, max_len=500, MAX=10000):
-        super(PositionalEncodingTF, self).__init__()
+        super().__init__()
         self.d_model = d_model
         self.max_len = max_len
         self.MAX = MAX
@@ -49,7 +47,7 @@ class Raindrop(MessagePassing):
 
     def __init__(
         self,
-        in_channels: Union[int, Tuple[int, int]],
+        in_channels: int | tuple[int, int],
         out_channels: int,
         n_nodes: int,
         ob_dim: int,
@@ -58,7 +56,7 @@ class Raindrop(MessagePassing):
         concat: bool = True,
         beta: bool = False,
         dropout: float = 0.0,
-        edge_dim: Optional[int] = None,
+        edge_dim: int | None = None,
         bias: bool = True,
         root_weight: bool = True,
         **kwargs,
@@ -136,7 +134,7 @@ class Raindrop(MessagePassing):
 
     def forward(
         self,
-        x: Union[Tensor, PairTensor],
+        x: Tensor | PairTensor,
         p_t: Tensor,
         edge_index: Adj,
         # edge_weights=None,
@@ -182,15 +180,13 @@ class Raindrop(MessagePassing):
             assert alpha is not None
             if isinstance(edge_index, Tensor):
                 return out, (edge_index, alpha)
-            elif isinstance(edge_index, SparseTensor):
+            if isinstance(edge_index, SparseTensor):
                 return out, edge_index.set_value(alpha, layout="coo")
-        else:
-            return out
+            return None
+        return out
 
     def __repr__(self):
-        return "{}({}, {}, heads={})".format(
-            self.__class__.__name__, self.in_channels, self.out_channels, self.heads
-        )
+        return f"{self.__class__.__name__}({self.in_channels}, {self.out_channels}, heads={self.heads})"
 
     def process_inc_mat(self, incidence_matrix) -> None:
         self._attn_matrix = torch.Tensor(
@@ -215,7 +211,7 @@ class DropTop(nn.Module):
         max_len=215,
         threshold=0.2,
     ):
-        super(DropTop, self).__init__()
+        super().__init__()
 
         self.d_model = d_model
         self.n_sens = n_sens
@@ -319,8 +315,7 @@ class DropTop(nn.Module):
 
         output = torch.sum(output, dim=1)
         output = torch.cat([output, emb], dim=-1)
-        output = self.mlp(output)
-        return output
+        return self.mlp(output)
 
     def select_batch_unit(self, x, unit):
         return x[:, unit, :]
@@ -466,7 +461,7 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
         for i, edge in enumerate(one_cells):
             nonzero = torch.nonzero(inc_01[:, i]).T
             if all(inc_01[nonzero, i].squeeze() > threshold):
-                sc.add_simplex((edge))
+                sc.add_simplex(edge)
                 sc.set_simplex_attributes(
                     {edge: torch.mean(inc_01[nonzero, i].squeeze())},
                     "weight",
@@ -474,7 +469,7 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
         for i, face in enumerate(two_cells):
             nonzero = torch.nonzero(inc_02[:, i]).T
             if all(inc_02[nonzero, i].squeeze() > threshold):
-                sc.add_simplex((face))
+                sc.add_simplex(face)
                 sc.set_simplex_attributes(
                     {face: torch.mean(inc_02[nonzero, i].squeeze())},
                     "weight",
@@ -483,7 +478,7 @@ class RaindropDropTopLifting(PointCloud2SimplicialLifting):
         for i, face in enumerate(two_cells):
             nonzero = torch.nonzero(inc_12[:, i]).T
             if all(inc_12[nonzero, i].squeeze() > threshold):
-                sc.add_simplex((face))
+                sc.add_simplex(face)
                 sc.set_simplex_attributes(
                     {face: torch.mean(inc_12[nonzero, i].squeeze())},
                     "weight",

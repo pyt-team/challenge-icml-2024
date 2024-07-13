@@ -21,10 +21,10 @@ class TestRaindropDropTopLifting:
             epoch=1,
         )
         self.data = torch_geometric.data.Data(
-            x=torch.randn(100, 64),
-            times=torch.randn(100, 1),
-            static=torch.randn(100, 5),
-            y=torch.randint(0, 2, (100,)),
+            x=torch.randn(215, 16, 4),
+            times=torch.randn(16, 215),
+            static=torch.randn(16, 9),
+            y=torch.randint(0, 2, (16,)),
         )
         self.lifting.drop_top(self.data.x, self.data.times, self.data.static)
 

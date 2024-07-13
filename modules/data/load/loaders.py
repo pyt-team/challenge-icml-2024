@@ -4,10 +4,8 @@ import zipfile
 import numpy as np
 import requests
 import rootutils
-import torch
 import torch_geometric
 from omegaconf import DictConfig
-from torch.utils.data import Dataset
 from torch_geometric.data import Data
 
 from modules.data.load.base import AbstractLoader
@@ -282,5 +280,4 @@ class PointCloudLoader(AbstractLoader):
         Ptimes = Ptimes.permute(1, 0, 2)
         P = P[:, :, :4]
 
-        dataset = Data(x=P, y=y, time=Ptimes, static=Pstatic)
-        return dataset
+        return Data(x=P, y=y, time=Ptimes, static=Pstatic)

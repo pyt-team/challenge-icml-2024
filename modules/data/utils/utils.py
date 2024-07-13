@@ -472,8 +472,7 @@ def preprocess_data(x, P, Pstatic, y):
             Pf[f] = (Pf[f] - mf[f]) / (stdf[f] + 1e-18)
         Pf = Pf * M_3D
         Pnorm_tensor = Pf.reshape((F, N, T)).transpose((1, 2, 0))
-        Pfinal_tensor = np.concatenate([Pnorm_tensor, M], axis=2)
-        return Pfinal_tensor
+        return np.concatenate([Pnorm_tensor, M], axis=2)
 
     def mask_normalize_static(P_tensor, ms, ss):
         N, S = P_tensor.shape
@@ -489,8 +488,7 @@ def preprocess_data(x, P, Pstatic, y):
             Ps[s, idx_missing] = 0
 
         # reshape back
-        Pnorm_tensor = Ps.reshape((S, N)).transpose((1, 0))
-        return Pnorm_tensor
+        return Ps.reshape((S, N)).transpose((1, 0))
 
     def tensorize_normalize(P, y, mf, stdf, ms, ss):
         T, F = P[0]["arr"].shape
