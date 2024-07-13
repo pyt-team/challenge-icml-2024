@@ -397,7 +397,7 @@ def load_almost_cliques_graph():
     almost_5_clique.remove([0, 1])
     almost_4_clique.remove([7, 8])
 
-    edges = [[4, 5], [0, 8]] + almost_5_clique + almost_4_clique
+    edges = [[4, 5], [0, 8], *almost_5_clique, *almost_4_clique]
 
     # Create a graph
     G = nx.Graph()
