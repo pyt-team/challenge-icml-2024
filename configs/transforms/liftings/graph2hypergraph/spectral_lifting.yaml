@@ -1,0 +1,6 @@
+transform_type: 'lifting'
+transform_name: "SpectralLifting"
+n_c: null
+cluster_alg: "KMeans"
+eps: 1e-9
+feature_lifting: ProjectionSum
