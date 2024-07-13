@@ -232,8 +232,7 @@ class PointCloudLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        if "data_name" not in self.parameters:
-            data = load_point_cloud(num_classes=self.cfg["num_classes"])
-            return CustomDataset([data], self.cfg["data_dir"])
-        else:  # noqa: RET505
-            raise NotImplementedError
+        data = load_point_cloud(
+            num_classes=self.cfg["num_classes"], num_points=self.cfg["num_points"]
+        )
+        return CustomDataset([data], self.cfg["data_dir"])
