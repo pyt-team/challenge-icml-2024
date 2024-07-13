@@ -8,7 +8,7 @@ from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLi
 
 
 class ExpanderGraphLifting(Graph2HypergraphLifting):
-    r"""Lifts graphs to expander hypergraph.
+    r"""Lifts graphs to expander (hyper)graph. More precisely, the expander is a random Ramanujan graph.
 
     Parameters
     ----------
