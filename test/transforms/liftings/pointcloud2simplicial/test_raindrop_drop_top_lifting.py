@@ -9,13 +9,13 @@ from modules.transforms.liftings.pointcloud2simplicial.raindrop_drop_top_lifting
 class TestRaindropDropTopLifting:
     def setup_method(self):
         self.lifting = RaindropDropTopLifting(
-            n_sens=10,
-            d_model=64,
+            n_sens=4,
+            d_model=8,
             n_layers=2,
-            n_heads=4,
+            n_heads=1,
             drop_ratio=0.4,
             n_classes=2,
-            d_static=5,
+            d_static=9,
             max_len=215,
             threshold=0.2,
             epoch=1,
@@ -26,6 +26,7 @@ class TestRaindropDropTopLifting:
             static=torch.randn(100, 5),
             y=torch.randint(0, 2, (100,)),
         )
+        self.lifting.drop_top(self.data.x, self.data.times, self.data.static)
 
     def test_lift_topology(self):
         simplex = self.lifting.lift_topology(self.data)
