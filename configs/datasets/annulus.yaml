@@ -1,0 +1,13 @@
+data_domain: pointcloud
+data_type: toy_dataset
+data_name: annulus
+data_dir: datasets/${data_domain}/${data_type}/${data_name}
+
+# Dataset parameters
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+num_features: 10
+num_classes: 3
+num_points: 1000
+dim: 2

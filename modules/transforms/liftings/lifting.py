@@ -61,6 +61,7 @@ class AbstractLifting(torch_geometric.transforms.BaseTransform):
         initial_data = data.to_dict()
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)
+
         return torch_geometric.data.Data(**initial_data, **lifted_topology)
 
 
@@ -118,9 +119,11 @@ class GraphLifting(AbstractLifting):
             # In case edge features are given, assign features to every edge
             edge_index, edge_attr = (
                 data.edge_index,
-                data.edge_attr
-                if is_undirected(data.edge_index, data.edge_attr)
-                else to_undirected(data.edge_index, data.edge_attr),
+                (
+                    data.edge_attr
+                    if is_undirected(data.edge_index, data.edge_attr)
+                    else to_undirected(data.edge_index, data.edge_attr)
+                ),
             )
             edges = [
                 (i.item(), j.item(), dict(features=edge_attr[edge_idx], dim=1))

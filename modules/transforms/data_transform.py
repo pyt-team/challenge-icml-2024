@@ -15,6 +15,7 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.pointcloud2graph.cover_lifting import CoverLifting
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -23,6 +24,8 @@ TRANSFORMS = {
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Point Cloud -> Graph
+    "CoverLifting": CoverLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
