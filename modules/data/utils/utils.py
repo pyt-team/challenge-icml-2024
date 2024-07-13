@@ -5,12 +5,16 @@ import pickle
 import networkx as nx
 import numpy as np
 import omegaconf
+import rootutils
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+from gudhi.datasets.remote import fetch_bunny
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_sparse import coalesce
+
+from modules.data.utils.custom_dataset import CustomDataset
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -50,16 +54,16 @@ def get_complex_connectivity(complex, max_rank, signed=False):
                 )
             except ValueError:  # noqa: PERF203
                 if connectivity_info == "incidence":
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx - 1], n=practical_shape[rank_idx]
                     )
                 else:
-                    connectivity[f"{connectivity_info}_{rank_idx}"] = (
-                        generate_zero_sparse_connectivity(
-                            m=practical_shape[rank_idx], n=practical_shape[rank_idx]
-                        )
+                    connectivity[
+                        f"{connectivity_info}_{rank_idx}"
+                    ] = generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx], n=practical_shape[rank_idx]
                     )
     connectivity["shape"] = practical_shape
     return connectivity
@@ -370,6 +374,89 @@ def get_TUDataset_pyg(cfg):
     data_dir, data_name = cfg["data_dir"], cfg["data_name"]
     dataset = torch_geometric.datasets.TUDataset(root=data_dir, name=data_name)
     return [data for data in dataset]
+
+
+def load_pointcloud_dataset(cfg):
+    r"""Loads point cloud datasets.
+    Parameters
+    ----------
+    cfg : DictConfig
+        Configuration parameters.
+    Returns
+    -------
+    torch_geometric.data.Data
+        Point cloud dataset.
+    """
+    root_folder = rootutils.find_root()
+    data_dir = osp.join(root_folder, cfg["data_dir"])
+
+    if cfg["data_name"] == "random_pointcloud":
+        num_points, dim = cfg["num_points"], cfg["dim"]
+        pos = torch.rand((num_points, dim))
+    elif cfg["data_name"] == "annulus":
+        num_points, dim = cfg["num_points"], cfg["dim"]
+        pos = sample_annulus(dim, num_points)
+    elif cfg["data_name"] == "stanford_bunny":
+        pos = fetch_bunny(
+            file_path=osp.join(data_dir, "stanford_bunny.npy"),
+            accept_license=False,
+        )
+        pos = torch.tensor(pos)
+
+    return CustomDataset(
+        [
+            torch_geometric.data.Data(
+                pos=pos,
+            )
+        ],
+        data_dir,
+    )
+
+
+def sample_annulus(
+    dimension: int, num_points: int, inner_radius: float = 0.8, outer_radius: float = 1
+):
+    """Sample points from annulus of the given dimension.
+
+    Parameters
+    ----------
+    dimension : int
+        Dimension
+    num_points : int
+        Size of sample
+    inner_radius : float, optional
+        Inner radius, by default 0.8
+    outer_radius : float, optional
+        Outer radius, by default 1
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor of sampled points
+    """
+    n = 0
+    P = np.array([[0.0] * dimension] * num_points)
+
+    rng = np.random.default_rng()
+    while n < num_points:
+        p = rng.uniform(-outer_radius, outer_radius, dimension)
+        if np.linalg.norm(p) > outer_radius or np.linalg.norm(p) < inner_radius:
+            continue
+        P[n] = p
+        n = n + 1
+    return torch.tensor(P)
+
+
+def load_annulus():
+    """Loads 2D annulus point cloud.
+
+    Returns
+    -------
+    torch_geometric.data.Data
+        Point cloud data.
+    """
+    pos = sample_annulus(2, 1000)
+    return torch_geometric.data.Data(pos=pos)
 
 
 def ensure_serializable(obj):
