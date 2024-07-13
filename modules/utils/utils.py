@@ -166,7 +166,11 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             )
             print(f" - Features dimensions: {features_dim}")
             # Check if there are isolated nodes
-            if hasattr(data, "edge_index") and hasattr(data, "x"):
+            if (
+                hasattr(data, "edge_index")
+                and hasattr(data, "x")
+                and data.x is not None
+            ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
@@ -225,7 +229,10 @@ def plot_manual_graph(data, title=None):
         incidence = data.incidence_hyperedges.coalesce()
 
     # Collect vertices
-    vertices = [i for i in range(data.x.shape[0])]
+    if hasattr(data, "x") and data.x is not None:
+        vertices = [i for i in range(data.x.shape[0])]
+    else:
+        vertices = [i for i in range(data["x_0"].shape[0])]
 
     # Hyperedges
     if max_order == 0:

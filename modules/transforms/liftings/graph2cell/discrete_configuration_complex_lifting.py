@@ -66,7 +66,7 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
         # This is because the configuration complex has a completely different 1-skeleton from the original graph
         lifted_topology = self.lift_topology(data)
         lifted_topology = self.feature_lifting(lifted_topology)
-        return torch_geometric.data.Data(**lifted_topology)
+        return torch_geometric.data.Data(y=data.y, **lifted_topology)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Generates the cubical complex of discrete graph configurations.

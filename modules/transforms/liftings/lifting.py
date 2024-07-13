@@ -117,10 +117,9 @@ class GraphLifting(AbstractLifting):
         if self.preserve_edge_attr and self._data_has_edge_attr(data):
             # In case edge features are given, assign features to every edge
             edge_index, edge_attr = (
-                data.edge_index,
-                data.edge_attr
+                (data.edge_index, data.edge_attr)
                 if is_undirected(data.edge_index, data.edge_attr)
-                else to_undirected(data.edge_index, data.edge_attr),
+                else to_undirected(data.edge_index, data.edge_attr)
             )
             edges = [
                 (i.item(), j.item(), dict(features=edge_attr[edge_idx], dim=1))
