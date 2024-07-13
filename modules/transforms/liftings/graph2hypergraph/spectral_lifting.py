@@ -37,7 +37,7 @@ class SpectralLifting(Graph2HypergraphLifting):
     def init_clust_alg(self, cluster_alg: str):
         cluster_algs = {"KMeans": KMeans}
         if cluster_alg not in cluster_algs:
-            warnings.warn(  # noqa: B028
+            warnings.warn(
                 f"KMeans will be used since the algorithm {cluster_alg} was not recognized. Available algorithms: {list(cluster_algs.values())}",
                 stacklevel=2,
             )
@@ -103,13 +103,13 @@ class SpectralLifting(Graph2HypergraphLifting):
 
         if k is None or k == 1:
             # Fall back to using largest absolute difference in case gap heuristic did not work
-            warnings.warn(  # noqa: B028
+            warnings.warn(
                 "Unable to confidently determine the number of clusters n_c. The largest difference between consecutive eigenvalues was used to determine the number of clusters. Please provide n_c.",
                 stacklevel=2,
             )
             k = find_k_largest_diff()
         if k == 1:
-            warnings.warn(  # noqa: B028
+            warnings.warn(
                 "Please provide the number of clusters n_c. The heuristics identified a single cluster and n_c was set to 2.",
                 stacklevel=2,
             )
