@@ -12,6 +12,7 @@ from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLi
 class WeightedCliqueLifting(Graph2SimplicialLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.percentile = kwargs.get("percentile", 0.9)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         graph = self._generate_graph_from_data(data)
@@ -63,11 +64,10 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
 
         return G
 
-    # Summation for weighted FRC
+    # The forman ricci curvature calculation is depended on the type of graph.
+    # The summation for this code is based off of the directed forman ricci curvate formula.
     def summation(self, v_name, v_weight, e_weight, target, G):
         frc_sum = 0
-
-        # since some nodes are undirected I will store seen nodes in a hashmap for instant lookup to see if it has already been traversed
         seen = set()
 
         # G.in_edges('node')'s formatting: tuple -> ('connecting_node', 'node')
@@ -109,8 +109,10 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
                 - self.summation(v1, v2_weight, target_edge_weight, v2, G)
             )
 
-            # the caluclation throws a division by 0 so im using a try/except
+            # the calculation throws a division by 0 because of how small it gets.
             # the e-308 numbers is the smallest number that can fit in a float64
+            # torch geometric cannot hold store numbers that dont fit in anything larger than a float64
+            # Since some FRC values can be negative, they are passed into 1/(e ** frc ) so they are all positive values
 
             try:
                 distance_metric = 1 / (e**frc)
@@ -129,7 +131,10 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
 
         return return_map
 
-    # Normalization formula
+    # Normalization formula is from:
+    # Dissecting Ethereum Blockchain Analytics: What We Learn from
+    # Topology and Geometry of Ethereum Graph
+    # the data has been pre-normalized in our PyTorch Geometric object using this formula.
     def formula(self, curr, max, min):
         return 1 / (1 + (9 * ((curr - min) / (max - min))))
 
@@ -138,11 +143,13 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
         graph_copy = graph_obj.copy()
         temp = set()
 
+        # Save the edges that are larger than the distance threshold so they can be removed.
         for edge1, edge2 in graph_copy.edges():
             if graph_copy.has_edge(edge1, edge2):
                 if graph_copy[edge1][edge2]["distance"] > (threshold):
                     temp.add((edge1, edge2))
 
+        # you cannot iterate through a networkx dict and remove simultaneously
         for e1, e2 in temp:
             graph_copy.remove_edge(e1, e2)
 
@@ -172,6 +179,6 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
                 dist_arr.append(temp_map[(e2, e1)])
 
         # Filter the graph.
-        G_copy = self.removeEdges(graph, np.percentile(dist_arr, 90))
+        G_copy = self.removeEdges(graph, np.percentile(dist_arr, self.percentile))
 
         return G_copy
