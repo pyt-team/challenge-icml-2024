@@ -23,7 +23,7 @@ class TestRaindropDropTopLifting:
         batch_size = 16
         self.data = torch_geometric.data.Data(
             x=torch.randn(215, batch_size, 4),
-            times=torch.randn(215, batch_size, 1),
+            time=torch.randn(215, batch_size, 1),
             static=torch.randn(batch_size, 9),
             y=torch.randint(2, (batch_size,)),
         )
