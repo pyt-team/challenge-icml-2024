@@ -200,7 +200,7 @@ def load_simplicial_dataset(cfg):
         # data.x_0 = data.x
 
         # Face attributes (surface normal)
-        data.x_2 = torch.nn.functional.normalize(
+        data.x_1 = torch.nn.functional.normalize(
             torch.cross(
                 data.pos[data.face[1]] - data.pos[data.face[0]],
                 data.pos[data.face[2]] - data.pos[data.face[0]],
@@ -210,7 +210,7 @@ def load_simplicial_dataset(cfg):
 
         # Tried using TopoNetX for this but it crashed the Jupyter notebook
         num_face = data.face.size(1)
-        data.incidence_2 = torch.sparse_coo_tensor(
+        data.incidence_1 = torch.sparse_coo_tensor(
             torch.stack(
                 (
                     data.face.T.reshape(-1),
@@ -219,6 +219,8 @@ def load_simplicial_dataset(cfg):
             ),
             torch.ones(3 * num_face),
         )
+
+        # Up- and down-Laplacian, etc. should be computed here
 
         return data
 
