@@ -20,9 +20,17 @@ class TestRaindropDropTopLifting:
             threshold=0.2,
             epoch=1,
         )
+        batch_size = 16
         self.data = torch_geometric.data.Data(
-            x=torch.randn(215, 16, 4),
-            times=torch.randn(215, 16),
-            static=torch.randn(16, 9),
-            y=torch.randint(0, 2, (16,)),
+            x=torch.randn(215, batch_size, 4),
+            times=torch.randn(215, batch_size, 1),
+            static=torch.randn(batch_size, 9),
+            y=torch.randint(0, 2, (batch_size)),
         )
+
+    def test_lift_topology(self):
+        simplex = self.lifting.lift_topology(self.data)
+        assert isinstance(simplex, dict), "The output should be a dictionary."
+        assert (
+            "incidence_matrices" in simplex
+        ), "The output dictionary should contain incidence matrices."
