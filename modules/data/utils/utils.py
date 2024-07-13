@@ -199,7 +199,7 @@ def load_simplicial_dataset(cfg):
         data.x = data.x.view(-1, 1)
         # data.x_0 = data.x
 
-        # Face attributes (surface normal)
+        # Face attributes (surface normal) (should this be "x_2"?)
         data.x_1 = torch.nn.functional.normalize(
             torch.cross(
                 data.pos[data.face[1]] - data.pos[data.face[0]],
@@ -208,6 +208,7 @@ def load_simplicial_dataset(cfg):
             )
         )
 
+        # Incidence from nodes to faces (should this be "incidence_2"?)
         # Tried using TopoNetX for this but it crashed the Jupyter notebook
         num_face = data.face.size(1)
         data.incidence_1 = torch.sparse_coo_tensor(
