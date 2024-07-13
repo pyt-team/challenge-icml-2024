@@ -6,33 +6,34 @@ import numpy as np
 import statsmodels.stats.multitest as mt
 import torch
 import torch_geometric
-from gudhi import cover_complex
 from statsmodels.distributions.empirical_distribution import ECDF
 from torch_geometric.utils.convert import from_networkx
 
 from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLifting
 
+rng = np.random.default_rng()
 
-def persistent_homology(points: torch.Tensor, subcomplex_inds: list[int] = None):
+
+def persistent_homology(points: torch.Tensor, subcomplex_inds=None):
     st = gudhi.AlphaComplex(points=points).create_simplex_tree()
 
     if subcomplex_inds is not None:
-        subcomplex = []
-        for simplex in st.get_simplices():
-            if all(x in subcomplex_inds for x in simplex[0]):
-                subcomplex.append(simplex[0])
+        subcomplex = [
+            simplex
+            for simplex, _ in st.get_simplices()
+            if all(x in subcomplex_inds for x in simplex)
+        ]
 
         new_vertex = st.num_vertices()
         st.insert([new_vertex], 0)
         for simplex in subcomplex:
-            st.insert(simplex + [new_vertex], st.filtration(simplex))
+            st.insert([*simplex, new_vertex], st.filtration(simplex))
 
     persistence = st.persistence()
-    diagram = np.array(
+
+    return np.array(
         [(birth, death) for (dim, (birth, death)) in persistence if dim == 1]
     )
-
-    return diagram
 
 
 def transform(diagram):
@@ -43,7 +44,7 @@ def transform(diagram):
 
 def get_empirical_distribution(dim: int):
     """Generates empirical distribution of pi values for random pointcloud in R^{dim}"""
-    random_pc = np.random.uniform(size=(10000, dim))
+    random_pc = rng.uniform(size=(10000, dim))
     dgm_rand = persistent_homology(random_pc)
     return ECDF(transform(dgm_rand))
 
@@ -55,9 +56,7 @@ def test_weak_universality(emp_cdf: ECDF, diagram, alpha: float = 0.05):
 
 
 def sample_points(points: torch.Tensor, n=300):
-    return points[
-        np.random.choice(points.shape[0], min(n, points.shape[0]), replace=False)
-    ]
+    return points[rng.choice(points.shape[0], min(n, points.shape[0]), replace=False)]
 
 
 class CoverLifting(PointCloud2GraphLifting):
@@ -72,7 +71,6 @@ class CoverLifting(PointCloud2GraphLifting):
     def __init__(
         self,
         ambient_dim: int = 2,
-        cover_complex: gudhi.cover_complex.CoverComplex = None,
         **kwargs,
     ):
         super().__init__(**kwargs)

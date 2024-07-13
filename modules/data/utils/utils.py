@@ -401,11 +401,7 @@ def load_pointcloud_dataset(cfg):
             file_path=osp.join(data_dir, "stanford_bunny.npy"),
             accept_license=False,
         )
-
-        num_points = cfg["num_points"] if "num_points" in cfg else len(pos)
         pos = torch.tensor(pos)
-
-        pos = pos[np.random.choice(pos.shape[0], num_points, replace=False)]
 
     return CustomDataset(
         [
@@ -420,8 +416,10 @@ def load_pointcloud_dataset(cfg):
 def annulus_2d(D, N, R1=0.8, R2=1, A=0):
     n = 0
     P = np.array([[0.0] * D] * N)
+
+    rng = np.random.default_rng()
     while n < N:
-        p = np.random.uniform(-R2, R2, D)
+        p = rng.uniform(-R2, R2, D)
         if np.linalg.norm(p) > R2 or np.linalg.norm(p) < R1:
             continue
         if (p[0] > 0) and (np.abs(p[1]) < A / 2):

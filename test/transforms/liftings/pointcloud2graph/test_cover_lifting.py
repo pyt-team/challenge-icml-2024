@@ -1,7 +1,6 @@
 """Test the message passing module."""
 
 import networkx as nx
-import torch
 from torch_geometric.utils.convert import to_networkx
 
 from modules.data.utils.utils import load_annulus
@@ -21,12 +20,7 @@ class TestCoverLifting:
     def test_lift_topology(self):
         """Test the lift_topology method."""
         # Test the lift_topology method
-        lifted_dataset = self.lifting(self.data)
+        lifted_data = self.lifting(self.data)
 
-        # g = nx.Graph()
-        # us, vs = lifted_dataset["edge_index"]
-
-        # for u, v in zip(us, vs):
-        #     g.add_edge(u, v)
-
-        # nx.cycles.find_cycle(g)
+        g = to_networkx(lifted_data, to_undirected=True)
+        nx.find_cycle(g)
