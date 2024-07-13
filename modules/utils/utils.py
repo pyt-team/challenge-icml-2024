@@ -133,10 +133,10 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             features_dim.append(data.x.shape[1])
         else:
             raise ValueError("Data object does not contain any vertices/points.")
-        if hasattr(data, "num_edges"):
+        if hasattr(data, "num_edges") and data.num_edges:
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and (data.edge_index is not None):
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -146,8 +146,17 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         hyperedges_features_dim = data.x_hyperedges.shape[1]
 
     # Plot the graph if it is not too large
-    if complex_dim[0] < 50:
+    if complex_dim[0] < 50 and len(complex_dim) != 1:
         plot_manual_graph(data)
+
+    # Plot point cloud if it is not too large
+    if (
+        complex_dim[0] < 10_000
+        and len(complex_dim) == 1
+        and not hyperedges
+        and data.pos.shape[1] in [2, 3]
+    ):
+        plot_point_cloud(data)
 
     if hyperedges:
         print(
@@ -166,7 +175,11 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             )
             print(f" - Features dimensions: {features_dim}")
             # Check if there are isolated nodes
-            if hasattr(data, "edge_index") and hasattr(data, "x"):
+            if (
+                hasattr(data, "edge_index")
+                and hasattr(data, "x")
+                and (data.edge_index is not None)
+            ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
@@ -178,6 +191,51 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
                 print(f" - The complex has {c_d} {i}-cells.")
                 print(f" - The {i}-cells have features dimension {features_dim[i]}")
     print("")
+
+
+def plot_point_cloud(data, title=None):
+    """Plot point cloud data.
+
+    Parameters
+    ----------
+    data : torch_geometric.data.Data
+        Data object containing the point cloud.
+    title: str
+        Title for the plot.
+    """
+
+    if not hasattr(data, "pos"):
+        raise ValueError("Must have a pos attribute to plot point cloud data.")
+
+    if len(data.pos.shape) != 2:
+        raise ValueError(
+            f"pos tensor should have 2 dimensions, found {len(data.pos.shape)}"
+        )
+
+    if data.pos.shape[1] == 3:
+        dim = 3
+        x = data.pos[:, 0]
+        y = data.pos[:, 1]
+        z = data.pos[:, 2]
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(x, y, z)
+        plt.show()
+    elif data.pos.shape[1] == 2:
+        dim = 2
+        x = data.pos[:, 0]
+        y = data.pos[:, 1]
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111)
+        ax.scatter(x, y)
+    else:
+        raise ValueError("Only 2 and 3 dimensional point cloud data can be plotted")
+
+    if title is not None:
+        ax.set_title(title)
+    else:
+        ax.set_title(f"{dim}D Point Cloud")
+    plt.show()
 
 
 def plot_manual_graph(data, title=None):
@@ -495,3 +553,46 @@ def describe_hypergraph(data: torch_geometric.data.Data):
         if he_idx >= 10:
             print("...")
             break
+
+
+def calculate_pairwise_differences(x: torch.Tensor):
+    r"""Generate tensor of pairwise differences between each row of x.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        2-dimensional tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor of pairwise differences of rows of x.
+    """
+    x_expanded_1 = x.unsqueeze(1)
+    x_expanded_2 = x.unsqueeze(0)
+    return x_expanded_1 - x_expanded_2
+
+
+def add_epsilon_to_zeros(t: torch.Tensor, epsilon=1e-8):
+    """Add a small epsilon value to off-diagonal elements which are zero. This is useful for using the gudhi library since it treats pairwise distances which are 0 as the same point.
+
+    Parameters
+    ----------
+    t : torch.Tensor
+        2-dimensional tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor with non-diagonal elements that are zero shifted slightly by a small epsilon.
+    """
+
+    # Create a mask for non-diagonal elements
+    non_diagonal_mask = ~torch.eye(t.shape[0], dtype=torch.bool, device=t.device)
+
+    # Create a tensor with epsilon values where the original tensor is 0
+    epsilon_tensor = torch.zeros_like(t)
+    epsilon_tensor[non_diagonal_mask & (t == 0)] = epsilon
+
+    # Add the epsilon tensor to the original tensor
+    return t + epsilon_tensor
