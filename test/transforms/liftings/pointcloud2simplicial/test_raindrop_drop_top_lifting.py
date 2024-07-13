@@ -25,7 +25,7 @@ class TestRaindropDropTopLifting:
             x=torch.randn(215, batch_size, 4),
             times=torch.randn(215, batch_size, 1),
             static=torch.randn(batch_size, 9),
-            y=torch.randint(0, 2, (batch_size)),
+            y=torch.randint(2, (batch_size,)),
         )
 
     def test_lift_topology(self):
