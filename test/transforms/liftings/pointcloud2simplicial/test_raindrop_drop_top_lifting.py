@@ -26,7 +26,6 @@ class TestRaindropDropTopLifting:
             static=torch.randn(16, 9),
             y=torch.randint(0, 2, (16,)),
         )
-        self.lifting.drop_top(self.data.x, self.data.times, self.data.static)
 
     def test_lift_topology(self):
         simplex = self.lifting.lift_topology(self.data)
