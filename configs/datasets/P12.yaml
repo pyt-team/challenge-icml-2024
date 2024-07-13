@@ -1,0 +1,2 @@
+data_dir: datasets/pointcloud/P12data
+data_file: processed_data/P_list.npy
