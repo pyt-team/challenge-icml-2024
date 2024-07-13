@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch_geometric
-from base import PointCloud2SimplicialLifting
 from toponetx.classes.simplicial_complex import SimplicialComplex
 from torch import Tensor
 from torch.nn import Linear, Parameter, init
@@ -17,6 +16,8 @@ from torch_geometric.typing import Adj, OptTensor, PairTensor
 from torch_geometric.utils import scatter, softmax
 from torch_sparse import SparseTensor
 from tqdm import tqdm
+
+from .base import PointCloud2SimplicialLifting
 
 
 class PositionalEncodingTF(nn.Module):
