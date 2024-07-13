@@ -14,7 +14,7 @@ Edge = tuple[Vertex, Vertex]
 ConfigurationTuple = tuple[Vertex | Edge]
 
 
-class DiscreteConfigurationLifting(Graph2CellLifting):
+class DiscreteConfigurationComplexLifting(Graph2CellLifting):
     r"""Lifts graphs to cell complexes by generating the k-th *discrete configuration complex* $D_k(G)$ of the graph. This is a cube complex, which is similar to a simplicial complex except each n-dimensional cell is homeomorphic to a n-dimensional cube rather than an n-dimensional simplex.
 
     The discrete configuration complex of order k consists of all sets of k unique edges or vertices of $G$, with the additional constraint that if an edge e is in a cell, then neither of the endpoints of e are in the cell. For examples of different graphs and their configuration complexes, see the tutorial.

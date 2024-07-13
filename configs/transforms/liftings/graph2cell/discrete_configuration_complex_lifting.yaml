@@ -1,5 +1,5 @@
 transform_type: 'lifting'
-transform_name: "DiscreteConfigurationLifting"
+transform_name: "DiscreteConfigurationComplexLifting"
 k: 2
 feature_aggregation: "concat"
 preserve_edge_attr: True
