@@ -148,13 +148,11 @@ class ProbabilisticCliqueLifting(Graph2CombinatorialLifting):
             The missing edges
         """
 
-        missing_edges = []
-
-        for node in nodes_to_connect:
-            # For each node in the clique, check if there is an edge between them
-            for clique_node in clique:
-                # If there is no edge between the node and the clique_node, it's a missing edge
-                if not graph.has_edge(node, clique_node):
-                    missing_edges.append((node, clique_node))
+        missing_edges = [
+            (node, clique_node)
+            for node in nodes_to_connect
+            for clique_node in clique
+            if not graph.has_edge(node, clique_node)
+        ]
 
         return missing_edges
