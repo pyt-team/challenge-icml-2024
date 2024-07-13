@@ -1,6 +1,8 @@
 import os
+import zipfile
 
 import numpy as np
+import requests
 import rootutils
 import torch_geometric
 from omegaconf import DictConfig
@@ -204,3 +206,54 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         return load_hypergraph_pickle_dataset(self.parameters)
+
+
+class PointCloudLoader(AbstractLoader):
+    r"""Loader for point cloud datasets.
+
+    Parameters
+    ----------
+    parameters : DictConfig
+        Configuration parameters.
+    """
+
+    def __init__(self, parameters: DictConfig):
+        super().__init__(parameters)
+        self.parameters = parameters
+
+    def load(self) -> torch_geometric.data.Dataset:
+        """Load point cloud dataset.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        torch_geometric.data.Dataset
+            torch_geometric.data.Dataset object containing the loaded data.
+        """
+        data_url = "https://figshare.com/ndownloader/files/34683085"
+
+        root_folder = rootutils.find_root()
+        data_path = os.path.join(
+            root_folder, self.parameters["data_dir"], "point_cloud_data.zip"
+        )
+        os.makedirs(os.path.dirname(data_path), exist_ok=True)
+        response = requests.get(data_url)
+
+        with open(data_path, "wb") as f:
+            f.write(response.content)
+
+        # Extract the zip file
+        if data_path.endswith(".zip"):
+            with zipfile.ZipFile(data_path, "r") as zip_ref:
+                zip_ref.extractall(self.parameters["data_dir"])
+
+        # Load the dataset
+        data_file = os.path.join(
+            root_folder, self.parameters["data_dir"], self.parameters["data_file"]
+        )
+        dataset = torch_geometric.data.Dataset(root=data_file)
+
+        return dataset
