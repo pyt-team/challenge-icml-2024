@@ -28,7 +28,7 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
     preserve_edge_attr : bool, optional
         Whether to preserve edge attributes. Default is True.
     feature_aggregation: str, optional
-        For a k-agent configuration, the method by which the features are aggregated. Can be "mean", "sum", or "concat". Default is "mean".
+        For a k-agent configuration, the method by which the features are aggregated. Can be "mean", "sum", or "concat". Default is "concat".
     **kwargs : optional
         Additional arguments for the class.
     """
@@ -37,7 +37,7 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
         self,
         k: int,
         preserve_edge_attr: bool = True,
-        feature_aggregation="mean",
+        feature_aggregation="concat",
         **kwargs,
     ):
         self.k = k
@@ -48,6 +48,25 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
             )
         self.feature_aggregation = feature_aggregation
         super().__init__(preserve_edge_attr=preserve_edge_attr, **kwargs)
+
+    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+        r"""Applies the full lifting (topology + features) to the input data.
+
+        Parameters
+        ----------
+        data : torch_geometric.data.Data
+            The input data to be lifted.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The lifted data.
+        """
+        # Unlike the base class, we do not pass the initial data to the final data
+        # This is because the configuration complex has a completely different 1-skeleton from the original graph
+        lifted_topology = self.lift_topology(data)
+        lifted_topology = self.feature_lifting(lifted_topology)
+        return torch_geometric.data.Data(**lifted_topology)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         r"""Generates the cubical complex of discrete graph configurations.
@@ -77,7 +96,9 @@ class DiscreteConfigurationLifting(Graph2CellLifting):
 
         cells = {i: [] for i in range(self.k + 1)}
         for conf in Configuration.instances.values():
-            cell = (conf.contents, {"features": conf.features()})
+            features = conf.features()
+            attrs = {"features": features} if features is not None else {}
+            cell = (conf.contents, attrs)
             cells[conf.dim].append(cell)
 
         # TopoNetX only supports cells of dimension <= 2
@@ -150,6 +171,9 @@ def generate_configuration_class(
                     features.append(graph.nodes[agent]["features"])
                 elif edge_features:
                     features.append(graph.edges[agent]["features"])
+
+            if not features:
+                return None
 
             if feature_aggregation == "mean":
                 try:
