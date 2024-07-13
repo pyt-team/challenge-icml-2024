@@ -109,12 +109,9 @@ class GraphLoader(AbstractLoader):
         elif self.parameters.data_name in ["EthereumTokenNetwork"]:
             root_folder = rootutils.find_root()
             root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
-            data_path = os.path.join(
-                root_data_dir, "OurDatasets/EthereumTokenNetwork.pt"
-            )
+            data_path = os.path.join(root_data_dir, "EthereumTokenNetwork.pt")
 
             with open(data_path, "rb") as f:
-                print(data_path)
                 dataset = torch.load(f)
 
             dataset = CustomDataset([dataset], self.data_dir)
