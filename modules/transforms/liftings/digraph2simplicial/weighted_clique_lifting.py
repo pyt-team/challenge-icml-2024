@@ -1,17 +1,14 @@
 from itertools import combinations
-from math import e, isinf, isnan, sqrt
+from math import e, isinf, sqrt
 
 import networkx as nx
 import numpy as np
-import pandas as pd
-import torch
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
 from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
 
 
-# Check the name
 class WeightedCliqueLifting(Graph2SimplicialLifting):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -19,9 +16,11 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
         graph = self._generate_graph_from_data(data)
 
-        self.run(graph)
+        graph = self.run(graph)
 
-        simplicial_complex = SimplicialComplex(graph)
+        graph = graph.to_undirected()
+
+        simplicial_complex = SimplicialComplex(simplices=graph)
 
         cliques = nx.find_cliques(graph)
         simplices = [set() for _ in range(2, self.complex_dim + 1)]
@@ -49,25 +48,20 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
         nx.Graph
             The generated NetworkX graph.
         """
-        DiG = nx.DiGraph()
+        G = torch_geometric.utils.to_networkx(data)
+        G.clear_edges()
 
-        for i in range(data["num_edges"]):
-            name1 = data["edge_index"][0][i]  # this will retirn the string name
-            if not DiG.has_node(name1):
-                DiG.add_node(
-                    name1,
-                    integer_label=int(data["integer_label"][data["edge_index"][0][i]]),
-                )
+        for node in G.nodes():
+            G.nodes[node]["features"] = data["features"][int(node)]
 
-            name2 = data["edge_index"][1][i]
-            if not DiG.has_node(name2):
-                DiG.add_node(
-                    name2,
-                    integer_label=int(data["integer_label"][data["edge_index"][1][i]]),
-                )
+        for i in range(int(data["num_edges"])):
+            G.add_edge(
+                int(data["edge_index"][0][i]),
+                int(data["edge_index"][1][i]),
+                w=float(data["x"][i]),
+            )
 
-            DiG.add_edge(name1, name2, w=float(data["x"][i]))
-        return DiG
+        return G
 
     # Summation for weighted FRC
     def summation(self, v_name, v_weight, e_weight, target, G):
@@ -178,6 +172,6 @@ class WeightedCliqueLifting(Graph2SimplicialLifting):
                 dist_arr.append(temp_map[(e2, e1)])
 
         # Filter the graph.
-        G_copy = self.removeEdges(graph, np.percentile(dist_arr, 50))
+        G_copy = self.removeEdges(graph, np.percentile(dist_arr, 90))
 
         return G_copy
