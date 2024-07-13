@@ -1,0 +1,5 @@
+data_dir: datasets/pointcloud/P12data
+data_file: processed_data/PTdict_list.npy
+label_file: processed_data/arr_outcomes.npy
+num_features: 6
+num_classes: 2

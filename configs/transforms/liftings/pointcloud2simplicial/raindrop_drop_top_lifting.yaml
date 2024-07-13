@@ -1,0 +1,12 @@
+transform_type: 'lifting'
+transform_name: "RaindropDropTopLifting"
+n_sens: 4
+d_model: 8
+n_layers: 2
+n_heads: 1
+drop_ratio: 0.4
+n_classes: 2
+d_static: 9
+max_len: 215
+threshold: 0.2
+epoch: 1
