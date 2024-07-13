@@ -14,7 +14,21 @@ from modules.transforms.liftings.pointcloud2graph.base import PointCloud2GraphLi
 rng = np.random.default_rng()
 
 
-def persistent_homology(points: torch.Tensor, subcomplex_inds=None):
+def persistent_homology(points: torch.Tensor, subcomplex_inds: list[int] | None = None):
+    """Calculate (relative) persistent homology using Alpha complex.
+
+    Parameters
+    ----------
+    points : torch.Tensor
+        Set of points.
+    subcomplex_inds : list[int] | None, optional
+        Points on the boundary (subcomplex), by default None
+
+    Returns
+    -------
+    torch.Tensor
+        Persistence diagram
+    """
     st = gudhi.AlphaComplex(points=points).create_simplex_tree()
 
     if subcomplex_inds is not None:
@@ -36,26 +50,81 @@ def persistent_homology(points: torch.Tensor, subcomplex_inds=None):
     )
 
 
-def transform(diagram):
+def transform_diagram(diagram: torch.Tensor):
+    """Transform the diagram to a list of pi values (birth / death).
+
+    Parameters
+    ----------
+    diagram : torch.Tensor
+        Persistence diagram
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor of pi values.
+    """
+
     b, d = diagram[:, 0], diagram[:, 1]
     pi = d / b
     return np.log(pi)
 
 
 def get_empirical_distribution(dim: int):
-    """Generates empirical distribution of pi values for random pointcloud in R^{dim}"""
+    """Generates empirical distribution of pi values for random pointcloud in R^{dim}
+
+    Parameters
+    ----------
+    dim : int
+        Dimension
+
+    Returns
+    -------
+    ECDF
+        CDF of the distribution.
+    """
     random_pc = rng.uniform(size=(10000, dim))
     dgm_rand = persistent_homology(random_pc)
-    return ECDF(transform(dgm_rand))
+    return ECDF(transform_diagram(dgm_rand))
 
 
 def test_weak_universality(emp_cdf: ECDF, diagram, alpha: float = 0.05):
-    pvals = 1 - emp_cdf(transform(diagram))
+    """Test cycles for significance using weak universality.
+    See: Bobrowski, O., Skraba, P. A universal null-distribution for topological data analysis. Sci Rep 13, 12274 (2023).
+
+    Parameters
+    ----------
+    emp_cdf : ECDF
+        Emperical CDF of pi values of random points.
+    diagram : _type_
+        Persistence diagram
+    alpha : float, optional
+        p-value, by default 0.05
+
+    Returns
+    -------
+    int
+        Number of significant cycles.
+    """
+    pvals = 1 - emp_cdf(transform_diagram(diagram))
     is_significant, _, _, _ = mt.multipletests(pvals, alpha=alpha, method="bonferroni")
     return np.sum(is_significant)
 
 
-def sample_points(points: torch.Tensor, n=300):
+def sample_points(points: torch.Tensor, n: int = 300):
+    """Sample n random points.
+
+    Parameters
+    ----------
+    points : torch.Tensor
+        Points
+    n : int, optional
+        Size of sample, by default 300
+
+    Returns
+    -------
+    torch.Tensor
+        Sample
+    """
     return points[rng.choice(points.shape[0], min(n, points.shape[0]), replace=False)]
 
 

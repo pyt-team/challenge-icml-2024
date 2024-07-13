@@ -395,7 +395,7 @@ def load_pointcloud_dataset(cfg):
         pos = torch.rand((num_points, dim))
     elif cfg["data_name"] == "annulus":
         num_points, dim = cfg["num_points"], cfg["dim"]
-        pos = annulus_2d(dim, num_points)
+        pos = sample_annulus(dim, num_points)
     elif cfg["data_name"] == "stanford_bunny":
         pos = fetch_bunny(
             file_path=osp.join(data_dir, "stanford_bunny.npy"),
@@ -413,16 +413,34 @@ def load_pointcloud_dataset(cfg):
     )
 
 
-def annulus_2d(D, N, R1=0.8, R2=1, A=0):
+def sample_annulus(
+    dimension: int, num_points: int, inner_radius: float = 0.8, outer_radius: float = 1
+):
+    """Sample points from annulus of the given dimension.
+
+    Parameters
+    ----------
+    dimension : int
+        Dimension
+    num_points : int
+        Size of sample
+    inner_radius : float, optional
+        Inner radius, by default 0.8
+    outer_radius : float, optional
+        Outer radius, by default 1
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor of sampled points
+    """
     n = 0
-    P = np.array([[0.0] * D] * N)
+    P = np.array([[0.0] * dimension] * num_points)
 
     rng = np.random.default_rng()
-    while n < N:
-        p = rng.uniform(-R2, R2, D)
-        if np.linalg.norm(p) > R2 or np.linalg.norm(p) < R1:
-            continue
-        if (p[0] > 0) and (np.abs(p[1]) < A / 2):
+    while n < num_points:
+        p = rng.uniform(-outer_radius, outer_radius, dimension)
+        if np.linalg.norm(p) > outer_radius or np.linalg.norm(p) < inner_radius:
             continue
         P[n] = p
         n = n + 1
@@ -430,31 +448,15 @@ def annulus_2d(D, N, R1=0.8, R2=1, A=0):
 
 
 def load_annulus():
-    pos = annulus_2d(2, 1000)
+    """Loads 2D annulus point cloud.
+
+    Returns
+    -------
+    torch_geometric.data.Data
+        Point cloud data.
+    """
+    pos = sample_annulus(2, 1000)
     return torch_geometric.data.Data(pos=pos)
-
-
-def load_manual_pointcloud():
-    """Create a manual pointcloud for testing purposes."""
-    # Define the positions
-    pos = torch.tensor(
-        [
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 1, 0],
-            [10, 0, 0],
-            [10, 0, 1],
-            [10, 1, 0],
-            [10, 1, 1],
-            [20, 0, 0],
-            [20, 0, 1],
-            [20, 1, 0],
-            [20, 1, 1],
-            [30, 0, 0],
-        ]
-    ).float()
-
-    return torch_geometric.data.Data(pos=pos, num_nodes=pos.size(0), num_features=0)
 
 
 def ensure_serializable(obj):
