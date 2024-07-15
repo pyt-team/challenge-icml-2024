@@ -1,10 +1,7 @@
 ## WeightedCliqueLifting
 WeightedCliqueLifting is a Python class for lifting a weighted-directed graph into a simplicial complex by using [Ricci Curvature](https://en.wikipedia.org/wiki/Ricci_curvature) information on the graph edges. This transformation is useful in topological data analysis, where higher-order interactions are represented by simplicial complexes.
 
-# A Note:
-We were unable to fully run our lifting as the Jupyter Notebook kernel would crash while verifying the simplicial complex due to a lack of sufficient memory on any of our systems. The weighted-directed graph is too large for us to run, but we hope someone else can. We have faith that our lifting from a weighted-directed graph into a simplicial complex works but would greatly appreciate it if this could be tested and we could receive feedback. Our code is commented in detail for you to work with.
-
-# Table of Contents
+ # Table of Contents
 
 1. Usage
 2. Our New Dataset
