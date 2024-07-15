@@ -50,8 +50,7 @@ To perform our topological lifting from a weighted-directed graph to a simplicia
 # Who We Are:
 Submission Completed by Ronan Buck, Vedant Patel, Guneet Uberoi from The University of Central Florida under the supervision of [Cuneyt Gurcan Akcora](https://cakcora.github.io/).
 
-# ICML Topological Deep Learning Challenge 2024: Beyond the Graph Domain
-Official repository for the Topological Deep Learning Challenge 2024, jointly organized by [TAG-DS](https://www.tagds.com) & PyT-Team and hosted by the [Geometry-grounded Representation Learning and Generative Modeling (GRaM) Workshop](https://gram-workshop.github.io) at ICML 2024.
+Please reach us at Vedant Patel <ve943156 at ucf dot edu>, Ronan Buck <ro214340 at ucf dot edu> and Guneet Uberoi <gu391902 at ucf dot edu>.
 
  
    
