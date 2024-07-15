@@ -107,6 +107,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
     # assert isinstance(
     #     dataset, torch_geometric.data.Dataset
     # ), "Data object must be a PyG Dataset object."
+
     num_samples = len(dataset)
     if num_samples == 1:
         print(f"\nDataset only contains {num_samples} sample:")

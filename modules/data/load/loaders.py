@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import rootutils
+import torch
 import torch_geometric
 from omegaconf import DictConfig
 
@@ -103,6 +104,17 @@ class GraphLoader(AbstractLoader):
             # Join dataset to process it
             dataset = datasets[0] + datasets[1] + datasets[2]
             dataset = ConcatToGeometricDataset(dataset)
+
+        # Our custom dataset, can also work with other Ethereum Token Networks
+        elif self.parameters.data_name in ["EthereumTokenNetwork"]:
+            root_folder = rootutils.find_root()
+            root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+            data_path = os.path.join(root_data_dir, "EthereumTokenNetwork.pt")
+
+            with open(data_path, "rb") as f:
+                dataset = torch.load(f)
+
+            dataset = CustomDataset([dataset], self.data_dir)
 
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()

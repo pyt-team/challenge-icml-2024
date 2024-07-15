@@ -1,0 +1,11 @@
+data_domain: graph
+data_type: Transactions
+data_name: EthereumTokenNetwork
+data_dir: datasets/${data_type}
+
+num_features: 1
+num_classes: 5
+task: classification
+loss_type: cross_entropy
+task_level: graph
+percentile: 0.9  # A configurable percentile threshold for filtering out edges in the graph (0.9 means keep 90% of edges)

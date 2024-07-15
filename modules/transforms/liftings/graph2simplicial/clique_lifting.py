@@ -32,10 +32,12 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
         dict
             The lifted topology.
         """
+
         graph = self._generate_graph_from_data(data)
         simplicial_complex = SimplicialComplex(graph)
         cliques = nx.find_cliques(graph)
         simplices = [set() for _ in range(2, self.complex_dim + 1)]
+
         for clique in cliques:
             for i in range(2, self.complex_dim + 1):
                 for c in combinations(clique, i + 1):
