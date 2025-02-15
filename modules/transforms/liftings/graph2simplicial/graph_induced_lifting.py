@@ -4,7 +4,9 @@ import networkx as nx
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
-from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
+from modules.transforms.liftings.graph2simplicial.base import (
+    Graph2SimplicialLifting,
+)
 
 
 class SimplicialGraphInducedLifting(Graph2SimplicialLifting):
