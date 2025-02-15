@@ -12,7 +12,7 @@ class TestDelaunayLifting:
     def setup_method(self):
         # Load the point cloud
         SEED = 42
-        self.data = load_point_cloud(num_points=5, seed=SEED)
+        self.data = load_point_cloud(num_samples=5, seed=SEED)
 
         # Initialise the DelaunayLifting class
         self.lifting_signed = DelaunayLifting(signed=True)
