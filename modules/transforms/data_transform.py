@@ -29,6 +29,9 @@ from modules.transforms.liftings.graph2simplicial.line_lifting import (
 from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
     SimplicialVietorisRipsLifting,
 )
+from modules.transforms.liftings.pointcloud2simplicial.alpha_complex_lifting import (
+    AlphaComplexLifting,
+)
 from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
     DelaunayLifting,
 )
@@ -43,6 +46,8 @@ TRANSFORMS = {
     "SimplicialGraphInducedLifting": SimplicialGraphInducedLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Point Cloud -> Simplicial Complex,
+    "AlphaComplexLifting": AlphaComplexLifting,
     # Point-cloud -> Simplicial Complex
     "DelaunayLifting": DelaunayLifting,
     # Graph -> Combinatorial Complex

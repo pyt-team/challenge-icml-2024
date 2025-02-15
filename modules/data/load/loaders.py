@@ -1,7 +1,9 @@
 import os
+from collections.abc import Callable
 
 import numpy as np
 import rootutils
+import torch
 import torch_geometric
 from omegaconf import DictConfig
 
@@ -15,10 +17,12 @@ from modules.data.utils.concat2geometric_dataset import (
 from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_cell_complex_dataset,
+    load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_manual_mol,
-    load_point_cloud,
+    load_manual_points,
+    load_random_points,
     load_simplicial_dataset,
 )
 
@@ -237,32 +241,67 @@ class HypergraphLoader(AbstractLoader):
 
 
 class PointCloudLoader(AbstractLoader):
-    r"""Loader for point-cloud dataset.
+    r"""Loader for point cloud datasets.
+
     Parameters
     ----------
-    parameters: DictConfig
-        Configuration parameters
+    parameters : DictConfig
+        Configuration parameters.
+    feature_generator: Optional[Callable[[torch.Tensor], torch.Tensor]]
+        Function to generate the dataset features. If None, no features added.
+    target_generator: Optional[Callable[[torch.Tensor], torch.Tensor]]
+        Function to generate the target variable. If None, no target added.
     """
 
-    def __init__(self, parameters: DictConfig):
+    def __init__(
+        self,
+        parameters: DictConfig,
+        feature_generator: Callable[[torch.Tensor], torch.Tensor]
+        | None = None,
+        target_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
+    ):
+        self.feature_generator = feature_generator
+        self.target_generator = target_generator
         super().__init__(parameters)
         self.parameters = parameters
-        self.data_dir = self.parameters["data_dir"]
-        if "num_classes" not in self.cfg:
-            self.cfg["num_classes"] = 2
 
     def load(self) -> torch_geometric.data.Dataset:
-        r"""Load point-cloud dataset.
+        r"""Load point cloud dataset.
+
         Parameters
         ----------
         None
+
+
         Returns
         -------
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        data = load_point_cloud(
-            num_classes=self.cfg["num_classes"],
-            num_points=self.cfg["num_points"],
+        # Define the path to the data directory
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+        self.data_dir = os.path.join(
+            root_data_dir, self.parameters["data_name"]
         )
-        return CustomDataset([data], self.cfg["data_dir"])
+
+        if self.parameters.data_name.startswith("gudhi_"):
+            data = load_gudhi_dataset(
+                self.parameters,
+                feature_generator=self.feature_generator,
+                target_generator=self.target_generator,
+            )
+        elif self.parameters.data_name == "random_points":
+            data = load_random_points(
+                dim=self.parameters["dim"],
+                num_classes=self.parameters["num_classes"],
+                num_samples=self.parameters["num_samples"],
+            )
+        elif self.parameters.data_name == "manual_points":
+            data = load_manual_points()
+        else:
+            raise NotImplementedError(
+                f"Dataset {self.parameters.data_name} not implemented"
+            )
+
+        return CustomDataset([data], self.data_dir)
