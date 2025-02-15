@@ -22,6 +22,7 @@ from modules.data.utils.utils import (
     load_manual_graph,
     load_manual_mol,
     load_manual_points,
+    load_point_cloud,
     load_random_points,
     load_simplicial_dataset,
 )
@@ -291,14 +292,16 @@ class PointCloudLoader(AbstractLoader):
                 feature_generator=self.feature_generator,
                 target_generator=self.target_generator,
             )
-        elif (
-            self.parameters.data_name == "random_points"
-            or self.parameters.data_name == "toy_point_cloud"
-        ):
+        elif self.parameters.data_name == "random_points":
             data = load_random_points(
                 dim=self.parameters["dim"],
                 num_classes=self.parameters["num_classes"],
                 num_samples=self.parameters["num_samples"],
+            )
+        elif self.parameters.data_name == "toy_point_cloud":
+            data = load_point_cloud(
+                num_classes=self.parameters["num_classes"],
+                num_points=self.parameters["num_samples"],
             )
         elif self.parameters.data_name == "manual_points":
             data = load_manual_points()
