@@ -8,7 +8,12 @@ from modules.transforms.data_manipulations.manipulations import (
     OneHotDegreeFeatures,
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
+from modules.transforms.liftings.graph2cell.cycle_lifting import (
+    CellCycleLifting,
+)
+from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
+    CombinatorialRingCloseAtomsLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
@@ -18,16 +23,30 @@ from modules.transforms.liftings.graph2simplicial.clique_lifting import (
 from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
     DelaunayLifting,
 )
+from modules.transforms.liftings.graph2simplicial.graph_induced_lifting import (
+    SimplicialGraphInducedLifting,
+)
+from modules.transforms.liftings.graph2simplicial.line_lifting import (
+    SimplicialLineLifting,
+)
+from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
+    SimplicialVietorisRipsLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
+    "SimplicialLineLifting": SimplicialLineLifting,
+    "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
+    "SimplicialGraphInducedLifting": SimplicialGraphInducedLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Point-cloud -> Simplicial Complex
     "DelaunayLifting": DelaunayLifting,
+    # Graph -> Combinatorial Complex
+    "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
@@ -57,10 +76,14 @@ class DataTransform(torch_geometric.transforms.BaseTransform):
         self.parameters = kwargs
 
         self.transform = (
-            TRANSFORMS[transform_name](**kwargs) if transform_name is not None else None
+            TRANSFORMS[transform_name](**kwargs)
+            if transform_name is not None
+            else None
         )
 
-    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+    def forward(
+        self, data: torch_geometric.data.Data
+    ) -> torch_geometric.data.Data:
         """Forward pass of the lifting.
 
         Parameters
