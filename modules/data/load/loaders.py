@@ -6,7 +6,9 @@ import torch_geometric
 from omegaconf import DictConfig
 
 from modules.data.load.base import AbstractLoader
-from modules.data.utils.concat2geometric_dataset import ConcatToGeometricDataset
+from modules.data.utils.concat2geometric_dataset import (
+    ConcatToGeometricDataset,
+)
 from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_cell_complex_dataset,
@@ -45,7 +47,9 @@ class GraphLoader(AbstractLoader):
         root_folder = rootutils.find_root()
         root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
 
-        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+        self.data_dir = os.path.join(
+            root_data_dir, self.parameters["data_name"]
+        )
         if (
             self.parameters.data_name.lower() in ["cora", "citeseer", "pubmed"]
             and self.parameters.data_type == "cocitation"

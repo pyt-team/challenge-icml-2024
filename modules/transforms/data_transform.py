@@ -8,7 +8,9 @@ from modules.transforms.data_manipulations.manipulations import (
     OneHotDegreeFeatures,
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
+from modules.transforms.liftings.graph2cell.cycle_lifting import (
+    CellCycleLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
@@ -56,10 +58,14 @@ class DataTransform(torch_geometric.transforms.BaseTransform):
         self.parameters = kwargs
 
         self.transform = (
-            TRANSFORMS[transform_name](**kwargs) if transform_name is not None else None
+            TRANSFORMS[transform_name](**kwargs)
+            if transform_name is not None
+            else None
         )
 
-    def forward(self, data: torch_geometric.data.Data) -> torch_geometric.data.Data:
+    def forward(
+        self, data: torch_geometric.data.Data
+    ) -> torch_geometric.data.Data:
         """Forward pass of the lifting.
 
         Parameters
