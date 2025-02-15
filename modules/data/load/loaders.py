@@ -291,7 +291,10 @@ class PointCloudLoader(AbstractLoader):
                 feature_generator=self.feature_generator,
                 target_generator=self.target_generator,
             )
-        elif self.parameters.data_name == "random_points":
+        elif (
+            self.parameters.data_name == "random_points"
+            or self.parameters.data_name == "toy_point_cloud"
+        ):
             data = load_random_points(
                 dim=self.parameters["dim"],
                 num_classes=self.parameters["num_classes"],

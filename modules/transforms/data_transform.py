@@ -14,6 +14,9 @@ from modules.transforms.liftings.graph2cell.cycle_lifting import (
 from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
     CombinatorialRingCloseAtomsLifting,
 )
+from modules.transforms.liftings.graph2hypergraph.expander_graph_lifting import (
+    ExpanderGraphLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,
 )
@@ -39,6 +42,7 @@ from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
 TRANSFORMS = {
     # Graph -> Hypergraph
     "HypergraphKNNLifting": HypergraphKNNLifting,
+    "ExpanderGraphLifting": ExpanderGraphLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     "SimplicialLineLifting": SimplicialLineLifting,
