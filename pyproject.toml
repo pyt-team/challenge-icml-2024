@@ -33,18 +33,22 @@ dependencies=[
     "matplotlib",
     "networkx",
     "pandas",
-    "pyg-nightly",
     "decorator",
     "hypernetx < 2.0.0",
-    "omegaconf",
     "trimesh",
     "spharapy",
+    "wandb",
+    "einops==0.7.0",
+    "tabulate",
+    "ipykernel",
+    "notebook",
+    "jupyterlab",
     "rich",
     "rootutils",
-    "pytest",
+    "rdkit",
+    "omegaconf",
     "toponetx @ git+https://github.com/pyt-team/TopoNetX.git",
     "topomodelx @ git+https://github.com/pyt-team/TopoModelX.git",
-    "topoembedx @ git+https://github.com/pyt-team/TopoEmbedX.git",
 
 ]
 
@@ -78,42 +82,22 @@ all = ["challenge-icml-2024[dev, doc]"]
 homepage="https://github.com/pyt-team/challenge-icml-2024.git"
 repository="https://github.com/pyt-team/challenge-icml-2024.git"
 
+[tool.black]
+line-length = 79  # PEP 8 standard for maximum line length
+target-version = ['py310']
+
+[tool.docformatter]
+wrap-summaries = 79
+wrap-descriptions = 79
+
 [tool.ruff]
-
-# Same as Black.
-line-length = 88
-indent-width = 4
-
 target-version = "py310"
-extend-include = ["*.ipynb"]
-
-[lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-select = ["E4", "E7", "E9", "F"]
-ignore = []
-
-# Allow fix for all enabled rules (when `--fix`) is provided.
-fixable = ["ALL"]
-unfixable = []
-
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[format]
-# Like Black, use double quotes for strings.
-quote-style = "double"
-
-# Like Black, indent with spaces, rather than tabs.
-indent-style = "space"
-
-# Like Black, respect magic trailing commas.
-skip-magic-trailing-comma = false
-
-# Like Black, automatically detect the appropriate line ending.
-line-ending = "auto"
+#extend-include = ["*.ipynb"]
+extend-exclude = ["test", "tutorials"]
+line-length = 79  # PEP 8 standard for maximum line length
 
 [tool.ruff.format]
-docstring-code-format = true
+docstring-code-format = false
 
 [tool.ruff.lint]
 select = [

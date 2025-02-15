@@ -289,6 +289,17 @@ def load_hypergraph_pickle_dataset(cfg):
     return data
 
 
+def load_point_cloud(num_classes: int = 2, num_points: int = 18, seed: int = 42):
+    """Create a toy point cloud dataset"""
+    rng = np.random.default_rng(seed)
+
+    points = torch.tensor(rng.random((num_points, 2)), dtype=torch.float)
+    classes = torch.tensor(rng.integers(num_classes, size=num_points), dtype=torch.long)
+    features = torch.tensor(rng.integers(3, size=(num_points, 1)), dtype=torch.float)
+
+    return torch_geometric.data.Data(x=features, y=classes, pos=points)
+
+
 def load_manual_graph():
     """Create a manual graph for testing purposes."""
     # Define the vertices (just 8 vertices)
@@ -339,6 +350,104 @@ def load_manual_graph():
         y=torch.tensor(y),
     )
 
+def load_manual_mol():
+    """Create a manual graph for testing the ring implementation.
+    Actually is the 471 molecule of QM9 dataset."""
+    # Define the vertices
+    vertices = [i for i in range(12)]
+    y = torch.tensor([[ 2.2569e+00,  4.5920e+01, -6.3076e+00,  1.9211e+00,  8.2287e+00,
+          4.6414e+02,  2.6121e+00, -8.3351e+03, -8.3349e+03, -8.3349e+03,
+         -8.3359e+03,  2.0187e+01, -4.8740e+01, -4.9057e+01, -4.9339e+01,
+         -4.5375e+01,  6.5000e+00,  3.8560e+00,  3.0122e+00]])
+
+    # Define the edges
+    edges = [
+        [0, 1],
+        [0, 6],
+        [1, 0],
+        [1, 2],
+        [1, 3],
+        [1, 5],
+        [2, 1],
+        [2, 3],
+        [2, 7],
+        [2, 8],
+        [3, 1],
+        [3, 2],
+        [3, 4],
+        [3, 9],
+        [4, 3],
+        [4, 5],
+        [5, 1],
+        [5, 4],
+        [5, 10],
+        [5, 11],
+        [6, 0],
+        [7, 2],
+        [8, 2],
+        [9, 3],
+        [10, 5],
+        [11, 5],
+    ]
+
+    # Add smile
+    smiles = "[H]O[C@@]12C([H])([H])O[C@]1([H])C2([H])[H]"
+
+    # # Create a graph
+    # G = nx.Graph()
+
+    # # Add vertices
+    # G.add_nodes_from(vertices)
+
+    # # Add edges
+    # G.add_edges_from(edges)
+
+    # G.to_undirected()
+    # edge_list = torch.Tensor(list(G.edges())).T.long()
+
+    x = [
+        [0.0, 0.0, 0.0, 1.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 2.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0, 1.0, 0.0, 8.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, 2.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ]
+
+    pos = torch.tensor(
+        [
+            [-0.0520,  1.4421,  0.0438],
+            [-0.0146,  0.0641,  0.0278],
+            [-0.2878, -0.7834, -1.1968],
+            [-1.1365, -0.9394,  0.0399],
+            [-0.4768, -1.7722,  0.9962],
+            [ 0.6009, -0.8025,  1.1266],
+            [ 0.6168,  1.7721, -0.5660],
+            [-0.7693, -0.2348, -2.0014],
+            [ 0.3816, -1.5834, -1.5029],
+            [-2.2159, -0.8594,  0.0798],
+            [ 1.5885, -1.2463,  0.9538],
+            [ 0.5680, -0.3171,  2.1084]
+        ]
+    )
+
+    assert len(x) == len(vertices)
+    assert len(pos) == len(vertices)
+
+    return torch_geometric.data.Data(
+        x=torch.tensor(x).float(),
+        edge_index=torch.tensor(edges).T.long(),
+        num_nodes=len(vertices),
+        y=torch.tensor(y),
+        smiles=smiles,
+        pos=pos
+    )
 
 def get_Planetoid_pyg(cfg):
     r"""Loads Planetoid graph datasets from torch_geometric.
