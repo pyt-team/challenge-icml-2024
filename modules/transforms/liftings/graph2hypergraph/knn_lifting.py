@@ -1,7 +1,9 @@
 import torch
 import torch_geometric
 
-from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
+from modules.transforms.liftings.graph2hypergraph.base import (
+    Graph2HypergraphLifting,
+)
 
 
 class HypergraphKNNLifting(Graph2HypergraphLifting):
@@ -45,14 +47,20 @@ class HypergraphKNNLifting(Graph2HypergraphLifting):
         if self.loop:
             for i in range(num_nodes):
                 if not torch.any(
-                    torch.all(data_lifted.edge_index == torch.tensor([[i, i]]).T, dim=0)
+                    torch.all(
+                        data_lifted.edge_index == torch.tensor([[i, i]]).T,
+                        dim=0,
+                    )
                 ):
                     connected_nodes = data_lifted.edge_index[
                         0, data_lifted.edge_index[1] == i
                     ]
                     dists = torch.sqrt(
                         torch.sum(
-                            (data.pos[connected_nodes] - data.pos[i].unsqueeze(0) ** 2),
+                            (
+                                data.pos[connected_nodes]
+                                - data.pos[i].unsqueeze(0) ** 2
+                            ),
                             dim=1,
                         )
                     )
@@ -60,7 +68,9 @@ class HypergraphKNNLifting(Graph2HypergraphLifting):
                     idx = torch.where(
                         torch.all(
                             data_lifted.edge_index
-                            == torch.tensor([[connected_nodes[furthest], i]]).T,
+                            == torch.tensor(
+                                [[connected_nodes[furthest], i]]
+                            ).T,
                             dim=0,
                         )
                     )[0]
