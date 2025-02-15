@@ -20,10 +20,9 @@ from modules.data.utils.utils import (
     load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
+    load_manual_mol,
     load_manual_points,
     load_random_points,
-    load_manual_mol,
-    load_point_cloud,
     load_simplicial_dataset,
 )
 
@@ -257,7 +256,8 @@ class PointCloudLoader(AbstractLoader):
     def __init__(
         self,
         parameters: DictConfig,
-        feature_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
+        feature_generator: Callable[[torch.Tensor], torch.Tensor]
+        | None = None,
         target_generator: Callable[[torch.Tensor], torch.Tensor] | None = None,
     ):
         self.feature_generator = feature_generator
@@ -281,7 +281,9 @@ class PointCloudLoader(AbstractLoader):
         # Define the path to the data directory
         root_folder = rootutils.find_root()
         root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
-        self.data_dir = os.path.join(root_data_dir, self.parameters["data_name"])
+        self.data_dir = os.path.join(
+            root_data_dir, self.parameters["data_name"]
+        )
 
         if self.parameters.data_name.startswith("gudhi_"):
             data = load_gudhi_dataset(
