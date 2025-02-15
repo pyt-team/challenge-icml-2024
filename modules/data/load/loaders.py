@@ -17,8 +17,8 @@ from modules.data.utils.utils import (
     load_cell_complex_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
-    load_point_cloud,
     load_manual_mol,
+    load_point_cloud,
     load_simplicial_dataset,
 )
 
@@ -262,6 +262,7 @@ class PointCloudLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         data = load_point_cloud(
-            num_classes=self.cfg["num_classes"], num_points=self.cfg["num_points"]
+            num_classes=self.cfg["num_classes"],
+            num_points=self.cfg["num_points"],
         )
         return CustomDataset([data], self.cfg["data_dir"])
