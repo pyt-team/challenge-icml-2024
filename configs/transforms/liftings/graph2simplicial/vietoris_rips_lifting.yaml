@@ -1,0 +1,7 @@
+transform_type: 'lifting'
+transform_name: "SimplicialVietorisRipsLifting"
+complex_dim: 3
+preserve_edge_attr: False
+signed: True
+distance_threshold: 2.0
+feature_lifting: ProjectionSum
