@@ -298,17 +298,17 @@ def load_hypergraph_pickle_dataset(cfg):
 
 
 def load_point_cloud(
-    num_classes: int = 2, num_points: int = 18, seed: int = 42
+    num_classes: int = 2, num_samples: int = 18, seed: int = 42
 ):
     """Create a toy point cloud dataset"""
     rng = np.random.default_rng(seed)
 
-    points = torch.tensor(rng.random((num_points, 2)), dtype=torch.float)
+    points = torch.tensor(rng.random((num_samples, 2)), dtype=torch.float)
     classes = torch.tensor(
-        rng.integers(num_classes, size=num_points), dtype=torch.long
+        rng.integers(num_classes, size=num_samples), dtype=torch.long
     )
     features = torch.tensor(
-        rng.integers(3, size=(num_points, 1)), dtype=torch.float
+        rng.integers(3, size=(num_samples, 1)), dtype=torch.float
     )
 
     return torch_geometric.data.Data(x=features, y=classes, pos=points)
