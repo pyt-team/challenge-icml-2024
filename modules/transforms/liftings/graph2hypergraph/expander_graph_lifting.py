@@ -4,7 +4,9 @@ import networkx
 import torch
 import torch_geometric
 
-from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
+from modules.transforms.liftings.graph2hypergraph.base import (
+    Graph2HypergraphLifting,
+)
 
 
 class ExpanderGraphLifting(Graph2HypergraphLifting):
@@ -39,13 +41,17 @@ class ExpanderGraphLifting(Graph2HypergraphLifting):
             The lifted topology.
         """
 
-        expander_graph = random_regular_expander_graph(data.num_nodes, self.node_degree)
+        expander_graph = random_regular_expander_graph(
+            data.num_nodes, self.node_degree
+        )
 
         # Catch superfluous warning
         with warnings.catch_warnings():
             warnings.simplefilter(action="ignore", category=FutureWarning)
 
-            incidence_matrix = networkx.incidence_matrix(expander_graph).tocoo()
+            incidence_matrix = networkx.incidence_matrix(
+                expander_graph
+            ).tocoo()
 
         coo_indices = torch.stack(
             (
@@ -79,7 +85,9 @@ else:
 
     @nx.utils.decorators.np_random_state("seed")
     # @nx._dispatchable(graphs=None, returns_graph=True)
-    def maybe_regular_expander(n, d, *, create_using=None, max_tries=100, seed=None):
+    def maybe_regular_expander(
+        n, d, *, create_using=None, max_tries=100, seed=None
+    ):
         r"""Utility for creating a random regular expander.
 
         Returns a random $d$-regular graph on $n$ nodes which is an expander
@@ -332,7 +340,11 @@ else:
         while not is_regular_expander(G, epsilon=epsilon):
             iterations -= 1
             G = maybe_regular_expander(
-                n=n, d=d, create_using=create_using, max_tries=max_tries, seed=seed
+                n=n,
+                d=d,
+                create_using=create_using,
+                max_tries=max_tries,
+                seed=seed,
             )
 
             if iterations == 0:
