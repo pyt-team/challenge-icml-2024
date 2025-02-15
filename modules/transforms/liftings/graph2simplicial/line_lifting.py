@@ -2,7 +2,9 @@ import networkx as nx
 import torch_geometric
 from toponetx.classes import SimplicialComplex
 
-from modules.transforms.liftings.graph2simplicial.base import Graph2SimplicialLifting
+from modules.transforms.liftings.graph2simplicial.base import (
+    Graph2SimplicialLifting,
+)
 
 
 class SimplicialLineLifting(Graph2SimplicialLifting):
@@ -47,11 +49,15 @@ class SimplicialLineLifting(Graph2SimplicialLifting):
         simplices = list(cliques)  # list(map(lambda x: set(x), cliques))
 
         # we need to rename simplices here since now vertices are named as pairs
-        self.rename_vertices_dict = {node: i for i, node in enumerate(line_graph.nodes)}
+        self.rename_vertices_dict = {
+            node: i for i, node in enumerate(line_graph.nodes)
+        }
         self.rename_vertices_dict_inverse = {
             i: node for node, i in self.rename_vertices_dict.items()
         }
-        renamed_line_graph = nx.relabel_nodes(line_graph, self.rename_vertices_dict)
+        renamed_line_graph = nx.relabel_nodes(
+            line_graph, self.rename_vertices_dict
+        )
 
         renamed_simplices = [
             {self.rename_vertices_dict[vertex] for vertex in simplex}
@@ -70,4 +76,6 @@ class SimplicialLineLifting(Graph2SimplicialLifting):
             renamed_node_features, name="features"
         )
 
-        return self._get_lifted_topology(simplicial_complex, renamed_line_graph)
+        return self._get_lifted_topology(
+            simplicial_complex, renamed_line_graph
+        )
