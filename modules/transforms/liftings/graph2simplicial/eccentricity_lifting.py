@@ -9,8 +9,8 @@ from modules.transforms.liftings.graph2simplicial.base import (
 )
 
 
-class SimplicialGraphInducedLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain by identifying connected subgraphs as simplices.
+class SimplicialEccentricityLifting(Graph2SimplicialLifting):
+    r"""Lifts graphs to simplicial complex domain using eccentricity.
 
     Parameters
     ----------
@@ -35,15 +35,20 @@ class SimplicialGraphInducedLifting(Graph2SimplicialLifting):
             The lifted topology.
         """
         graph = self._generate_graph_from_data(data)
-        simplicial_complex = SimplicialComplex(graph)
-        all_nodes = list(graph.nodes)
+        simplicial_complex = SimplicialComplex()
+        eccentricities = nx.eccentricity(graph)
         simplices = [set() for _ in range(2, self.complex_dim + 1)]
 
-        for k in range(2, self.complex_dim + 1):
-            for combination in combinations(all_nodes, k + 1):
-                subgraph = graph.subgraph(combination)
-                if nx.is_connected(subgraph):
-                    simplices[k - 2].add(tuple(sorted(combination)))
+        for node in graph.nodes:
+            simplicial_complex.add_node(node, features=data.x[node])
+
+        for node, ecc in eccentricities.items():
+            neighborhood = list(
+                nx.single_source_shortest_path_length(graph, node, cutoff=ecc).keys()
+            )
+            for k in range(1, self.complex_dim):
+                for combination in combinations(neighborhood, k + 1):
+                    simplices[k - 1].add(tuple(sorted(combination)))
 
         for set_k_simplices in simplices:
             simplicial_complex.add_simplices_from(list(set_k_simplices))

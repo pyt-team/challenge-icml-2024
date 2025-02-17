@@ -23,8 +23,8 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
-from modules.transforms.liftings.graph2simplicial.graph_induced_lifting import (
-    SimplicialGraphInducedLifting,
+from modules.transforms.liftings.graph2simplicial.eccentricity_lifting import (
+    SimplicialEccentricityLifting,
 )
 from modules.transforms.liftings.graph2simplicial.line_lifting import (
     SimplicialLineLifting,
@@ -48,6 +48,7 @@ TRANSFORMS = {
     "SimplicialLineLifting": SimplicialLineLifting,
     "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
     "SimplicialGraphInducedLifting": SimplicialGraphInducedLifting,
+    "SimplicialEccentricityLifting": SimplicialEccentricityLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Point Cloud -> Simplicial Complex,
