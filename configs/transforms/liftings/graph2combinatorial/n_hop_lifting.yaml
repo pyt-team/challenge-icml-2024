@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "NHopLifting"
+hop_num: 1
+feature_lifting: ProjectionSum
