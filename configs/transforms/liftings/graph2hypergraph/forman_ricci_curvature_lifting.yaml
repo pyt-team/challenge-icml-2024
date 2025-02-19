@@ -1,0 +1,7 @@
+transform_type: 'lifting'
+transform_name: "HypergraphFormanRicciCurvatureLifting"
+network_type: 'weighted'
+threshold_type: 'quantile'
+threshold_direction: 'above'
+threshold: 0.1
+feature_lifting: ProjectionSum
