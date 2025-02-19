@@ -11,6 +11,9 @@ from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import (
     CellCycleLifting,
 )
+from modules.transforms.liftings.graph2combinatorial.curve_lifting import (
+    CurveLifting,
+)
 from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
     CombinatorialRingCloseAtomsLifting,
 )
@@ -58,12 +61,13 @@ TRANSFORMS = {
     "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    # Graph -> Combinatorial Complex
+    "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
+    "CurveLifting": CurveLifting,
     # Point Cloud -> Simplicial Complex,
     "AlphaComplexLifting": AlphaComplexLifting,
     # Point-cloud -> Simplicial Complex
     "DelaunayLifting": DelaunayLifting,
-    # Graph -> Combinatorial Complex
-    "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations

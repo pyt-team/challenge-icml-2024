@@ -5,6 +5,7 @@ from topomodelx.nn.combinatorial.hmc import HMC
 class HMCModel(torch.nn.Module):
     r"""HMC model that runs over combinatorial Complexes (CCC)
 
+
     Parameters
     ----------
     model_config : Dict | DictConfig
@@ -19,6 +20,7 @@ class HMCModel(torch.nn.Module):
             if isinstance(dataset_config["num_features"], int)
             else dataset_config["num_features"][0]
         )
+
         negative_slope = model_config["negative_slope"]
         hidden_channels = model_config["hidden_channels"]
         out_channels = dataset_config["num_classes"]
@@ -60,7 +62,7 @@ class HMCModel(torch.nn.Module):
 
         Returns
         -------
-        torch.Tensor
+        tuple of torch.Tensor
             Output tensor.
         """
         x_0 = data.x_0
@@ -82,7 +84,6 @@ class HMCModel(torch.nn.Module):
             inc_1,
             inc_2,
         )
-
         x_0 = self.linear_0(x_0)
         x_1 = self.linear_1(x_1)
         x_2 = self.linear_2(x_2)

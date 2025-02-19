@@ -10,6 +10,7 @@ import rootutils
 import toponetx.datasets.graph as graph
 import torch
 import torch_geometric
+import torch_geometric.data
 from gudhi.datasets.generators import points
 from gudhi.datasets.remote import (
     fetch_bunny,
@@ -21,6 +22,45 @@ from torch_geometric.data import Data
 from torch_sparse import coalesce
 
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
+
+
+def get_ccc_connectivity(complex, max_rank):
+    r"""
+
+    Parameters
+    ----------
+    complex : topnetx.CombinatorialComplex, topnetx.SimplicialComplex
+        Combinatorial Complex complex.
+    max_rank : int
+        Maximum rank of the complex.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    practical_shape = list(
+        np.pad(list(complex.shape), (0, max_rank + 1 - len(complex.shape)))
+    )
+
+    connectivity = {}
+    # compute incidence matrices
+    for rank_idx in range(1, max_rank + 1):
+        matrix = complex.incidence_matrix(rank=rank_idx - 1, to_rank=rank_idx)
+        connectivity[f"incidence_{rank_idx}"] = from_sparse(matrix)
+
+    # compute adjacent matrices
+    for rank_idx in range(max_rank + 1):
+        matrix = complex.adjacency_matrix(rank_idx, rank_idx + 1)
+        connectivity[f"adjacency_{rank_idx}"] = from_sparse(matrix)
+
+    for rank_idx in range(1, max_rank + 1):
+        matrix = complex.laplacian_matrix(rank_idx)
+        connectivity[f"laplacian_{rank_idx}"] = matrix
+
+    connectivity["shape"] = practical_shape
+
+    return connectivity
 
 
 def get_complex_connectivity(complex, max_rank, signed=False):
@@ -365,6 +405,100 @@ def load_manual_graph():
     )
 
 
+
+def load_k4_graph() -> torch_geometric.data.Data:
+    """K_4 is a complete graph with 4 vertices."""
+    vertices = [i for i in range(4)]
+    y = [0, 1, 1, 1]
+    edges = [
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [1, 2],
+        [1, 3],
+        [2, 3],
+    ]
+    G = nx.Graph()
+    G.add_nodes_from(vertices)
+    G.add_edges_from(edges)
+    G.to_undirected()
+    edge_list = torch.Tensor(list(G.edges())).T.long()
+    x = torch.tensor([1, 5, 10, 50]).unsqueeze(1).float()
+    return torch_geometric.data.Data(
+        x=x, edge_index=edge_list, num_nodes=len(vertices), y=torch.tensor(y)
+    )
+
+
+def load_double_house_graph() -> torch_geometric.data.Data:
+    """Double house graph is a featured graph in Geiger et al."""
+    vertices = [i for i in range(8)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0]
+    edges = [
+        [0, 1],
+        [0, 2],
+        [0, 7],
+        [1, 2],
+        [1, 3],
+        [2, 4],
+        [3, 5],
+        [3, 4],
+        [4, 6],
+        [5, 6],
+        [5, 7],
+        [6, 7],
+    ]
+    G = nx.Graph()
+    G.add_nodes_from(vertices)
+    G.add_edges_from([[v1, v2] for (v1, v2) in edges])
+    G.to_undirected()
+    edge_list = torch.Tensor(list(G.edges())).T.long()
+    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+    return torch_geometric.data.Data(
+        x=x, edge_index=edge_list, num_nodes=len(vertices), y=torch.tensor(y)
+    )
+
+
+def load_8_vertex_cubic_graphs() -> list[torch_geometric.data.Data]:
+    """Downloaded from https://mathrepo.mis.mpg.de/GraphCurveMatroids/"""
+    # fmt: off
+    edgesets = [
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 5}, {4, 6}, {5, 7}, {5, 8}, {6, 7}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 5}, {3, 6}, {4, 5}, {4, 7}, {5, 8}, {6, 7}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 5}, {3, 6}, {4, 7}, {4, 8}, {5, 7}, {5, 8}, {6, 7}, {6, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 5}, {2, 6}, {3, 5}, {3, 7}, {4, 6}, {4, 7}, {5, 8}, {6, 8}, {7, 8}],
+        [{1, 2}, {1, 3}, {1, 4}, {2, 5}, {2, 6}, {3, 5}, {3, 7}, {4, 6}, {4, 8}, {5, 8}, {6, 7}, {7, 8}],
+    ]
+    # fmt: on
+
+    list_data = []
+    for i, edgeset in enumerate(edgesets):
+        n = 8 if i < 5 else 10
+        vertices = [i for i in range(n)]
+        x = (
+            torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+            if i < 5
+            else torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000])
+            .unsqueeze(1)
+            .float()
+        )
+        y = (
+            torch.tensor([0, 1, 1, 1, 0, 0, 0, 0])
+            if i < 5
+            else torch.tensor([0, 1, 1, 1, 0, 0, 0, 0, 1, 1])
+        )
+        edgeset = [[v1 - 1, v2 - 1] for (v1, v2) in edgeset]
+        G = nx.Graph()
+        G.add_nodes_from(vertices)
+        # offset by 1, since the graphs presented start at 1.
+        G.add_edges_from(edgeset)
+        G.to_undirected()
+        edge_list = torch.Tensor(list(G.edges())).T.long()
+
+        data = torch_geometric.data.Data(x=x, edge_index=edge_list, num_nodes=n, y=y)
+
+        list_data.append(data)
+    return list_data
+
 def load_manual_mol():
     """Create a manual graph for testing the ring implementation.
     Actually is the 471 molecule of QM9 dataset."""
@@ -484,6 +618,7 @@ def load_manual_mol():
         smiles=smiles,
         pos=pos,
     )
+
 
 
 def get_Planetoid_pyg(cfg):

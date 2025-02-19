@@ -16,6 +16,7 @@ from modules.data.utils.concat2geometric_dataset import (
 )
 from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
+    load_8_vertex_cubic_graphs,
     load_cell_complex_dataset,
     load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
@@ -138,6 +139,10 @@ class GraphLoader(AbstractLoader):
         elif self.parameters.data_name in ["manual"]:
             data = load_manual_graph()
             dataset = CustomDataset([data], self.data_dir)
+
+        elif self.parameters.data_name in ["graphs_8vertices"]:
+            graphs = load_8_vertex_cubic_graphs()
+            dataset = CustomDataset(graphs, self.data_dir)
 
         elif self.parameters.data_name in ["manual_rings"]:
             data = load_manual_mol()
