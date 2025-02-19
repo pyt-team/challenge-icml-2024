@@ -10,6 +10,7 @@ import omegaconf
 import rootutils
 import torch
 import torch_geometric
+from matplotlib import cm
 from matplotlib.patches import Polygon
 
 plt.rcParams["text.usetex"] = bool(shutil.which("latex"))
@@ -148,19 +149,22 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         if hasattr(data, "num_nodes"):
             complex_dim.append(data.num_nodes)
             features_dim.append(data.num_node_features)
-        elif hasattr(data, "x"):
+        elif hasattr(data, "x") and data.x is not None:
             complex_dim.append(data.x.shape[0])
             features_dim.append(data.x.shape[1])
         else:
             raise ValueError(
                 "Data object does not contain any vertices/points."
             )
-        if hasattr(data, "num_edges") and hasattr(data, "num_edge_features"):
+
+        if hasattr(data, "num_edges") and data.num_edges > 0:
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index") and (data.edge_index is not None):
+
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
+
     # Check if the data object contains hyperedges
     hyperedges = False
     if hasattr(data, "x_hyperedges"):
@@ -201,6 +205,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
                 hasattr(data, "edge_index")
                 and hasattr(data, "x")
                 and (data.edge_index is not None)
+                and data.x is not None
             ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
@@ -587,3 +592,22 @@ def describe_hypergraph(data: torch_geometric.data.Data):
         if he_idx >= 10:
             print("...")
             break
+
+
+def plot_pointcloud_voronoi(
+    dataset, idx_sample: int = 0, azim: float = 180, roll: float = -90
+):
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111, projection="3d")
+
+    data = dataset.get(idx_sample % len(dataset))
+    points = data.pos
+
+    if hasattr(data, "incidence_hyperedges"):
+        color = np.array(data.incidence_hyperedges.coalesce().indices()[1])
+    else:
+        color = np.ones(len(points))
+
+    ax.scatter(*points.T, s=1.0, c=color, cmap=cm.flag)
+    ax.view_init(elev=10.0, azim=azim, roll=roll)
+    plt.show()

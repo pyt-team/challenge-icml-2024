@@ -24,6 +24,7 @@ from modules.data.utils.utils import (
     load_manual_mol,
     load_manual_points,
     load_point_cloud,
+    load_pointcloud_dataset,
     load_random_points,
     load_simplicial_dataset,
 )
@@ -278,7 +279,6 @@ class PointCloudLoader(AbstractLoader):
         ----------
         None
 
-
         Returns
         -------
         torch_geometric.data.Dataset
@@ -316,3 +316,8 @@ class PointCloudLoader(AbstractLoader):
             )
 
         return CustomDataset([data], self.data_dir)
+        self.data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
+        return CustomDataset(
+            [load_pointcloud_dataset(self.parameters)], self.data_dir
+        )

@@ -1,0 +1,15 @@
+data_domain: pointcloud
+data_type: toy_dataset
+data_name: random_pointcloud
+data_dir: datasets/${data_domain}/${data_type}/${data_name}
+
+# Dataset parameters
+pos_to_x: True
+num_features: 3
+num_points: 20
+dim: 3
+num_classes: 2
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: node
