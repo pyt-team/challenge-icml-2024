@@ -1,0 +1,9 @@
+data_domain: pointcloud
+data_type: toy_dataset
+data_name: gudhi_spiral_2d
+data_dir: datasets/${data_domain}/${data_type}
+
+# Dataset parameters
+task: regression
+loss_type: mse
+monitor_metric: mae

@@ -72,20 +72,22 @@ def load_transform_config(
         Transform configuration.
     """
     root_folder = rootutils.find_root()
-    transform_config_path = (
-        f"{root_folder}/configs/transforms/{transform_type}/{transform_id}.yaml"
-    )
+    transform_config_path = f"{root_folder}/configs/transforms/{transform_type}/{transform_id}.yaml"
     transform_config = omegaconf.OmegaConf.load(transform_config_path)
     # Print configuration
     if transform_type == "liftings":
         print(f"\nTransform configuration for {transform_id}:\n")
     else:
-        print(f"\nTransform configuration for {transform_type}/{transform_id}:\n")
+        print(
+            f"\nTransform configuration for {transform_type}/{transform_id}:\n"
+        )
     pprint.pp(dict(transform_config.copy()))
     return transform_config
 
 
-def load_model_config(model_type: str, model_name: str) -> omegaconf.DictConfig:
+def load_model_config(
+    model_type: str, model_name: str
+) -> omegaconf.DictConfig:
     r"""Load the model configuration.
 
     Parameters
@@ -99,7 +101,9 @@ def load_model_config(model_type: str, model_name: str) -> omegaconf.DictConfig:
         Model configuration.
     """
     root_folder = rootutils.find_root()
-    model_config_path = f"{root_folder}/configs/models/{model_type}/{model_name}.yaml"
+    model_config_path = (
+        f"{root_folder}/configs/models/{model_type}/{model_name}.yaml"
+    )
     model_config = omegaconf.OmegaConf.load(model_config_path)
     # Print configuration
     print(f"\nModel configuration for {model_type} {model_name.upper()}:\n")
@@ -133,7 +137,10 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
     features_dim = []
     # If lifted, we can look at the generated features for each cell
     for dim in range(10):
-        if hasattr(data, f"x_{dim}") and getattr(data, f"x_{dim}").shape[0] > 0:
+        if (
+            hasattr(data, f"x_{dim}")
+            and getattr(data, f"x_{dim}").shape[0] > 0
+        ):
             complex_dim.append(getattr(data, f"x_{dim}").shape[0])
             features_dim.append(getattr(data, f"x_{dim}").shape[1])
     # If not lifted, we check the classical fields of a dataset loaded from PyG
@@ -145,11 +152,13 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             complex_dim.append(data.x.shape[0])
             features_dim.append(data.x.shape[1])
         else:
-            raise ValueError("Data object does not contain any vertices/points.")
-        if hasattr(data, "num_edges"):
+            raise ValueError(
+                "Data object does not contain any vertices/points."
+            )
+        if hasattr(data, "num_edges") and hasattr(data, "num_edge_features"):
             complex_dim.append(data.num_edges)
             features_dim.append(data.num_edge_features)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and (data.edge_index is not None):
             complex_dim.append(data.edge_index.shape[1])
             features_dim.append(data.edge_attr.shape[1])
     # Check if the data object contains hyperedges
@@ -159,8 +168,17 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         hyperedges_features_dim = data.x_hyperedges.shape[1]
 
     # Plot the graph if it is not too large
-    if complex_dim[0] < 50:
+    if complex_dim[0] < 50 and len(complex_dim) != 1:
         plot_manual_graph(data)
+
+    # Plot point cloud if it is not too large
+    if (
+        complex_dim[0] < 10_000
+        and len(complex_dim) == 1
+        and not hyperedges
+        and data.pos.shape[1] in [2, 3]
+    ):
+        plot_point_cloud(data)
 
     if hyperedges:
         print(
@@ -179,7 +197,11 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             )
             print(f" - Features dimensions: {features_dim}")
             # Check if there are isolated nodes
-            if hasattr(data, "edge_index") and hasattr(data, "x"):
+            if (
+                hasattr(data, "edge_index")
+                and hasattr(data, "x")
+                and (data.edge_index is not None)
+            ):
                 connected_nodes = torch.unique(data.edge_index)
                 isolated_nodes = []
                 for i in range(data.x.shape[0]):
@@ -189,8 +211,57 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
         else:
             for i, c_d in enumerate(complex_dim):
                 print(f" - The complex has {c_d} {i}-cells.")
-                print(f" - The {i}-cells have features dimension {features_dim[i]}")
+                print(
+                    f" - The {i}-cells have features dimension {features_dim[i]}"
+                )
     print("")
+
+
+def plot_point_cloud(data, title=None):
+    """Plot point cloud data.
+
+    Parameters
+    ----------
+    data : torch_geometric.data.Data
+        Data object containing the point cloud.
+    title: str
+        Title for the plot.
+    """
+
+    if not hasattr(data, "pos"):
+        raise ValueError("Must have a pos attribute to plot point cloud data.")
+
+    if len(data.pos.shape) != 2:
+        raise ValueError(
+            f"pos tensor should have 2 dimensions, found {len(data.pos.shape)}"
+        )
+
+    if data.pos.shape[1] == 3:
+        dim = 3
+        x = data.pos[:, 0]
+        y = data.pos[:, 1]
+        z = data.pos[:, 2]
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(x, y, z)
+        plt.show()
+    elif data.pos.shape[1] == 2:
+        dim = 2
+        x = data.pos[:, 0]
+        y = data.pos[:, 1]
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(111)
+        ax.scatter(x, y)
+    else:
+        raise ValueError(
+            "Only 2 and 3 dimensional point cloud data can be plotted"
+        )
+
+    if title is not None:
+        ax.set_title(title)
+    else:
+        ax.set_title(f"{dim}D Point Cloud")
+    plt.show()
 
 
 def plot_manual_graph(data, title=None):
@@ -225,7 +296,8 @@ def plot_manual_graph(data, title=None):
             sum(v[1] for v in vertices) / len(vertices),
         ]
         return sorted(
-            vertices, key=lambda v: (np.arctan2(v[1] - centroid[1], v[0] - centroid[0]))
+            vertices,
+            key=lambda v: (np.arctan2(v[1] - centroid[1], v[0] - centroid[0])),
         )
 
     max_order = 1
@@ -239,14 +311,15 @@ def plot_manual_graph(data, title=None):
 
     # Collect vertices
     vertices = [i for i in range(data.x.shape[0])]
-
     # Hyperedges
     if max_order == 0:
         n_vertices = len(vertices)
         n_hyperedges = incidence.shape[1]
         vertices += [i + n_vertices for i in range(n_hyperedges)]
         indices = incidence.indices()
-        edges = np.array([indices[1].numpy(), indices[0].numpy() + n_vertices]).T
+        edges = np.array(
+            [indices[0].numpy(), indices[1].numpy() + n_vertices]
+        ).T
         pos_n = [[i, 0] for i in range(n_vertices)]
         pos_he = [[i, 1] for i in range(n_hyperedges)]
         pos = pos_n + pos_he
@@ -256,13 +329,15 @@ def plot_manual_graph(data, title=None):
         edges = []
         edge_mapper = {}
         if hasattr(data, "incidence_1"):
-            for edge_idx, edge in enumerate(abs(data.incidence_1.to_dense().T)):
+            for edge_idx, edge in enumerate(
+                abs(data.incidence_1.to_dense().T)
+            ):
                 node_idxs = torch.where(edge != 0)[0].numpy()
 
                 edges.append(torch.where(edge != 0)[0].numpy())
                 edge_mapper[edge_idx] = sorted(node_idxs)
             edges = np.array(edges)
-        elif hasattr(data, "edge_index"):
+        elif hasattr(data, "edge_index") and data.edge_index is not None:
             edges = data.edge_index.T.tolist()
             edge_mapper = {}
             for e, edge in enumerate(edges):
@@ -289,7 +364,9 @@ def plot_manual_graph(data, title=None):
     if max_order == 3:
         volumes = []
         volume_mapper = {}
-        for volume_idx, volume in enumerate(abs(data.incidence_3.to_dense().T)):
+        for volume_idx, volume in enumerate(
+            abs(data.incidence_3.to_dense().T)
+        ):
             face_idxs = torch.where(volume != 0)[0].numpy()
 
             nodes = []
@@ -500,7 +577,9 @@ def describe_hypergraph(data: torch_geometric.data.Data):
     incidence = data.incidence_hyperedges.coalesce()
     indices = incidence.indices()
 
-    print(f"The hypergraph has {data.incidence_hyperedges.shape[1]} hyperedges.")
+    print(
+        f"The hypergraph has {data.incidence_hyperedges.shape[1]} hyperedges."
+    )
     for he_idx in torch.unique(indices[1]):
         corresponding_idxs = indices[0] == he_idx
         nodes = indices[1, corresponding_idxs]
