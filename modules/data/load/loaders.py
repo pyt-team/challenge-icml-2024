@@ -310,14 +310,14 @@ class PointCloudLoader(AbstractLoader):
             )
         elif self.parameters.data_name == "manual_points":
             data = load_manual_points()
+        elif self.parameters.data_name == "stanford_bunny":
+            self.data_dir = os.path.join(
+                root_folder, self.parameters["data_dir"]
+            )
+            data = load_pointcloud_dataset(self.parameters)
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
             )
 
         return CustomDataset([data], self.data_dir)
-        self.data_dir = os.path.join(root_folder, self.parameters["data_dir"])
-
-        return CustomDataset(
-            [load_pointcloud_dataset(self.parameters)], self.data_dir
-        )
