@@ -9,8 +9,8 @@ from modules.transforms.liftings.graph2simplicial.base import (
 )
 
 
-class SimplicialCliqueLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
+class SimplicialEccentricityLifting(Graph2SimplicialLifting):
+    r"""Lifts graphs to simplicial complex domain using eccentricity.
 
     Parameters
     ----------
@@ -22,7 +22,7 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
         super().__init__(**kwargs)
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex by identifying the cliques as k-simplices.
+        r"""Lifts the topology of a graph to a simplicial complex by identifying connected subgraphs as simplices.
 
         Parameters
         ----------
@@ -35,13 +35,20 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
             The lifted topology.
         """
         graph = self._generate_graph_from_data(data)
-        simplicial_complex = SimplicialComplex(graph)
-        cliques = nx.find_cliques(graph)
+        simplicial_complex = SimplicialComplex()
+        eccentricities = nx.eccentricity(graph)
         simplices = [set() for _ in range(2, self.complex_dim + 1)]
-        for clique in cliques:
-            for i in range(2, self.complex_dim + 1):
-                for c in combinations(clique, i + 1):
-                    simplices[i - 2].add(tuple(c))
+
+        for node in graph.nodes:
+            simplicial_complex.add_node(node, features=data.x[node])
+
+        for node, ecc in eccentricities.items():
+            neighborhood = list(
+                nx.single_source_shortest_path_length(graph, node, cutoff=ecc).keys()
+            )
+            for k in range(1, self.complex_dim):
+                for combination in combinations(neighborhood, k + 1):
+                    simplices[k - 1].add(tuple(sorted(combination)))
 
         for set_k_simplices in simplices:
             simplicial_complex.add_simplices_from(list(set_k_simplices))

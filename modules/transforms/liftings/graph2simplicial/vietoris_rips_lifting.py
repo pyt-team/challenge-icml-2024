@@ -9,20 +9,23 @@ from modules.transforms.liftings.graph2simplicial.base import (
 )
 
 
-class SimplicialCliqueLifting(Graph2SimplicialLifting):
-    r"""Lifts graphs to simplicial complex domain by identifying the cliques as k-simplices.
+class SimplicialVietorisRipsLifting(Graph2SimplicialLifting):
+    r"""Lifts graphs to simplicial complex domain using the Vietoris-Rips complex based on pairwise distances.
 
     Parameters
     ----------
+    distance_threshold : float
+        The maximum distance between vertices to form a simplex.
     **kwargs : optional
         Additional arguments for the class.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, distance_threshold=1.0, **kwargs):
         super().__init__(**kwargs)
+        self.distance_threshold = distance_threshold
 
     def lift_topology(self, data: torch_geometric.data.Data) -> dict:
-        r"""Lifts the topology of a graph to a simplicial complex by identifying the cliques as k-simplices.
+        r"""Lifts the topology of a graph to a simplicial complex using the Vietoris-Rips complex.
 
         Parameters
         ----------
@@ -36,12 +39,19 @@ class SimplicialCliqueLifting(Graph2SimplicialLifting):
         """
         graph = self._generate_graph_from_data(data)
         simplicial_complex = SimplicialComplex(graph)
-        cliques = nx.find_cliques(graph)
+        all_nodes = list(graph.nodes)
         simplices = [set() for _ in range(2, self.complex_dim + 1)]
-        for clique in cliques:
-            for i in range(2, self.complex_dim + 1):
-                for c in combinations(clique, i + 1):
-                    simplices[i - 2].add(tuple(c))
+
+        # Calculate pairwise shortest path distances
+        path_lengths = dict(nx.all_pairs_shortest_path_length(graph))
+
+        for k in range(2, self.complex_dim + 1):
+            for combination in combinations(all_nodes, k + 1):
+                if all(
+                    path_lengths[u][v] <= self.distance_threshold
+                    for u, v in combinations(combination, 2)
+                ):
+                    simplices[k - 2].add(tuple(sorted(combination)))
 
         for set_k_simplices in simplices:
             simplicial_complex.add_simplices_from(list(set_k_simplices))
