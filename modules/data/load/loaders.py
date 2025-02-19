@@ -18,7 +18,6 @@ from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_8_vertex_cubic_graphs,
     load_cell_complex_dataset,
-    load_double_house_graph,
     load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
