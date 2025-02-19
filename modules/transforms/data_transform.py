@@ -20,6 +20,9 @@ from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting im
 from modules.transforms.liftings.graph2hypergraph.expander_graph_lifting import (
     ExpanderGraphLifting,
 )
+from modules.transforms.liftings.graph2hypergraph.forman_ricci_curvature_lifting import (
+    HypergraphFormanRicciCurvatureLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.kernel_lifting import (
     HypergraphKernelLifting,
 )
@@ -53,6 +56,7 @@ TRANSFORMS = {
     "HypergraphKNNLifting": HypergraphKNNLifting,
     "HypergraphKernelLifting": HypergraphKernelLifting,
     "ExpanderGraphLifting": ExpanderGraphLifting,
+    "HypergraphFormanRicciCurvatureLifting": HypergraphFormanRicciCurvatureLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     "SimplicialEccentricityLifting": SimplicialEccentricityLifting,
