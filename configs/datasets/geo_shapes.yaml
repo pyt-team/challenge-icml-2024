@@ -1,0 +1,12 @@
+data_domain: pointcloud
+data_type: toy_dataset
+data_name: geo_shapes
+data_dir: datasets/${data_domain}/${data_type}
+
+# Dataset parameters
+dim: 1
+num_classes: 2
+num_samples: 24
+num_features: 1
+task: classification
+loss_type: cross_entropy

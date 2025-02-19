@@ -26,6 +26,7 @@ from modules.data.utils.utils import (
     load_point_cloud,
     load_pointcloud_dataset,
     load_random_points,
+    load_random_shape_point_cloud,
     load_simplicial_dataset,
 )
 
@@ -272,8 +273,19 @@ class PointCloudLoader(AbstractLoader):
         super().__init__(parameters)
         self.parameters = parameters
 
+        if "data_name" not in self.cfg:
+            self.cfg["data_name"] = "shapes"
+            if "num_points" not in self.cfg:
+                self.cfg["num_points"] = 24
+            if "num_classes" not in self.cfg:
+                self.cfg["num_classes"] = 2
+
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.cfg["data_dir"])
+        self.data_dir = os.path.join(root_data_dir, self.cfg["data_name"])
+
     def load(self) -> torch_geometric.data.Dataset:
-        r"""Load point cloud dataset.
+        r"""Load point-cloud dataset.
 
         Parameters
         ----------
@@ -315,6 +327,11 @@ class PointCloudLoader(AbstractLoader):
                 root_folder, self.parameters["data_dir"]
             )
             data = load_pointcloud_dataset(self.parameters)
+        elif self.parameters.data_name == "shapes":
+            data = load_random_shape_point_cloud(
+                num_points=self.parameters["num_points"],
+                num_classes=self.parameters["num_classes"],
+            )
         else:
             raise NotImplementedError(
                 f"Dataset {self.parameters.data_name} not implemented"
