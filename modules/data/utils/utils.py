@@ -405,7 +405,6 @@ def load_manual_graph():
     )
 
 
-
 def load_k4_graph() -> torch_geometric.data.Data:
     """K_4 is a complete graph with 4 vertices."""
     vertices = [i for i in range(4)]
@@ -475,9 +474,13 @@ def load_8_vertex_cubic_graphs() -> list[torch_geometric.data.Data]:
         n = 8 if i < 5 else 10
         vertices = [i for i in range(n)]
         x = (
-            torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+            torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000])
+            .unsqueeze(1)
+            .float()
             if i < 5
-            else torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000])
+            else torch.tensor(
+                [1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000]
+            )
             .unsqueeze(1)
             .float()
         )
@@ -494,10 +497,13 @@ def load_8_vertex_cubic_graphs() -> list[torch_geometric.data.Data]:
         G.to_undirected()
         edge_list = torch.Tensor(list(G.edges())).T.long()
 
-        data = torch_geometric.data.Data(x=x, edge_index=edge_list, num_nodes=n, y=y)
+        data = torch_geometric.data.Data(
+            x=x, edge_index=edge_list, num_nodes=n, y=y
+        )
 
         list_data.append(data)
     return list_data
+
 
 def load_manual_mol():
     """Create a manual graph for testing the ring implementation.
@@ -618,7 +624,6 @@ def load_manual_mol():
         smiles=smiles,
         pos=pos,
     )
-
 
 
 def get_Planetoid_pyg(cfg):
@@ -822,3 +827,71 @@ def load_manual_points():
     x = torch.ones_like(pos, dtype=torch.float)
     y = torch.randint(0, 2, (pos.shape[0],), dtype=torch.float)
     return torch_geometric.data.Data(x=x, y=y, pos=pos, complex_dim=0)
+
+
+def load_pointcloud_dataset(cfg):
+    r"""Loads point cloud datasets.
+
+    Parameters
+    ----------
+    cfg : DictConfig
+        Configuration parameters.
+
+    Returns
+    -------
+    torch_geometric.data.Data
+        Point cloud dataset.
+    """
+    # Define the path to the data directory
+    root_folder = rootutils.find_root()
+    data_dir = osp.join(root_folder, cfg["data_dir"])
+
+    if cfg["data_name"] == "random_pointcloud":
+        num_points, dim = cfg["num_points"], cfg["dim"]
+        pos = torch.rand((num_points, dim))
+    elif cfg["data_name"] == "stanford_bunny":
+        pos = fetch_bunny(
+            file_path=osp.join(data_dir, "stanford_bunny.npy"),
+            accept_license=False,
+        )
+        num_points = len(pos)
+        pos = torch.tensor(pos)
+
+    if cfg.pos_to_x:
+        return torch_geometric.data.Data(
+            x=pos, pos=pos, num_nodes=num_points, num_features=pos.size(1)
+        )
+
+    return torch_geometric.data.Data(
+        pos=pos, num_nodes=num_points, num_features=0
+    )
+
+
+def load_manual_pointcloud(pos_to_x: bool = False):
+    """Create a manual pointcloud for testing purposes."""
+    # Define the positions
+    pos = torch.tensor(
+        [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [10, 0, 0],
+            [10, 0, 1],
+            [10, 1, 0],
+            [10, 1, 1],
+            [20, 0, 0],
+            [20, 0, 1],
+            [20, 1, 0],
+            [20, 1, 1],
+            [30, 0, 0],
+        ]
+    ).float()
+
+    if pos_to_x:
+        return torch_geometric.data.Data(
+            x=pos, pos=pos, num_nodes=pos.size(0), num_features=pos.size(1)
+        )
+
+    return torch_geometric.data.Data(
+        pos=pos, num_nodes=pos.size(0), num_features=0
+    )

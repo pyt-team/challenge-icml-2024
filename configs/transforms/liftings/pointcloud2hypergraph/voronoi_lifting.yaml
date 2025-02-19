@@ -1,0 +1,4 @@
+transform_type: 'lifting'
+transform_name: "VoronoiLifting"
+support_ratio: 0.005
+feature_lifting: ProjectionSum
