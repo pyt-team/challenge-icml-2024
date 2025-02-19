@@ -8,10 +8,6 @@ from modules.transforms.data_manipulations.manipulations import (
     OneHotDegreeFeatures,
 )
 from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
-from modules.transforms.liftings.graph2cell.cycle_lifting import CellCycleLifting
-from modules.transforms.liftings.graph2hypergraph.kernel_lifting import (
-    HypergraphKernelLifting,
-)
 from modules.transforms.liftings.graph2cell.cycle_lifting import (
     CellCycleLifting,
 )
@@ -20,6 +16,9 @@ from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting im
 )
 from modules.transforms.liftings.graph2hypergraph.expander_graph_lifting import (
     ExpanderGraphLifting,
+)
+from modules.transforms.liftings.graph2hypergraph.kernel_lifting import (
+    HypergraphKernelLifting,
 )
 from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
     HypergraphKNNLifting,

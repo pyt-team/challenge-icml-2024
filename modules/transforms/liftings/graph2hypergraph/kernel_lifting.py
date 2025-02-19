@@ -6,7 +6,9 @@ import torch_geometric
 import torch_geometric.utils
 from scipy.linalg import fractional_matrix_power as fmp
 
-from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
+from modules.transforms.liftings.graph2hypergraph.base import (
+    Graph2HypergraphLifting,
+)
 
 
 def graph_heat_kernel(laplacian: torch.Tensor, t: float = 1.0) -> torch.Tensor:
@@ -29,7 +31,9 @@ def graph_heat_kernel(laplacian: torch.Tensor, t: float = 1.0) -> torch.Tensor:
     return torch.linalg.matrix_exp(-t * laplacian)
 
 
-def graph_matern_kernel(laplacian: torch.Tensor, nu: int = 1, kappa: int = 1) -> torch.Tensor:
+def graph_matern_kernel(
+    laplacian: torch.Tensor, nu: int = 1, kappa: int = 1
+) -> torch.Tensor:
     """
     Return graph Mat\'ern kernel $$K = (2 \nu / kappa^2 I + L)^{-\nu}.$$
 
@@ -51,7 +55,9 @@ def graph_matern_kernel(laplacian: torch.Tensor, nu: int = 1, kappa: int = 1) ->
     return torch.tensor(fmp((2 * nu / kappa**2) * id_matrix + laplacian, -nu))
 
 
-def get_graph_kernel(laplacian, kernel: str | typing.Callable = "heat", **kwargs):
+def get_graph_kernel(
+    laplacian, kernel: str | typing.Callable = "heat", **kwargs
+):
     """
     Returns a graph kernel.
 
@@ -82,7 +88,9 @@ def get_graph_kernel(laplacian, kernel: str | typing.Callable = "heat", **kwargs
     raise ValueError(f"Unknown graph kernel type {kernel}")
 
 
-def get_feat_kernel(features, kernel: str | typing.Callable = "identity", **kwargs):
+def get_feat_kernel(
+    features, kernel: str | typing.Callable = "identity", **kwargs
+):
     """
     Returns a kernel matrix for the given features based on the specified kernel type.
 
@@ -202,7 +210,14 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         Additional arguments for the class.
     """
 
-    def __init__(self, graph_kernel="heat", feat_kernel="identity", C="prod", fraction=0.5, **kwargs):
+    def __init__(
+        self,
+        graph_kernel="heat",
+        feat_kernel="identity",
+        C="prod",
+        fraction=0.5,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.graph_kernel = graph_kernel
         self.feat_kernel = feat_kernel
@@ -229,7 +244,6 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         keep_columns = torch.where(torch.sum(incidence != 0, dim=0) > 1)[0]
         return incidence[:, keep_columns]
 
-
     def _deduplicate_hyperedges(self, incidence: torch.Tensor) -> torch.Tensor:
         r"""
          Remove duplicate hyperedges from the incidence matrix.
@@ -246,7 +260,9 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         transposed_tensor = incidence.T
         return torch.unique(transposed_tensor, dim=0).T
 
-    def lift_topology(self, data: torch_geometric.data.Data) -> dict[str, torch.Tensor]:
+    def lift_topology(
+        self, data: torch_geometric.data.Data
+    ) -> dict[str, torch.Tensor]:
         r"""Lifts the topology of a graph to hypergraph domain by considering the kernel over vertices or alternatively features.
         In a most generic form the kernel looks like:
         $$K =  C(K_v(v, v^{\prime}) K_x(x, x^{\prime})),$$
@@ -268,7 +284,9 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         ValueError: if the input is incomplete or in incorrect format.
         """
         if not torch_geometric.utils.is_undirected(data.edge_index):
-            raise ValueError("HypergraphKernelLifting is applicable only to undirected graphs")
+            raise ValueError(
+                "HypergraphKernelLifting is applicable only to undirected graphs"
+            )
 
         num_nodes = data.x.shape[0]
         data.pos = data.x
@@ -276,13 +294,21 @@ class HypergraphKernelLifting(Graph2HypergraphLifting):
         incidence_1 = torch.zeros(num_nodes, num_hyperedges)
 
         # constructing the Laplacian
-        edge_index, edge_weight = torch_geometric.utils.get_laplacian(data.edge_index, data.edge_weight, normalization="sym")
-        laplacian = torch.zeros((num_nodes, num_nodes), dtype=edge_weight.dtype)
+        edge_index, edge_weight = torch_geometric.utils.get_laplacian(
+            data.edge_index, data.edge_weight, normalization="sym"
+        )
+        laplacian = torch.zeros(
+            (num_nodes, num_nodes), dtype=edge_weight.dtype
+        )
         laplacian[edge_index[0], edge_index[1]] = edge_weight
 
         # obtaining the kernels (K_v is the kernel from graph topology and K_x is the kernel from features)
-        K_v = get_graph_kernel(laplacian=laplacian, kernel=self.graph_kernel, **self.kwargs)
-        K_x = get_feat_kernel(features=data.x, kernel=self.feat_kernel, **self.kwargs)
+        K_v = get_graph_kernel(
+            laplacian=laplacian, kernel=self.graph_kernel, **self.kwargs
+        )
+        K_x = get_feat_kernel(
+            features=data.x, kernel=self.feat_kernel, **self.kwargs
+        )
 
         # combine the kernels
         C = get_combination(c_name_or_func=self.C)
