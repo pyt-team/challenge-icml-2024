@@ -44,6 +44,9 @@ from modules.transforms.liftings.graph2simplicial.line_lifting import (
 from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
     SimplicialVietorisRipsLifting,
 )
+from modules.transforms.liftings.pointcloud2hypergraph.mogmst_lifting import (
+    MoGMSTLifting,
+)
 from modules.transforms.liftings.pointcloud2hypergraph.voronoi_lifting import (
     VoronoiLifting,
 )
@@ -77,6 +80,7 @@ TRANSFORMS = {
     "DelaunayLifting": DelaunayLifting,
     # Pointcloud -> Hypergraph
     "VoronoiLifting": VoronoiLifting,
+    "MoGMSTLifting": MoGMSTLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
