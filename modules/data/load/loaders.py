@@ -336,7 +336,7 @@ class PointCloudLoader(AbstractLoader):
             )
         elif self.parameters["data_name"] == "manual_points":
             data = load_manual_points()
-        elif self.parameters.data_name == "stanford_bunny":
+        elif self.parameters["data_name"] == "stanford_bunny":
             self.data_dir = os.path.join(
                 root_folder, self.parameters["data_dir"]
             )
