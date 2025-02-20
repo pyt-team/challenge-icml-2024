@@ -119,6 +119,61 @@ def get_complex_connectivity(complex, max_rank, signed=False):
     return connectivity
 
 
+def get_combinatorial_complex_connectivity(complex, max_rank=None):
+    r"""Gets the connectivity matrices for the combinatorial complex.
+
+    Parameters
+    ----------
+    complex : topnetx.CombinatorialComplex
+        Combinatorial complex.
+    max_rank : int
+        Maximum rank of the complex.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the connectivity matrices.
+    """
+    if max_rank is None:
+        max_rank = complex.dim
+    practical_shape = list(
+        np.pad(list(complex.shape), (0, max_rank + 1 - len(complex.shape)))
+    )
+
+    connectivity = {}
+
+    for rank_idx in range(max_rank + 1):
+        if rank_idx > 0:
+            try:
+                connectivity[f"incidence_{rank_idx}"] = from_sparse(
+                    complex.incidence_matrix(
+                        rank=rank_idx - 1, to_rank=rank_idx
+                    )
+                )
+            except ValueError:
+                connectivity[f"incidence_{rank_idx}"] = (
+                    generate_zero_sparse_connectivity(
+                        m=practical_shape[rank_idx],
+                        n=practical_shape[rank_idx],
+                    )
+                )
+
+        try:
+            connectivity[f"adjacency_{rank_idx}"] = from_sparse(
+                complex.adjacency_matrix(rank=rank_idx, via_rank=rank_idx + 1)
+            )
+        except ValueError:
+            connectivity[f"adjacency_{rank_idx}"] = (
+                generate_zero_sparse_connectivity(
+                    m=practical_shape[rank_idx], n=practical_shape[rank_idx]
+                )
+            )
+
+        connectivity["shape"] = practical_shape
+
+    return connectivity
+
+
 def generate_zero_sparse_connectivity(m, n):
     r"""Generates a zero sparse connectivity matrix.
 
@@ -285,17 +340,13 @@ def load_hypergraph_pickle_dataset(cfg):
 
     print(f"number of hyperedges: {len(hypergraph)}")
 
-    edge_idx = 0  # num_nodes
     node_list = []
     edge_list = []
-    for he in hypergraph:
-        cur_he = hypergraph[he]
+
+    for edge_idx, cur_he in enumerate(hypergraph.values()):
         cur_size = len(cur_he)
-
-        node_list += list(cur_he)
-        edge_list += [edge_idx] * cur_size
-
-        edge_idx += 1
+        node_list.extend(cur_he)
+        edge_list.extend([edge_idx] * cur_size)
 
     # check that every node is in some hyperedge
     if len(np.unique(node_list)) != num_nodes:
@@ -638,6 +689,55 @@ def load_manual_mol():
         y=torch.tensor(y),
         smiles=smiles,
         pos=pos,
+    )
+
+
+def load_manual_hypergraph():
+    """Create a manual hypergraph for testing purposes."""
+    # Define the vertices (just 8 vertices)
+    vertices = [i for i in range(8)]
+    y = [0, 1, 1, 1, 0, 0, 0, 0]
+    # Define the hyperedges
+    hyperedges = [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [0, 1, 2],
+        [0, 1, 3],
+        [0, 2, 3],
+        [1, 2, 3],
+        [3, 4],
+        [4, 5],
+        [4, 7],
+        [5, 6],
+        [6, 7],
+    ]
+
+    # Generate feature from 0 to 7
+    x = torch.tensor([1, 5, 10, 50, 100, 500, 1000, 5000]).unsqueeze(1).float()
+    labels = torch.tensor(y, dtype=torch.long)
+
+    node_list = []
+    edge_list = []
+
+    for edge_idx, he in enumerate(hyperedges):
+        cur_size = len(he)
+        node_list += he
+        edge_list += [edge_idx] * cur_size
+
+    edge_index = np.array([node_list, edge_list], dtype=int)
+    edge_index = torch.LongTensor(edge_index)
+
+    incidence_hyperedges = torch.sparse_coo_tensor(
+        edge_index,
+        values=torch.ones(edge_index.shape[1]),
+        size=(len(vertices), len(hyperedges)),
+    )
+
+    return Data(
+        x=x,
+        edge_index=edge_index,
+        y=labels,
+        incidence_hyperedges=incidence_hyperedges,
     )
 
 

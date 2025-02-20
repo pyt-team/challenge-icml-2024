@@ -33,7 +33,7 @@ class HMCModel(torch.nn.Module):
             int_channels_l = []
             out_channels_l = []
 
-            for _ in range(3): # only 3 ranks
+            for _ in range(3):  # only 3 ranks
                 # First layer behavior
                 if layer == 0:
                     in_channels_l.append(in_channels)
@@ -42,11 +42,13 @@ class HMCModel(torch.nn.Module):
                 int_channels_l.append(hidden_channels)
                 out_channels_l.append(hidden_channels)
 
-            channels_per_layer.append((in_channels_l, int_channels_l, out_channels_l))
+            channels_per_layer.append(
+                (in_channels_l, int_channels_l, out_channels_l)
+            )
 
         self.base_model = HMC(
             channels_per_layer=channels_per_layer,
-            negative_slope=negative_slope
+            negative_slope=negative_slope,
         )
         self.linear_0 = torch.nn.Linear(hidden_channels, out_channels)
         self.linear_1 = torch.nn.Linear(hidden_channels, out_channels)
