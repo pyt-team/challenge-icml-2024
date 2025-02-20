@@ -1,0 +1,6 @@
+transform_type: "lifting"
+transform_name: "MapperLifting"
+filter_attr: "laplacian"
+resolution: 10
+gain: 0.3
+filter_func:
