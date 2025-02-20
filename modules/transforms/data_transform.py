@@ -56,6 +56,9 @@ from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
 from modules.transforms.liftings.hypergraph2combinatorial.universal_strict_lifting import (
     UniversalStrictLifting,
 )
+from modules.transforms.liftings.hypergraph2simplicial.heat_lifting import (
+    HypergraphHeatLifting,
+)
 from modules.transforms.liftings.pointcloud2hypergraph.mogmst_lifting import (
     MoGMSTLifting,
 )
@@ -102,6 +105,8 @@ TRANSFORMS = {
     "PointNetLifting": PointNetLifting,
     # Hypergraph -> Combinatorial Complex
     "UniversalStrictLifting": UniversalStrictLifting,
+    # Hypergraph -> Simplicial Complex
+    "HypergraphHeatLifting": HypergraphHeatLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations
