@@ -317,38 +317,38 @@ class PointCloudLoader(AbstractLoader):
             root_data_dir, self.parameters["data_name"]
         )
 
-        if self.parameters.data_name.startswith("gudhi_"):
+        if self.parameters["data_name"].startswith("gudhi_"):
             data = load_gudhi_dataset(
                 self.parameters,
                 feature_generator=self.feature_generator,
                 target_generator=self.target_generator,
             )
-        elif self.parameters.data_name == "random_points":
+        elif self.parameters["data_name"] == "random_points":
             data = load_random_points(
                 dim=self.parameters["dim"],
                 num_classes=self.parameters["num_classes"],
                 num_samples=self.parameters["num_samples"],
             )
-        elif self.parameters.data_name == "toy_point_cloud":
+        elif self.parameters["data_name"] == "toy_point_cloud":
             data = load_point_cloud(
                 num_classes=self.parameters["num_classes"],
                 num_samples=self.parameters["num_samples"],
             )
-        elif self.parameters.data_name == "manual_points":
+        elif self.parameters["data_name"] == "manual_points":
             data = load_manual_points()
         elif self.parameters.data_name == "stanford_bunny":
             self.data_dir = os.path.join(
                 root_folder, self.parameters["data_dir"]
             )
             data = load_pointcloud_dataset(self.parameters)
-        elif self.parameters.data_name == "shapes":
+        elif self.parameters["data_name"] == "shapes":
             data = load_random_shape_point_cloud(
                 num_points=self.parameters["num_points"],
                 num_classes=self.parameters["num_classes"],
             )
         else:
             raise NotImplementedError(
-                f"Dataset {self.parameters.data_name} not implemented"
+                f"Dataset {self.parameters["data_name"]} not implemented"
             )
 
         return CustomDataset([data], self.data_dir)
