@@ -348,7 +348,7 @@ class PointCloudLoader(AbstractLoader):
             )
         else:
             raise NotImplementedError(
-                f"Dataset {self.parameters["data_name"]} not implemented"
+                f"Dataset {self.parameters.data_name} not implemented"
             )
 
         return CustomDataset([data], self.data_dir)
