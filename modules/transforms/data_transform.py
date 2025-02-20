@@ -83,6 +83,9 @@ from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
 from modules.transforms.liftings.pointcloud2simplicial.random_flag_complex import (
     RandomFlagComplexLifting,
 )
+from modules.transforms.liftings.simplicial2combinatorial.coface_cc_lifting import (
+    CofaceCCLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -119,6 +122,8 @@ TRANSFORMS = {
     "UniversalStrictLifting": UniversalStrictLifting,
     # Hypergraph -> Simplicial Complex
     "HypergraphHeatLifting": HypergraphHeatLifting,
+    # Simplicial Complex -> Combinatorial Complex
+    "CofaceCCLifting": CofaceCCLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
     # Data Manipulations

@@ -1,0 +1,7 @@
+data_name: KarateClub
+data_domain: simplex
+data_dir: datasets/${data_domain}/${data_type}
+data_type: simplex
+
+num_features: 2
+num_classes:  2

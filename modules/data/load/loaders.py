@@ -223,7 +223,14 @@ class SimplicialLoader(AbstractLoader):
         torch_geometric.data.Dataset
             torch_geometric.data.Dataset object containing the loaded data.
         """
-        return load_simplicial_dataset(self.parameters)
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+
+        self.data_dir = os.path.join(
+            root_data_dir, self.parameters["data_name"]
+        )
+        data = load_simplicial_dataset(self.parameters)
+        return CustomDataset([data], self.data_dir)
 
 
 class HypergraphLoader(AbstractLoader):
