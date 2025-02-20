@@ -843,7 +843,7 @@ def load_contact_primary_school(cfg: dict, data_dir: str):
     import gdown
 
     url = "https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA"
-    fn = tempfile.NamedTemporaryFile()
+    fn = tempfile.NamedTemporaryFile()  # noqa: SIM115, RUF100
     gdown.download(url, fn.name, quiet=False)
     archive = zipfile.ZipFile(fn.name, "r")
     labels = archive.open(
@@ -912,7 +912,7 @@ def load_senate_committee(
     import gdown
 
     url = "https://drive.google.com/uc?id=17ZRVwki_x_C_DlOAea5dPBO7Q4SRTRRw"
-    fn = tempfile.NamedTemporaryFile()
+    fn = tempfile.NamedTemporaryFile()  # noqa: SIM115, RUF100
     gdown.download(url, fn.name, quiet=False)
     archive = zipfile.ZipFile(fn.name, "r")
     labels = archive.open(
