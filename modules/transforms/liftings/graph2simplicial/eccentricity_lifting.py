@@ -44,7 +44,9 @@ class SimplicialEccentricityLifting(Graph2SimplicialLifting):
 
         for node, ecc in eccentricities.items():
             neighborhood = list(
-                nx.single_source_shortest_path_length(graph, node, cutoff=ecc).keys()
+                nx.single_source_shortest_path_length(
+                    graph, node, cutoff=ecc
+                ).keys()
             )
             for k in range(1, self.complex_dim):
                 for combination in combinations(neighborhood, k + 1):
