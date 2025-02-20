@@ -56,6 +56,9 @@ from modules.transforms.liftings.hypergraph2combinatorial.universal_strict_lifti
 from modules.transforms.liftings.pointcloud2hypergraph.mogmst_lifting import (
     MoGMSTLifting,
 )
+from modules.transforms.liftings.pointcloud2hypergraph.pointnet_lifting import (
+    PointNetLifting,
+)
 from modules.transforms.liftings.pointcloud2hypergraph.voronoi_lifting import (
     VoronoiLifting,
 )
@@ -92,6 +95,7 @@ TRANSFORMS = {
     # Pointcloud -> Hypergraph
     "VoronoiLifting": VoronoiLifting,
     "MoGMSTLifting": MoGMSTLifting,
+    "PointNetLifting": PointNetLifting,
     # Hypergraph -> Combinatorial Complex
     "UniversalStrictLifting": UniversalStrictLifting,
     # Feature Liftings
