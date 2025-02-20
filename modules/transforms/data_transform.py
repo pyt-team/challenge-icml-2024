@@ -44,6 +44,9 @@ from modules.transforms.liftings.graph2hypergraph.modularity_maximization_liftin
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
+from modules.transforms.liftings.graph2simplicial.dnd_lifting import (
+    SimplicialDnDLifting,
+)
 from modules.transforms.liftings.graph2simplicial.eccentricity_lifting import (
     SimplicialEccentricityLifting,
 )
@@ -102,6 +105,7 @@ TRANSFORMS = {
     "SimplicialLineLifting": SimplicialLineLifting,
     "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
     "LatentCliqueLifting": LatentCliqueLifting,
+    "SimplicialDnDLifting": SimplicialDnDLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     "DiscreteConfigurationComplexLifting": DiscreteConfigurationComplexLifting,
