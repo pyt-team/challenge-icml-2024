@@ -7,7 +7,10 @@ from modules.transforms.data_manipulations.manipulations import (
     NodeFeaturesToFloat,
     OneHotDegreeFeatures,
 )
-from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
+from modules.transforms.feature_liftings.feature_liftings import (
+    ElementwiseMean,
+    ProjectionSum,
+)
 from modules.transforms.liftings.graph2cell.cycle_lifting import (
     CellCycleLifting,
 )
@@ -59,6 +62,9 @@ from modules.transforms.liftings.graph2simplicial.latentclique_lifting import (
 from modules.transforms.liftings.graph2simplicial.line_lifting import (
     SimplicialLineLifting,
 )
+from modules.transforms.liftings.graph2simplicial.neighborhood_complex_lifting import (
+    NeighborhoodComplexLifting,
+)
 from modules.transforms.liftings.graph2simplicial.vietoris_rips_lifting import (
     SimplicialVietorisRipsLifting,
 )
@@ -106,6 +112,7 @@ TRANSFORMS = {
     "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
     "LatentCliqueLifting": LatentCliqueLifting,
     "SimplicialDnDLifting": SimplicialDnDLifting,
+    "NeighborhoodComplexLifting": NeighborhoodComplexLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     "DiscreteConfigurationComplexLifting": DiscreteConfigurationComplexLifting,
@@ -130,6 +137,7 @@ TRANSFORMS = {
     "CofaceCCLifting": CofaceCCLifting,
     # Feature Liftings
     "ProjectionSum": ProjectionSum,
+    "ElementwiseMean": ElementwiseMean,
     # Data Manipulations
     "Identity": IdentityTransform,
     "NodeDegrees": NodeDegrees,
