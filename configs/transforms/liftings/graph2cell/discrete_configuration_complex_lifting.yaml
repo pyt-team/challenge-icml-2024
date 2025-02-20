@@ -1,0 +1,6 @@
+transform_type: 'lifting'
+transform_name: "DiscreteConfigurationComplexLifting"
+k: 2
+feature_aggregation: "concat"
+preserve_edge_attr: True
+feature_lifting: ProjectionSum

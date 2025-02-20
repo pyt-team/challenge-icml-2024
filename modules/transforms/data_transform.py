@@ -11,6 +11,9 @@ from modules.transforms.feature_liftings.feature_liftings import ProjectionSum
 from modules.transforms.liftings.graph2cell.cycle_lifting import (
     CellCycleLifting,
 )
+from modules.transforms.liftings.graph2cell.discrete_configuration_complex_lifting import (
+    DiscreteConfigurationComplexLifting,
+)
 from modules.transforms.liftings.graph2combinatorial.curve_lifting import (
     CurveLifting,
 )
@@ -95,6 +98,7 @@ TRANSFORMS = {
     "LatentCliqueLifting": LatentCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
+    "DiscreteConfigurationComplexLifting": DiscreteConfigurationComplexLifting,
     # Graph -> Combinatorial Complex
     "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
     "CurveLifting": CurveLifting,

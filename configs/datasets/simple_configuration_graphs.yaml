@@ -1,0 +1,12 @@
+data_domain: graph
+data_type: toy_dataset
+data_name: simple_configuration_graphs
+data_dir: datasets/${data_domain}/${data_type}
+
+# Dataset parameters
+num_features: 1
+num_classes: 2
+task: classification
+loss_type: cross_entropy
+monitor_metric: accuracy
+task_level: graph

@@ -973,6 +973,45 @@ def load_senate_committee(
     )
 
 
+def load_simple_configuration_graphs():
+    """Generate small graphs to illustrate the discrete configuration complex."""
+
+    # Y shaped graph
+    y_graph = nx.Graph()
+    y_graph.add_edges_from([(0, 1), (0, 2), (0, 3)])
+    y_data = torch_geometric.data.Data(
+        x=torch.tensor([0, 1, 2, 3]).unsqueeze(1).float(),
+        y=torch.tensor([0]),
+        edge_index=torch.Tensor(list(y_graph.edges())).T.long(),
+        num_nodes=4,
+        edge_attr=torch.Tensor([-1, -2, -3]).unsqueeze(1).float(),
+    )
+
+    # X shaped graph
+    x_graph = nx.Graph()
+    x_graph.add_edges_from([(0, 1), (0, 2), (0, 3), (0, 4)])
+    x_data = torch_geometric.data.Data(
+        x=torch.tensor([0, 1, 2, 3, 4]).unsqueeze(1).float(),
+        y=torch.tensor([0]),
+        edge_index=torch.Tensor(list(x_graph.edges())).T.long(),
+        num_nodes=4,
+        edge_attr=torch.Tensor([-1, -2, -3, -4]).unsqueeze(1).float(),
+    )
+
+    # g shaped graph
+    g_graph = nx.Graph()
+    g_graph.add_edges_from([(0, 1), (1, 2), (2, 0), (2, 3)])
+    g_data = torch_geometric.data.Data(
+        x=torch.tensor([0, 1, 2, 3]).unsqueeze(1).float(),
+        y=torch.tensor([1]),
+        edge_index=torch.Tensor(list(g_graph.edges())).T.long(),
+        num_nodes=4,
+        edge_attr=torch.Tensor([-1, -2, -3, -4]).unsqueeze(1).float(),
+    )
+
+    return x_data, y_data, g_data
+
+
 def get_Planetoid_pyg(cfg):
     r"""Loads Planetoid graph datasets from torch_geometric.
 
