@@ -287,16 +287,16 @@ class PointCloudLoader(AbstractLoader):
         super().__init__(parameters)
         self.parameters = parameters
 
-        if "data_name" not in self.cfg:
-            self.cfg["data_name"] = "shapes"
+        if "data_name" not in self.parameters:
+            self.parameters["data_name"] = "shapes"
             if "num_points" not in self.cfg:
-                self.cfg["num_points"] = 24
+                self.parameters["num_points"] = 24
             if "num_classes" not in self.cfg:
-                self.cfg["num_classes"] = 2
+                self.parameters["num_classes"] = 2
 
-        root_folder = rootutils.find_root()
-        root_data_dir = os.path.join(root_folder, self.cfg["data_dir"])
-        self.data_dir = os.path.join(root_data_dir, self.cfg["data_name"])
+        # root_folder = rootutils.find_root()
+        # root_data_dir = os.path.join(root_folder, self.cfg["data_dir"])
+        # self.data_dir = os.path.join(root_data_dir, self.cfg["data_name"])
 
     def load(self) -> torch_geometric.data.Dataset:
         r"""Load point-cloud dataset.
