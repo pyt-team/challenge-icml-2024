@@ -32,6 +32,9 @@ from modules.transforms.liftings.graph2hypergraph.knn_lifting import (
 from modules.transforms.liftings.graph2hypergraph.mapper_lifting import (
     MapperLifting,
 )
+from modules.transforms.liftings.graph2hypergraph.modularity_maximization_lifting import (
+    ModularityMaximizationLifting,
+)
 from modules.transforms.liftings.graph2simplicial.clique_lifting import (
     SimplicialCliqueLifting,
 )
@@ -70,6 +73,7 @@ TRANSFORMS = {
     "ExpanderGraphLifting": ExpanderGraphLifting,
     "HypergraphFormanRicciCurvatureLifting": HypergraphFormanRicciCurvatureLifting,
     "MapperLifting": MapperLifting,
+    "ModularityMaximizationLifting": ModularityMaximizationLifting,
     # Graph -> Simplicial Complex
     "SimplicialCliqueLifting": SimplicialCliqueLifting,
     "SimplicialEccentricityLifting": SimplicialEccentricityLifting,
