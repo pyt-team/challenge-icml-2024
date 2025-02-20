@@ -18,16 +18,19 @@ from modules.data.utils.custom_dataset import CustomDataset
 from modules.data.utils.utils import (
     load_8_vertex_cubic_graphs,
     load_cell_complex_dataset,
+    load_contact_primary_school,
     load_gudhi_dataset,
     load_hypergraph_pickle_dataset,
     load_manual_graph,
     load_manual_hypergraph,
+    load_manual_hypergraph_2,
     load_manual_mol,
     load_manual_points,
     load_point_cloud,
     load_pointcloud_dataset,
     load_random_points,
     load_random_shape_point_cloud,
+    load_senate_committee,
     load_simplicial_dataset,
 )
 
@@ -247,18 +250,23 @@ class HypergraphLoader(AbstractLoader):
             torch_geometric.data.Dataset object containing the loaded data.
         """
         # Manual hypergraph
+        root_folder = rootutils.find_root()
+        root_data_dir = os.path.join(root_folder, self.parameters["data_dir"])
+        self.data_dir = os.path.join(
+            root_data_dir, self.parameters["data_name"]
+        )
         if self.parameters.data_name in ["manual"]:
-            root_folder = rootutils.find_root()
-            root_data_dir = os.path.join(
-                root_folder, self.parameters["data_dir"]
-            )
-            self.data_dir = os.path.join(
-                root_data_dir, self.parameters["data_name"]
-            )
-
             data = load_manual_hypergraph()
             return CustomDataset([data], self.parameters.data_dir)
-
+        if self.parameters.data_name in ["ContactPrimarySchool"]:
+            data = load_contact_primary_school(self.parameters, self.data_dir)
+            return CustomDataset([data], self.data_dir)
+        if self.parameters.data_name in ["senate_committee"]:
+            data = load_senate_committee(self.parameters, self.data_dir)
+            return CustomDataset([data], self.data_dir)
+        if self.parameters.data_name in ["manual_hg"]:
+            data = load_manual_hypergraph_2(self.parameters)
+            return CustomDataset([data], self.data_dir)
         return load_hypergraph_pickle_dataset(self.parameters)
 
 

@@ -12,12 +12,12 @@ class PreProcessor(torch_geometric.data.InMemoryDataset):
 
     Parameters
     ----------
-    data_dir : str
-        Path to the directory containing the data.
     data_list : list
         List of data objects.
     transforms_config : DictConfig | dict
         Configuration parameters for the transforms.
+    data_dir : str
+        Path to the directory containing the data.
     **kwargs: optional
         Additional arguments.
     """

@@ -1,7 +1,10 @@
 import hashlib
+import itertools as it
 import os
 import os.path as osp
 import pickle
+import tempfile
+import zipfile
 from collections.abc import Callable
 from urllib.request import urlretrieve
 
@@ -14,6 +17,7 @@ import torch
 import torch_geometric
 import torch_geometric.data
 import torch_geometric.transforms as T
+import torch_sparse
 from gudhi.datasets.generators import points
 from gudhi.datasets.remote import (
     fetch_bunny,
@@ -23,7 +27,7 @@ from gudhi.datasets.remote import (
 from topomodelx.utils.sparse import from_sparse
 from torch_geometric.data import Data
 from torch_geometric.datasets import GeometricShapes
-from torch_sparse import coalesce
+from torch_sparse import SparseTensor, coalesce
 
 rootutils.setup_root("./", indicator=".project-root", pythonpath=True)
 
@@ -794,6 +798,178 @@ def load_manual_hypergraph():
         edge_index=edge_index,
         y=labels,
         incidence_hyperedges=incidence_hyperedges,
+    )
+
+
+def load_manual_hypergraph_2(cfg: dict):
+    """Create a manual hypergraph for testing purposes."""
+    rng = np.random.default_rng(1234)
+    n, m = 12, 24
+    hyperedges = set(
+        [tuple(np.flatnonzero(rng.choice([0, 1], size=n))) for _ in range(m)]
+    )
+    hyperedges = [np.array(he) for he in hyperedges]
+    R = torch.tensor(np.concatenate(hyperedges), dtype=torch.long)
+    C = torch.tensor(
+        np.repeat(np.arange(len(hyperedges)), [len(he) for he in hyperedges]),
+        dtype=torch.long,
+    )
+    V = torch.tensor(np.ones(len(R)))
+    incidence_hyperedges = torch_sparse.SparseTensor(row=R, col=C, value=V)
+    incidence_hyperedges = (
+        incidence_hyperedges.coalesce().to_torch_sparse_coo_tensor()
+    )
+
+    ## Bipartite graph repr.
+    edges = np.array(
+        list(
+            it.chain(
+                *[[(i, v) for v in he] for i, he in enumerate(hyperedges)]
+            )
+        )
+    )
+    return Data(
+        x=torch.empty((n, 0)),
+        edge_index=torch.tensor(edges, dtype=torch.long),
+        num_nodes=n,
+        num_node_features=0,
+        num_edges=len(hyperedges),
+        incidence_hyperedges=incidence_hyperedges,
+        max_dim=cfg.get("max_dim", 3),
+    )
+
+
+def load_contact_primary_school(cfg: dict, data_dir: str):
+    import gdown
+
+    url = "https://drive.google.com/uc?id=1H7PGDPvjCyxbogUqw17YgzMc_GHLjbZA"
+    fn = tempfile.NamedTemporaryFile()
+    gdown.download(url, fn.name, quiet=False)
+    archive = zipfile.ZipFile(fn.name, "r")
+    labels = archive.open(
+        "contact-primary-school/node-labels-contact-primary-school.txt", "r"
+    ).readlines()
+    hyperedges = archive.open(
+        "contact-primary-school/hyperedges-contact-primary-school.txt", "r"
+    ).readlines()
+    label_names = archive.open(
+        "contact-primary-school/label-names-contact-primary-school.txt", "r"
+    ).readlines()
+
+    hyperedges = [
+        list(map(int, he.decode().replace("\n", "").strip().split(",")))
+        for he in hyperedges
+    ]
+    labels = np.array(
+        [int(b.decode().replace("\n", "").strip()) for b in labels]
+    )
+    label_names = np.array(
+        [b.decode().replace("\n", "").strip() for b in label_names]
+    )
+
+    # Based on: https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.HypergraphConv.html
+    HE_coo = torch.tensor(
+        np.array(
+            [
+                np.concatenate(hyperedges),
+                np.repeat(
+                    np.arange(len(hyperedges)), [len(he) for he in hyperedges]
+                ),
+            ]
+        )
+    )
+
+    incidence_hyperedges = (
+        SparseTensor(
+            row=HE_coo[0, :],
+            col=HE_coo[1, :],
+            value=torch.tensor(np.ones(HE_coo.shape[1])),
+        )
+        .coalesce()
+        .to_torch_sparse_coo_tensor()
+    )
+
+    return Data(
+        x=torch.empty((len(labels), 0)),
+        edge_index=HE_coo,
+        y=torch.LongTensor(labels),
+        y_names=label_names,
+        num_nodes=len(labels),
+        num_node_features=0,
+        num_edges=len(hyperedges),
+        incidence_hyperedges=incidence_hyperedges,
+        max_dim=cfg.get("max_dim", 1),
+        # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
+    )
+
+
+def load_senate_committee(
+    cfg: dict, data_dir: str
+) -> torch_geometric.data.Data:
+    import tempfile
+    import zipfile
+
+    import gdown
+
+    url = "https://drive.google.com/uc?id=17ZRVwki_x_C_DlOAea5dPBO7Q4SRTRRw"
+    fn = tempfile.NamedTemporaryFile()
+    gdown.download(url, fn.name, quiet=False)
+    archive = zipfile.ZipFile(fn.name, "r")
+    labels = archive.open(
+        "senate-committees/node-labels-senate-committees.txt", "r"
+    ).readlines()
+    hyperedges = archive.open(
+        "senate-committees/hyperedges-senate-committees.txt", "r"
+    ).readlines()
+    label_names = archive.open(
+        "senate-committees/node-names-senate-committees.txt", "r"
+    ).readlines()
+
+    hyperedges = [
+        list(map(int, he.decode().replace("\n", "").strip().split(",")))
+        for he in hyperedges
+    ]
+    labels = np.array(
+        [int(b.decode().replace("\n", "").strip()) for b in labels]
+    )
+    label_names = np.array(
+        [b.decode().replace("\n", "").strip() for b in label_names]
+    )
+
+    # Based on: https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.conv.HypergraphConv.html
+    HE_coo = torch.tensor(
+        np.array(
+            [
+                np.concatenate(hyperedges) - 1,
+                np.repeat(
+                    np.arange(len(hyperedges)), [len(he) for he in hyperedges]
+                ),
+            ]
+        )
+    )
+    from torch_sparse import SparseTensor
+
+    incidence_hyperedges = (
+        SparseTensor(
+            row=HE_coo[0, :],
+            col=HE_coo[1, :],
+            value=torch.tensor(np.ones(HE_coo.shape[1])),
+        )
+        .coalesce()
+        .to_torch_sparse_coo_tensor()
+    )
+
+    return Data(
+        x=torch.empty((len(labels), 0)),
+        edge_index=HE_coo,
+        y=torch.LongTensor(labels),
+        y_names=label_names,
+        num_nodes=len(labels),
+        num_node_features=0,
+        num_edges=len(hyperedges),
+        incidence_hyperedges=incidence_hyperedges,
+        max_dim=cfg.get("max_dim", 2),
+        # x_hyperedges=torch.tensor(np.empty(shape=(len(hyperedges), 0)))
     )
 
 

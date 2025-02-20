@@ -50,7 +50,7 @@ dependencies=[
     "pyflagsercount",
     "toponetx @ git+https://github.com/pyt-team/TopoNetX.git",
     "topomodelx @ git+https://github.com/pyt-team/TopoModelX.git",
-
+    "hirola",
 ]
 
 [project.optional-dependencies]
