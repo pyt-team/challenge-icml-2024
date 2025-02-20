@@ -80,6 +80,9 @@ from modules.transforms.liftings.pointcloud2simplicial.alpha_complex_lifting imp
 from modules.transforms.liftings.pointcloud2simplicial.delaunay_lifting import (
     DelaunayLifting,
 )
+from modules.transforms.liftings.pointcloud2simplicial.random_flag_complex import (
+    RandomFlagComplexLifting,
+)
 
 TRANSFORMS = {
     # Graph -> Hypergraph
@@ -107,6 +110,7 @@ TRANSFORMS = {
     "AlphaComplexLifting": AlphaComplexLifting,
     # Point-cloud -> Simplicial Complex
     "DelaunayLifting": DelaunayLifting,
+    "RandomFlagComplexLifting": RandomFlagComplexLifting,
     # Pointcloud -> Hypergraph
     "VoronoiLifting": VoronoiLifting,
     "MoGMSTLifting": MoGMSTLifting,
