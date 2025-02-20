@@ -8,7 +8,9 @@ from torch_geometric.transforms import (
     ToUndirected,
 )
 
-from modules.transforms.liftings.graph2hypergraph.base import Graph2HypergraphLifting
+from modules.transforms.liftings.graph2hypergraph.base import (
+    Graph2HypergraphLifting,
+)
 
 
 class MapperCover:
@@ -58,11 +60,15 @@ class MapperCover:
         data_range = data_max - data_min
 
         # width of each interval in the cover and last left endpoint
-        cover_width = data_range / (self.resolution - (self.resolution - 1) * self.gain)
-        last_lower_endpoint = data_min + cover_width * (self.resolution - 1) * (
-            1 - self.gain
+        cover_width = data_range / (
+            self.resolution - (self.resolution - 1) * self.gain
         )
-        lower_endpoints = torch.linspace(data_min, last_lower_endpoint, self.resolution)
+        last_lower_endpoint = data_min + cover_width * (
+            self.resolution - 1
+        ) * (1 - self.gain)
+        lower_endpoints = torch.linspace(
+            data_min, last_lower_endpoint, self.resolution
+        )
         upper_endpoints = lower_endpoints + cover_width
         self.cover_intervals = torch.hstack(
             (
@@ -230,7 +236,9 @@ class MapperLifting(Graph2HypergraphLifting):
                 self.filter_attr not in filter_dict
             ), f"Assign new filter_attr not in {list(filter_dict)} or leave filter_func as None. \
             Currently filter_func is {filter_func} and filter_attr is {filter_attr}"
-            assert type(filter_attr) is str, f"{filter_attr} must be a string."
+            assert isinstance(
+                filter_attr, str
+            ), f"{filter_attr} must be a string."
 
     def _filter(self, data):
         """Applies 1-dimensional filter function to
@@ -253,8 +261,8 @@ class MapperLifting(Graph2HypergraphLifting):
             transform = self.filter_func
             filtered_data = transform(data)
 
-        assert filtered_data.size() == torch.Size(
-            [len(data.x), 1]
+        assert (
+            filtered_data.size() == torch.Size([len(data.x), 1])
         ), f"filtered data should have size [n_samples, 1]. Currently filtered data has size {filtered_data.size()}."
         self.filtered_data = {self.filter_attr: filtered_data}
 
