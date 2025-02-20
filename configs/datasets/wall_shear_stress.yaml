@@ -1,0 +1,13 @@
+data_domain: simplicial_complex
+data_type: artery
+data_name: wall_shear_stress
+data_dir: datasets/${data_domain}/${data_type}
+
+num_features:
+  - 1 # initial node features
+  - 3 # initial edge features
+num_classes: 3
+task: regression
+loss_type: mae
+montitor_metric: mae
+task_level: node

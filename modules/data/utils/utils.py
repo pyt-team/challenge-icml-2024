@@ -1,7 +1,9 @@
 import hashlib
+import os
 import os.path as osp
 import pickle
 from collections.abc import Callable
+from urllib.request import urlretrieve
 
 import networkx as nx
 import numpy as np
@@ -222,81 +224,129 @@ def load_simplicial_dataset(cfg):
     torch_geometric.data.Data
         Simplicial dataset.
     """
-    if cfg["data_name"] != "KarateClub":
-        return NotImplementedError
-    data = graph.karate_club(complex_type="simplicial", feat_dim=2)
-    max_rank = data.dim
-    features = {}
-    dict_feat_equivalence = {
-        0: "node_feat",
-        1: "edge_feat",
-        2: "face_feat",
-        3: "tetrahedron_feat",
-    }
-    for rank_idx in range(max_rank + 1):
-        try:
-            features[f"x_{rank_idx}"] = torch.tensor(
-                np.stack(
-                    list(
-                        data.get_simplex_attributes(
-                            dict_feat_equivalence[rank_idx]
-                        ).values()
+    if cfg["data_name"] == "KarateClub":
+        data = graph.karate_club(complex_type="simplicial", feat_dim=2)
+        max_rank = data.dim
+        features = {}
+        dict_feat_equivalence = {
+            0: "node_feat",
+            1: "edge_feat",
+            2: "face_feat",
+            3: "tetrahedron_feat",
+        }
+        for rank_idx in range(max_rank + 1):
+            try:
+                features[f"x_{rank_idx}"] = torch.tensor(
+                    np.stack(
+                        list(
+                            data.get_simplex_attributes(
+                                dict_feat_equivalence[rank_idx]
+                            ).values()
+                        )
                     )
                 )
-            )
-        except ValueError:  # noqa: PERF203
-            features[f"x_{rank_idx}"] = torch.tensor(
-                np.zeros((data.shape[rank_idx], 0))
-            )
-    features["y"] = torch.tensor(
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            0,
-            1,
-            1,
-            1,
-            1,
-            0,
-            0,
-            1,
-            1,
-            0,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-        ]
-    )
-    # features['num_nodes'] = data.shape[0]
-    features["x"] = features["x_0"]
-    connectivity = get_complex_connectivity(data, max_rank)
-    data = torch_geometric.data.Data(**connectivity, **features)
+            except ValueError:  # noqa: PERF203
+                features[f"x_{rank_idx}"] = torch.tensor(
+                    np.zeros((data.shape[rank_idx], 0))
+                )
+        features["y"] = torch.tensor(
+            [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                1,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            ]
+        )
+        # features['num_nodes'] = data.shape[0]
+        features["x"] = features["x_0"]
+        connectivity = get_complex_connectivity(data, max_rank)
+        data = torch_geometric.data.Data(**connectivity, **features)
 
-    # Project node-level features to edge-level (WHY DO WE NEED IT, data already has x_1)
-    data.x_1 = data.x_1 + torch.mm(data.incidence_1.to_dense().T, data.x_0)
+        # Project node-level features to edge-level (WHY DO WE NEED IT, data already has x_1)
+        data.x_1 = data.x_1 + torch.mm(data.incidence_1.to_dense().T, data.x_0)
 
-    return torch_geometric.transforms.random_node_split.RandomNodeSplit(
-        num_val=4, num_test=4
-    )(data)
+        return torch_geometric.transforms.random_node_split.RandomNodeSplit(
+            num_val=4, num_test=4
+        )(data)
+
+    if cfg["data_name"] == "wall_shear_stress":
+        path_to_data_dir = osp.join(rootutils.find_root(), cfg["data_dir"])
+        path_to_npz = osp.join(path_to_data_dir, f"{cfg['data_name']}.npz")
+
+        # Download data
+        if not osp.exists(path_to_npz):
+            os.makedirs(path_to_data_dir, exist_ok=True)
+            urlretrieve(
+                "https://surfdrive.surf.nl/files/index.php/s/6h2MLfnxvQJLx1W/download",
+                path_to_npz,
+            )
+
+        # Load data
+        npz = np.load(path_to_npz)
+
+        data = Data(**{key: torch.from_numpy(npz[key]) for key in npz.files})
+
+        # Node attributes (geodesic distance to artery inlet)
+        data.x = data.x.view(-1, 1)
+        # data.x_0 = data.x
+
+        # Face attributes (surface normal) (should this be "x_2"?)
+        data.x_1 = torch.nn.functional.normalize(
+            torch.cross(
+                data.pos[data.face[1]] - data.pos[data.face[0]],
+                data.pos[data.face[2]] - data.pos[data.face[0]],
+                dim=1,
+            )
+        )
+
+        # Incidence from nodes to faces (should this be "incidence_2"?)
+        # Tried using TopoNetX for this but it crashed the Jupyter notebook
+        num_face = data.face.size(1)
+        data.incidence_1 = torch.sparse_coo_tensor(
+            torch.stack(
+                (
+                    data.face.T.reshape(-1),
+                    torch.arange(num_face).expand((3, -1)).T.reshape(-1),
+                )
+            ),
+            torch.ones(3 * num_face),
+        )
+
+        # Up- and down-Laplacian, etc. should be computed here
+
+        return data
+
+    return NotImplementedError
 
 
 def load_hypergraph_pickle_dataset(cfg):
