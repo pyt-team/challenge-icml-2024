@@ -47,6 +47,9 @@ from modules.transforms.liftings.graph2simplicial.eccentricity_lifting import (
 from modules.transforms.liftings.graph2simplicial.graph_induced_lifting import (
     SimplicialGraphInducedLifting,
 )
+from modules.transforms.liftings.graph2simplicial.latentclique_lifting import (
+    LatentCliqueLifting,
+)
 from modules.transforms.liftings.graph2simplicial.line_lifting import (
     SimplicialLineLifting,
 )
@@ -89,6 +92,7 @@ TRANSFORMS = {
     "SimplicialGraphInducedLifting": SimplicialGraphInducedLifting,
     "SimplicialLineLifting": SimplicialLineLifting,
     "SimplicialVietorisRipsLifting": SimplicialVietorisRipsLifting,
+    "LatentCliqueLifting": LatentCliqueLifting,
     # Graph -> Cell Complex
     "CellCycleLifting": CellCycleLifting,
     # Graph -> Combinatorial Complex
