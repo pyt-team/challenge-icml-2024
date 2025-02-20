@@ -316,7 +316,11 @@ def plot_manual_graph(data, title=None):
         incidence = data.incidence_hyperedges.coalesce()
 
     # Collect vertices
-    vertices = [i for i in range(data.x.shape[0])]
+    if hasattr(data, "x") and data.x is not None:
+        vertices = [i for i in range(data.x.shape[0])]
+    else:
+        vertices = [i for i in range(data["x_0"].shape[0])]
+
     # Hyperedges
     if max_order == 0:
         n_vertices = len(vertices)
@@ -679,3 +683,8 @@ def plot_pointcloud_voronoi(
     ax.scatter(*points.T, s=1.0, c=color, cmap=cm.flag)
     ax.view_init(elev=10.0, azim=azim, roll=roll)
     plt.show()
+
+
+def edge_cycle_to_vertex_cycle(edge_cycle: list[list | tuple]):
+    """Takes a cycle represented by a list of edges and returns a vertex representation: [(1, 2), (0, 1), (1, 2)] -> [1, 2, 3]."""
+    return [e[0] for e in nx.find_cycle(nx.Graph(edge_cycle))]

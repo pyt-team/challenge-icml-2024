@@ -31,6 +31,7 @@ from modules.data.utils.utils import (
     load_random_points,
     load_random_shape_point_cloud,
     load_senate_committee,
+    load_simple_configuration_graphs,
     load_simplicial_dataset,
 )
 
@@ -153,6 +154,9 @@ class GraphLoader(AbstractLoader):
         elif self.parameters.data_name in ["manual_rings"]:
             data = load_manual_mol()
             dataset = CustomDataset([data], self.data_dir)
+        elif self.parameters.data_name in ["simple_configuration_graphs"]:
+            data = load_simple_configuration_graphs()
+            dataset = CustomDataset([*data], self.data_dir)
 
         else:
             raise NotImplementedError(
