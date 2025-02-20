@@ -145,6 +145,7 @@ def describe_data(dataset: torch_geometric.data.Dataset, idx_sample: int = 0):
             complex_dim.append(getattr(data, f"x_{dim}").shape[0])
             features_dim.append(getattr(data, f"x_{dim}").shape[1])
     # If not lifted, we check the classical fields of a dataset loaded from PyG
+    print(complex_dim)
     if len(complex_dim) == 0:
         if hasattr(data, "num_nodes"):
             complex_dim.append(data.num_nodes)

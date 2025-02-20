@@ -17,6 +17,9 @@ from modules.transforms.liftings.graph2combinatorial.curve_lifting import (
 from modules.transforms.liftings.graph2combinatorial.ring_close_atoms_lifting import (
     CombinatorialRingCloseAtomsLifting,
 )
+from modules.transforms.liftings.graph2combinatorial.sp_lifting import (
+    SimplicialPathsLifting,
+)
 from modules.transforms.liftings.graph2hypergraph.expander_graph_lifting import (
     ExpanderGraphLifting,
 )
@@ -88,6 +91,7 @@ TRANSFORMS = {
     # Graph -> Combinatorial Complex
     "CombinatorialRingCloseAtomsLifting": CombinatorialRingCloseAtomsLifting,
     "CurveLifting": CurveLifting,
+    "SimplicialPathsLifting": SimplicialPathsLifting,
     # Point Cloud -> Simplicial Complex,
     "AlphaComplexLifting": AlphaComplexLifting,
     # Point-cloud -> Simplicial Complex
